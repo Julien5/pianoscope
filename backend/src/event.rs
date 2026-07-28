@@ -1,0 +1,52 @@
+use crate::graphics;
+
+pub const NOTE_NAMES: &[&str] = &[
+    "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+];
+
+#[derive(Clone)]
+pub enum Status {
+    NoteOn,
+    NoteOff,
+}
+
+#[derive(Clone)]
+pub struct Event {
+    pub status: Status,
+    pub velocity: u32,
+    pub note: u8,
+    pub note_name: String,
+    pub raw: Vec<u8>,
+    pub svg: Vec<u8>,
+}
+
+impl Event {
+    pub fn from_midi(bytes: &[u8]) -> Option<Self> {
+        if bytes.len() < 3 {
+            return None;
+        }
+        let status_byte = bytes[0] & 0xF0;
+        let note = bytes[1];
+        let velocity = bytes[2];
+
+        let status = if status_byte == 0x90 && velocity > 0 {
+            Status::NoteOn
+        } else {
+            Status::NoteOff
+        };
+
+        let note_idx = (note % 12) as usize;
+        let note_name = NOTE_NAMES[note_idx];
+        let octave = (note / 12) as i32 - 1;
+        let name = format!("{note_name}{octave}");
+
+        Some(Self {
+            status,
+            velocity: velocity as u32,
+            note,
+            note_name: name,
+            raw: bytes.to_vec(),
+            svg: graphics::generate(71 - note as i32),
+        })
+    }
+}

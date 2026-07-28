@@ -25,12 +25,16 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     try {
       final portName = await provider.connect(index);
       if (!mounted) return;
-      final stream = provider.startEventStream();
+      final streams = await provider.startEventStream();
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              MidiSignalScreen(portName: portName, eventStream: stream),
+          builder: (_) => MidiSignalScreen(
+            portName: portName,
+            eventStream: streams.events,
+            errorStream: streams.errors,
+          ),
         ),
       );
     } catch (e) {

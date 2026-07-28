@@ -2,13 +2,11 @@ use midir::{MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
+use crate::event::Event;
 use crate::simulation;
 
-const NOTE_NAMES: &[&str] = &[
-    "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
-];
-
-pub type EventSender = Arc<dyn Fn(String) + Send + Sync>;
+pub type EventSender = Arc<dyn Fn(Event) + Send + Sync>;
+pub type ErrorSender = Arc<dyn Fn(String) + Send + Sync>;
 
 pub struct Midi {
     port_index: AtomicU32,
@@ -42,23 +40,23 @@ impl Midi {
         Ok(port_name)
     }
 
-    pub fn start_event_stream(&self, sender: EventSender) {
+    pub fn start_event_stream(&self, sender: EventSender, error_sender: ErrorSender) {
         if simulation::enabled() {
-            simulation::start_stream(sender);
+            simulation::start_stream(sender, error_sender);
             return;
         }
-        self.start_real_stream(sender);
+        self.start_real_stream(sender, error_sender);
     }
 
-    fn start_real_stream(&self, sender: EventSender) {
+    fn start_real_stream(&self, sender: EventSender, error_sender: ErrorSender) {
         let port_index = self.port_index.load(Ordering::Relaxed);
         if port_index == u32::MAX {
-            sender("ERROR: Not connected".to_string());
+            error_sender("Not connected".to_string());
             return;
         }
 
         let Ok(midi_in) = MidiInput::new("nano") else {
-            sender("ERROR: Failed to create MIDI input".to_string());
+            error_sender("Failed to create MIDI input".to_string());
             return;
         };
 
@@ -66,25 +64,24 @@ impl Midi {
         let in_port = match ports.into_iter().nth(port_index as usize) {
             Some(p) => p,
             None => {
-                sender("ERROR: Port no longer available".to_string());
+                error_sender("Port no longer available".to_string());
                 return;
             }
         };
 
         let callback_sender = sender.clone();
         let callback = move |_timestamp: u64, bytes: &[u8], _data: &mut ()| {
-            if let Some(msg) = format_midi_event(bytes) {
-                callback_sender(msg);
+            if let Some(event) = Event::from_midi(bytes) {
+                callback_sender(event);
             }
         };
 
         match midi_in.connect(&in_port, "nano", callback, ()) {
             Ok(conn) => {
                 *self.connection.lock().unwrap() = Some(conn);
-                sender("CONNECTED".to_string());
             }
             Err(e) => {
-                sender(format!("ERROR: {e}"));
+                error_sender(format!("{e}"));
             }
         }
     }
@@ -95,34 +92,6 @@ impl Midi {
         }
         *self.connection.lock().unwrap() = None;
     }
-}
-
-pub fn format_midi_event(bytes: &[u8]) -> Option<String> {
-    if bytes.len() < 3 {
-        return None;
-    }
-    let status = bytes[0] & 0xF0;
-    let note = bytes[1];
-    let velocity = bytes[2];
-
-    let event_type = if status == 0x90 && velocity > 0 {
-        "NOTE_ON"
-    } else {
-        "NOTE_OFF"
-    };
-
-    let raw = bytes
-        .iter()
-        .map(|b| format!("{b:02X}"))
-        .collect::<Vec<_>>()
-        .join(" ");
-
-    let note_idx = (note % 12) as usize;
-    let note_name = NOTE_NAMES[note_idx];
-    let octave = (note / 12) as i32 - 1;
-    let name = format!("{note_name}{octave}");
-
-    Some(format!("{event_type} {raw} {name}"))
 }
 
 pub fn list_midi_ports() -> Vec<String> {

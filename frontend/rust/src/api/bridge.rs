@@ -1,3 +1,4 @@
+use crate::api::event::Event;
 use crate::frb_generated::StreamSink;
 use backend::midi::{self, Midi};
 use std::sync::Arc;
@@ -22,9 +23,14 @@ impl Bridge {
         self.midi.connect(port_index)
     }
 
-    pub fn start_midi_event_stream(&self, sink: StreamSink<String>) {
-        let sender = Arc::new(move |msg| drop(sink.add(msg)));
-        self.midi.start_event_stream(sender);
+    pub fn start_midi_event_stream(
+        &self,
+        sink: StreamSink<Event>,
+        error_sink: StreamSink<String>,
+    ) {
+        let sender = Arc::new(move |event| drop(sink.add(event)));
+        let error_sender = Arc::new(move |msg| drop(error_sink.add(msg)));
+        self.midi.start_event_stream(sender, error_sender);
     }
 
     pub fn disconnect_midi(&self) {

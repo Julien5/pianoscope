@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:frontend/src/rust/api/bridge.dart';
+import 'package:frontend/src/rust/api/event.dart';
 
 class MidiProvider extends ChangeNotifier {
   Bridge? _bridge;
@@ -30,8 +33,11 @@ class MidiProvider extends ChangeNotifier {
     return await _bridge!.connectMidi(portIndex: portIndex);
   }
 
-  Stream<String> startEventStream() {
-    return _bridge!.startMidiEventStream();
+  Future<({Stream<Event> events, Stream<String> errors})> startEventStream() async {
+    final sink = RustStreamSink<Event>();
+    final errorSink = RustStreamSink<String>();
+    await _bridge!.startMidiEventStream(sink: sink, errorSink: errorSink);
+    return (events: sink.stream, errors: errorSink.stream);
   }
 
   Future<void> disconnect() async {

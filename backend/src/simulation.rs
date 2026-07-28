@@ -7,7 +7,8 @@ use std::{
     time::Duration,
 };
 
-use crate::midi::{format_midi_event, EventSender};
+use crate::event::Event;
+use crate::midi::{ErrorSender, EventSender};
 
 pub fn setting() -> Option<String> {
     let val = std::env::var("SIMULATION").ok().or_else(|| {
@@ -49,7 +50,7 @@ const SCALE_NOTES: &[u8] = &[
 ];
 static SIM_STOP: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
-pub fn start_stream(sender: EventSender) {
+pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
     let stop = Arc::new(AtomicBool::new(false));
     *SIM_STOP.lock().unwrap() = Some(stop.clone());
 
@@ -58,8 +59,6 @@ pub fn start_stream(sender: EventSender) {
     thread::Builder::new()
         .name("nano-midi-sim".into())
         .spawn(move || {
-            sender("CONNECTED".to_string());
-
             for _ in 0..loops {
                 if stop.load(Ordering::Relaxed) {
                     return;
@@ -68,15 +67,17 @@ pub fn start_stream(sender: EventSender) {
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    let msg_on = format_midi_event(&[0x90, note, 0x40]).unwrap_or_default();
-                    sender(msg_on);
+                    if let Some(event) = Event::from_midi(&[0x90, note, 0x40]) {
+                        sender(event);
+                    }
                     thread::sleep(Duration::from_millis(150));
 
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    let msg_off = format_midi_event(&[0x80, note, 0x00]).unwrap_or_default();
-                    sender(msg_off);
+                    if let Some(event) = Event::from_midi(&[0x80, note, 0x00]) {
+                        sender(event);
+                    }
                     thread::sleep(Duration::from_millis(30));
                 }
             }

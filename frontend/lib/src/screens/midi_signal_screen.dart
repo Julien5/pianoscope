@@ -1,16 +1,22 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/src/providers/midi_provider.dart';
+import 'package:frontend/src/rust/api/event.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
-  final Stream<String> eventStream;
+  final Stream<Event> eventStream;
+  final Stream<String> errorStream;
 
   const MidiSignalScreen({
     super.key,
     required this.portName,
     required this.eventStream,
+    required this.errorStream,
   });
 
   @override
@@ -20,42 +26,40 @@ class MidiSignalScreen extends StatefulWidget {
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _noteName = '---';
   String _rawHex = '';
-  StreamSubscription<String>? _subscription;
+  Uint8List? _svgData;
+  StreamSubscription<Event>? _eventSubscription;
+  StreamSubscription<String>? _errorSubscription;
 
   @override
   void initState() {
     super.initState();
-    _subscription = widget.eventStream.listen(_onEvent);
+    _eventSubscription = widget.eventStream.listen(_onEvent);
+    _errorSubscription = widget.errorStream.listen(_onError);
   }
 
-  void _onEvent(String event) {
-    if (event.startsWith('ERROR')) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(event)));
-      return;
-    }
-
-    if (event == 'CONNECTED') {
-      return;
-    }
-
-    final parts = event.split(' ');
-    if (parts.length < 3) return;
-
-    final rawHex = parts.sublist(1, parts.length - 1).join(' ');
-    final noteName = parts.last;
-
+  void _onEvent(Event event) {
     setState(() {
-      _noteName = noteName;
-      _rawHex = rawHex;
+      _noteName = event.noteName;
+      _rawHex = _formatRaw(event.raw);
+      _svgData = event.svg;
     });
+  }
+
+  void _onError(String error) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(error)));
+  }
+
+  String _formatRaw(Uint8List raw) {
+    return raw.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
+    _eventSubscription?.cancel();
+    _errorSubscription?.cancel();
     context.read<MidiProvider>().disconnect();
     super.dispose();
   }
@@ -68,11 +72,14 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (_svgData != null)
+              SvgPicture.string(utf8.decode(_svgData!), height: 200),
+            const SizedBox(height: 16),
             Text(
               _noteName,
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(_rawHex, style: const TextStyle(fontSize: 20)),
           ],
         ),
