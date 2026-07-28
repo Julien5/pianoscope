@@ -34,6 +34,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "backend"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "log",
+ "midir",
+ "ndk-context",
+]
+
+[[package]]
 name = "bitflags"
 version = "2.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -299,16 +309,6 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
  "windows",
-]
-
-[[package]]
-name = "nano-backend"
-version = "0.1.0"
-dependencies = [
- "libc",
- "log",
- "midir",
- "ndk-context",
 ]
 
 [[package]]
