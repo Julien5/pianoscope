@@ -46,7 +46,7 @@ impl Event {
             note,
             note_name: name,
             raw: bytes.to_vec(),
-            svg: graphics::generate(71 - note as i32),
+            svg: graphics::generate(graphics::offset_for_midi(note)),
         })
     }
 
@@ -58,7 +58,7 @@ impl Event {
             note,
             note_name: name.to_string(),
             raw: vec![0x90, note, 0x40],
-            svg: graphics::generate(71 - note as i32),
+            svg: graphics::generate(graphics::offset_for_midi(note)),
         })
     }
 }

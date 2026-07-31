@@ -5,6 +5,10 @@ pub fn generate(offset: i32) -> Vec<u8> {
     template.replacen("{y}", &y.to_string(), 1).into_bytes()
 }
 
+pub fn offset_for_midi(note: u8) -> i32 {
+    46 - ((7 * note as i32 + 1) / 12)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

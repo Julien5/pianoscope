@@ -70,7 +70,7 @@ pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
                     if let Some(event) = Event::from_midi(&[0x90, note, 0x40]) {
                         sender(event);
                     }
-                    thread::sleep(Duration::from_millis(150));
+                    thread::sleep(Duration::from_millis(500));
 
                     if stop.load(Ordering::Relaxed) {
                         return;
