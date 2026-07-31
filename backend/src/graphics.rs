@@ -11,13 +11,13 @@ mod tests {
 
     #[test]
     fn generate_offset_0() {
-        let expected = include_bytes!("../data/ref/N0.svg");
+        let expected = include_bytes!("../data/ref/offset/N0.svg");
         assert_eq!(generate(0), expected.to_vec());
     }
 
     #[test]
     fn generate_offset_1() {
-        let expected = include_bytes!("../data/ref/N1.svg");
+        let expected = include_bytes!("../data/ref/offset/N1.svg");
         assert_eq!(generate(1), expected.to_vec());
     }
 }

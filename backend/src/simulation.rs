@@ -15,7 +15,7 @@ pub fn setting() -> Option<String> {
         #[cfg(target_os = "android")]
         {
             use crate::init::android;
-            android::system_property("debug.nano.sim")
+            android::system_property("debug.frontend.simulation")
         }
         #[cfg(not(target_os = "android"))]
         {

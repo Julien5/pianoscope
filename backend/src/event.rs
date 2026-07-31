@@ -49,4 +49,43 @@ impl Event {
             svg: graphics::generate(71 - note as i32),
         })
     }
+
+    pub fn for_note(name: &str) -> Option<Self> {
+        let note = note_name_to_midi(name)?;
+        Some(Self {
+            status: Status::NoteOn,
+            velocity: 0x40,
+            note,
+            note_name: name.to_string(),
+            raw: vec![0x90, note, 0x40],
+            svg: graphics::generate(71 - note as i32),
+        })
+    }
+}
+
+fn note_name_to_midi(name: &str) -> Option<u8> {
+    let name = name.trim();
+    let (letter, rest) = name.split_at_checked(1)?;
+    let semitone = match letter {
+        "C" => 0,
+        "D" => 2,
+        "E" => 4,
+        "F" => 5,
+        "G" => 7,
+        "A" => 9,
+        "B" => 11,
+        _ => return None,
+    };
+    let (accidental, octave_str) = match rest.chars().next() {
+        Some('#') => (1, &rest[1..]),
+        Some('b') => (-1, &rest[1..]),
+        Some(_) => (0, rest),
+        None => return None,
+    };
+    let octave: i32 = octave_str.parse().ok()?;
+    let note = (octave + 1) * 12 + semitone + accidental;
+    if !(0..=127).contains(&note) {
+        return None;
+    }
+    Some(note as u8)
 }
