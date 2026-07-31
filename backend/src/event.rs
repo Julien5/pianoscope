@@ -51,13 +51,21 @@ impl Event {
     }
 
     pub fn for_note(name: &str) -> Option<Self> {
+        Self::for_note_status(name, Status::NoteOn, 0x40)
+    }
+
+    pub fn for_note_status(name: &str, status: Status, velocity: u32) -> Option<Self> {
         let note = note_name_to_midi(name)?;
+        let status_byte = match status {
+            Status::NoteOn => 0x90,
+            Status::NoteOff => 0x80,
+        };
         Some(Self {
-            status: Status::NoteOn,
-            velocity: 0x40,
+            status,
+            velocity,
             note,
             note_name: name.to_string(),
-            raw: vec![0x90, note, 0x40],
+            raw: vec![status_byte, note, velocity as u8],
             svg: graphics::generate(graphics::offset_for_midi(note)),
         })
     }

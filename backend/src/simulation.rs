@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-use crate::event::Event;
+use crate::event::{Event, Status};
 use crate::midi::{ErrorSender, EventSender};
 
 pub fn setting() -> Option<String> {
@@ -44,9 +44,9 @@ pub fn loop_count() -> u32 {
     setting().and_then(|s| s.parse::<u32>().ok()).unwrap_or(0)
 }
 
-const SCALE_NOTES: &[u8] = &[
-    48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 71, 69, 67, 65, 64, 62, 60, 59, 57,
-    55, 53, 52, 50, 48,
+const SCALE_NOTES: &[&str] = &[
+    "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5",
+    "B4", "A4", "G4", "F4", "E4", "D4", "C4", "B3", "A3", "G3", "F3", "E3", "D3", "C3",
 ];
 static SIM_STOP: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
@@ -67,7 +67,7 @@ pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    if let Some(event) = Event::from_midi(&[0x90, note, 0x40]) {
+                    if let Some(event) = Event::for_note_status(note, Status::NoteOn, 0x40) {
                         sender(event);
                     }
                     thread::sleep(Duration::from_millis(500));
@@ -75,7 +75,7 @@ pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    if let Some(event) = Event::from_midi(&[0x80, note, 0x00]) {
+                    if let Some(event) = Event::for_note_status(note, Status::NoteOff, 0) {
                         sender(event);
                     }
                     thread::sleep(Duration::from_millis(30));
