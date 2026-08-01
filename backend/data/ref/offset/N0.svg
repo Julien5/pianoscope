@@ -5,6 +5,12 @@
   <line x1="0" y1="13.50" x2="10" y2="13.50" stroke="black" stroke-width="0.175" />
   <line x1="0" y1="15.25" x2="10" y2="15.25" stroke="black" stroke-width="0.175" />
   <line x1="0" y1="17.00" x2="10" y2="17.00" stroke="black" stroke-width="0.175" />
+  <line x1="2.75" y1="18.75" x2="7.25" y2="18.75" stroke="black" stroke-width="0.175" display="none" />
+  <line x1="2.75" y1="20.50" x2="7.25" y2="20.50" stroke="black" stroke-width="0.175" display="none" />
+  <line x1="2.75" y1="22.25" x2="7.25" y2="22.25" stroke="black" stroke-width="0.175" display="none" />
+  <line x1="2.75" y1="8.25" x2="7.25" y2="8.25" stroke="black" stroke-width="0.175" display="none" />
+  <line x1="2.75" y1="6.50" x2="7.25" y2="6.50" stroke="black" stroke-width="0.175" display="none" />
+  <line x1="2.75" y1="4.75" x2="7.25" y2="4.75" stroke="black" stroke-width="0.175" display="none" />
   <g transform="translate(0,0)">
     <ellipse cx="5" cy="9.125" rx="1.1" ry="0.875" fill="black"
 			 		transform="rotate(-7 5 10.875)"/>

@@ -275,7 +275,13 @@ class _SvgParser {
       width = _length(root.getAttribute('width'));
       height = _length(root.getAttribute('height'));
     }
-    return _SvgRoot(minX, minY, width, height, _build(root) ?? _GroupElement(const [], const []));
+    return _SvgRoot(
+      minX,
+      minY,
+      width,
+      height,
+      _build(root) ?? _GroupElement(const [], const []),
+    );
   }
 
   double _length(String? value) {
@@ -285,6 +291,9 @@ class _SvgParser {
   }
 
   _SvgElement? _build(XmlElement xml) {
+    if (xml.getAttribute("display") == "none") {
+      return null;
+    }
     _SvgElement? element;
     switch (xml.name.local) {
       case 'g':
@@ -342,10 +351,9 @@ class _SvgParser {
     return double.parse(value.trim());
   }
 
-  bool _crisp(XmlElement xml) =>
-      (xml.getAttribute('shape-rendering') ?? '').toLowerCase().contains(
-        'crisp',
-      );
+  bool _crisp(XmlElement xml) => (xml.getAttribute('shape-rendering') ?? '')
+      .toLowerCase()
+      .contains('crisp');
 
   Color _color(XmlElement xml, String name, Color fallback) {
     final value = xml.getAttribute(name);
