@@ -47,13 +47,13 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
 
   void _onError(String error) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(error)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
   }
 
   String _formatRaw(Uint8List raw) {
-    return raw.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
+    return raw
+        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+        .join(' ');
   }
 
   @override
@@ -76,7 +76,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
               NoteSvgView(
                 svg: utf8.decode(_svgData!),
                 height: 200,
-                forceAntiAlias: false,
+                forceAntiAlias: true,
               ),
             const SizedBox(height: 16),
             Text(
