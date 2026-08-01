@@ -7,6 +7,6 @@ fn svg_matches_reference() {
         std::fs::write(format!("/tmp/{}.svg", note), &event.svg).expect("should write file");
         let expected = std::fs::read(format!("data/ref/notes/{}.svg", note))
             .expect("reference file should exist");
-        assert_eq!(event.svg, expected);
+        assert_eq!(event.svg, expected, "failed with {}", note);
     }
 }

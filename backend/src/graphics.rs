@@ -26,39 +26,40 @@ pub fn offset_for_midi(note: u8) -> i32 {
 mod tests {
     use super::*;
 
+    fn write_and_check(offset: i32, name: &str) {
+        let svg = generate(offset);
+        std::fs::write(format!("/tmp/{name}.svg"), &svg).expect("should write file");
+        let expected = std::fs::read(format!("data/ref/offset/{name}.svg")).expect("should read file");
+        assert_eq!(svg, expected);
+    }
+
     #[test]
     fn generate_offset_0() {
-        let expected = include_bytes!("../data/ref/offset/N0.svg");
-        assert_eq!(generate(0), expected.to_vec());
+        write_and_check(0, "N0");
     }
 
     #[test]
     fn generate_offset_1() {
-        let expected = include_bytes!("../data/ref/offset/N1.svg");
-        assert_eq!(generate(1), expected.to_vec());
+        write_and_check(1, "N1");
     }
 
     #[test]
     fn generate_offset_11() {
-        let expected = include_bytes!("../data/ref/offset/N11.svg");
-        assert_eq!(generate(11), expected.to_vec());
+        write_and_check(11, "N11");
     }
 
     #[test]
     fn generate_offset_13() {
-        let expected = include_bytes!("../data/ref/offset/N13.svg");
-        assert_eq!(generate(13), expected.to_vec());
+        write_and_check(13, "N13");
     }
 
     #[test]
     fn generate_offset_minus_1() {
-        let expected = include_bytes!("../data/ref/offset/M1.svg");
-        assert_eq!(generate(-1), expected.to_vec());
+        write_and_check(-1, "M1");
     }
 
     #[test]
     fn generate_offset_minus_3() {
-        let expected = include_bytes!("../data/ref/offset/M3.svg");
-        assert_eq!(generate(-3), expected.to_vec());
+        write_and_check(-3, "M3");
     }
 }
