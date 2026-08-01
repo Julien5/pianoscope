@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
@@ -7,9 +8,9 @@ import 'package:xml/xml.dart';
 ///
 /// Only the small SVG subset used by the note templates is supported:
 ///   - root `<svg>` element with a `viewBox`
-///   - `<rect>`, `<line>` and `<ellipse>` shapes
+///   - `<rect>`, `<line>`, `<ellipse>` and `<path>` shapes
 ///   - `<g>` groups
-///   - `translate`, `rotate` and `scale` transforms
+///   - `translate`, `rotate`, `scale` and `matrix` transforms
 ///   - `shape-rendering="crispEdges"` (renders without antialiasing)
 ///
 /// Unlike `flutter_svg`, antialiasing can be disabled, per element via the
@@ -179,6 +180,49 @@ class _EllipseElement extends _SvgElement {
   }
 }
 
+class _PathElement extends _SvgElement {
+  _PathElement(
+    this.path,
+    this.fill,
+    this.stroke,
+    this.strokeWidth,
+    this.evenOdd,
+    this.crisp,
+  );
+
+  final Path path;
+  final Color fill;
+  final Color stroke;
+  final double strokeWidth;
+  final bool evenOdd;
+  final bool crisp;
+
+  @override
+  void paint(Canvas canvas, bool? forceAntiAlias) {
+    final antiAlias = forceAntiAlias ?? !crisp;
+    path.fillType = evenOdd ? PathFillType.evenOdd : PathFillType.nonZero;
+    if (fill != Colors.transparent) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..isAntiAlias = antiAlias
+          ..color = fill,
+      );
+    }
+    if (stroke != Colors.transparent && strokeWidth > 0) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..isAntiAlias = antiAlias
+          ..strokeWidth = strokeWidth
+          ..color = stroke,
+      );
+    }
+  }
+}
+
 class _Transform {
   _Transform(this.apply);
 
@@ -186,7 +230,7 @@ class _Transform {
 
   static List<_Transform> parseAll(String value) {
     final transformRegex = RegExp(
-      r'(translate\([^)]*\)|rotate\([^)]*\)|scale\([^)]*\))',
+      r'(translate\([^)]*\)|rotate\([^)]*\)|scale\([^)]*\)|matrix\([^)]*\))',
     );
     return [
       for (final match in transformRegex.allMatches(value))
@@ -195,6 +239,25 @@ class _Transform {
   }
 
   static _Transform parse(String s) {
+    if (s.startsWith('matrix')) {
+      final numbers = _numbers(s, 'matrix');
+      final a = numbers.getOr(0);
+      final b = numbers.getOr(1);
+      final c = numbers.getOr(2);
+      final d = numbers.getOr(3);
+      final e = numbers.getOr(4);
+      final f = numbers.getOr(5);
+      return _Transform((canvas) {
+        canvas.transform(
+          Float64List.fromList([
+            a, b, 0, 0, //
+            c, d, 0, 0, //
+            0, 0, 1, 0, //
+            e, f, 0, 1, //
+          ]),
+        );
+      });
+    }
     if (s.startsWith('translate')) {
       final numbers = _numbers(s, 'translate');
       return _Transform(
@@ -337,6 +400,15 @@ class _SvgParser {
           _color(xml, 'fill', Colors.transparent),
           _crisp(xml),
         );
+      case 'path':
+        element = _PathElement(
+          _parsePath(xml.getAttribute('d') ?? ''),
+          _color(xml, 'fill', Colors.black),
+          _color(xml, 'stroke', Colors.transparent),
+          _number(xml, 'stroke-width', 1),
+          (xml.getAttribute('fill-rule') ?? '').toLowerCase() == 'evenodd',
+          _crisp(xml),
+        );
       default:
         return null;
     }
@@ -354,6 +426,80 @@ class _SvgParser {
   bool _crisp(XmlElement xml) => (xml.getAttribute('shape-rendering') ?? '')
       .toLowerCase()
       .contains('crisp');
+
+  static Path _parsePath(String d) {
+    final path = Path();
+    final tokens = RegExp(r'[MmCcLlZz]|-?\d+(?:\.\d+)?')
+        .allMatches(d)
+        .map((m) => m.group(0)!)
+        .toList();
+    var i = 0;
+    double curX = 0;
+    double curY = 0;
+    double startX = 0;
+    double startY = 0;
+    double numAt(int offset) => double.parse(tokens[i + offset]);
+
+    while (i < tokens.length) {
+      final token = tokens[i];
+      if (!RegExp(r'^[MmCcLlZz]$').hasMatch(token)) {
+        i++;
+        continue;
+      }
+      i++;
+      switch (token) {
+        case 'M':
+        case 'm':
+          if (token == 'M') {
+            curX = numAt(0);
+            curY = numAt(1);
+          } else {
+            curX += numAt(0);
+            curY += numAt(1);
+          }
+          path.moveTo(curX, curY);
+          startX = curX;
+          startY = curY;
+          i += 2;
+        case 'L':
+        case 'l':
+          if (token == 'L') {
+            curX = numAt(0);
+            curY = numAt(1);
+          } else {
+            curX += numAt(0);
+            curY += numAt(1);
+          }
+          path.lineTo(curX, curY);
+          i += 2;
+        case 'C':
+        case 'c':
+          if (token == 'C') {
+            path.cubicTo(numAt(0), numAt(1), numAt(2), numAt(3), numAt(4), numAt(5));
+            curX = numAt(4);
+            curY = numAt(5);
+          } else {
+            path.cubicTo(
+              curX + numAt(0),
+              curY + numAt(1),
+              curX + numAt(2),
+              curY + numAt(3),
+              curX + numAt(4),
+              curY + numAt(5),
+            );
+            curX += numAt(4);
+            curY += numAt(5);
+          }
+          i += 6;
+        case 'Z':
+        case 'z':
+          path.close();
+          curX = startX;
+          curY = startY;
+      }
+    }
+    return path;
+  }
 
   Color _color(XmlElement xml, String name, Color fallback) {
     final value = xml.getAttribute(name);
