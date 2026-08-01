@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/src/providers/midi_provider.dart';
 import 'package:frontend/src/rust/api/event.dart';
+import 'package:frontend/src/widgets/note_svg.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -73,7 +73,11 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_svgData != null)
-              SvgPicture.string(utf8.decode(_svgData!), height: 200),
+              NoteSvgView(
+                svg: utf8.decode(_svgData!),
+                height: 200,
+                forceAntiAlias: false,
+              ),
             const SizedBox(height: 16),
             Text(
               _noteName,
