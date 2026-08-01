@@ -50,11 +50,11 @@ impl Event {
         })
     }
 
-    pub fn for_note(name: &str) -> Option<Self> {
-        Self::for_note_status(name, Status::NoteOn, 0x40)
+    pub fn from_note(name: &str) -> Option<Self> {
+        Self::from_note_status(name, Status::NoteOn, 0x40)
     }
 
-    pub fn for_note_status(name: &str, status: Status, velocity: u32) -> Option<Self> {
+    pub fn from_note_status(name: &str, status: Status, velocity: u32) -> Option<Self> {
         let note = note_name_to_midi(name)?;
         let status_byte = match status {
             Status::NoteOn => 0x90,

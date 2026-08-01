@@ -45,8 +45,8 @@ pub fn loop_count() -> u32 {
 }
 
 const SCALE_NOTES: &[&str] = &[
-    "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5",
-    "B4", "A4", "G4", "F4", "E4", "D4", "C4", "B3", "A3", "G3", "F3", "E3", "D3", "C3",
+    "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "B4",
+    "A4", "G4", "F4", "E4", "D4", "C4", "B3", "A3", "G3", "F3", "E3", "D3", "C3",
 ];
 static SIM_STOP: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
@@ -67,7 +67,7 @@ pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    if let Some(event) = Event::for_note_status(note, Status::NoteOn, 0x40) {
+                    if let Some(event) = Event::from_note_status(note, Status::NoteOn, 0x40) {
                         sender(event);
                     }
                     thread::sleep(Duration::from_millis(500));
@@ -75,7 +75,7 @@ pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    if let Some(event) = Event::for_note_status(note, Status::NoteOff, 0) {
+                    if let Some(event) = Event::from_note_status(note, Status::NoteOff, 0) {
                         sender(event);
                     }
                     thread::sleep(Duration::from_millis(30));
