@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/src/providers/midi_provider.dart';
 import 'package:frontend/src/rust/api/event.dart';
-import 'package:frontend/src/widgets/note_svg.dart';
+import 'package:frontend/src/widgets/notation_view.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -26,7 +25,7 @@ class MidiSignalScreen extends StatefulWidget {
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _noteName = '---';
   String _rawHex = '';
-  Uint8List? _svgData;
+  Event? _event;
   StreamSubscription<Event>? _eventSubscription;
   StreamSubscription<String>? _errorSubscription;
 
@@ -41,7 +40,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     setState(() {
       _noteName = event.noteName;
       _rawHex = _formatRaw(event.raw);
-      _svgData = event.svg;
+      _event = event;
     });
   }
 
@@ -72,11 +71,10 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (_svgData != null)
-              NoteSvgView(
-                svg: utf8.decode(_svgData!),
-                height: 200,
-                forceAntiAlias: true,
+            if (_event != null)
+              NoteNotationView(
+                midiNote: _event!.note,
+                velocity: _event!.velocity,
               ),
             const SizedBox(height: 16),
             Text(
