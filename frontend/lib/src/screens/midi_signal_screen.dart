@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/src/providers/midi_provider.dart';
 import 'package:frontend/src/rust/api/event.dart';
-import 'package:frontend/src/widgets/notation_view.dart';
+import 'package:frontend/src/widgets/grand_staff_view.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -71,11 +71,10 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (_event != null)
-              NoteNotationView(
-                midiNote: _event!.note,
-                velocity: _event!.velocity,
-              ),
+            GrandStaffView(
+              midiNote: _event?.note,
+              velocity: _event?.velocity ?? 64,
+            ),
             const SizedBox(height: 16),
             Text(
               _noteName,

@@ -1,5 +1,3 @@
-use crate::graphics;
-
 pub const NOTE_NAMES: &[&str] = &[
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
 ];
@@ -17,7 +15,6 @@ pub struct Event {
     pub note: u8,
     pub note_name: String,
     pub raw: Vec<u8>,
-    pub svg: Vec<u8>,
 }
 
 impl Event {
@@ -46,7 +43,6 @@ impl Event {
             note,
             note_name: name,
             raw: bytes.to_vec(),
-            svg: graphics::generate(graphics::offset_for_midi(note)),
         })
     }
 
@@ -66,7 +62,6 @@ impl Event {
             note,
             note_name: name.to_string(),
             raw: vec![status_byte, note, velocity as u8],
-            svg: graphics::generate(graphics::offset_for_midi(note)),
         })
     }
 }

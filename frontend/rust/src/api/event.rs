@@ -7,7 +7,6 @@ pub struct _Event {
     pub note: u8,
     pub note_name: String,
     pub raw: Vec<u8>,
-    pub svg: Vec<u8>,
 }
 
 #[flutter_rust_bridge::frb(mirror(Status))]

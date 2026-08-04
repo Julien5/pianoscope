@@ -89,11 +89,10 @@ packages:
   flutter_music_notation:
     dependency: "direct main"
     description:
-      name: flutter_music_notation
-      sha256: "2eaad3b7097482179d0c06f0d407db54b18c3da3cf6d6db40998059ffae907d9"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
+      path: "../../flutter_music_notation"
+      relative: true
+    source: path
+    version: "0.2.0"
   flutter_rust_bridge:
     dependency: "direct main"
     description:

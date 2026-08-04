@@ -19,3 +19,19 @@ The project is a MIDI monitor app (Flutter + Rust) that connects to external MID
 - Opens real MIDI input connections, formats events as strings ("NOTE_ON 90 40 3C C4"). Has a built-in simulation mode (env var or Android property) for testing without hardware.
 
 - Targets: Android (arm64, x64), Linux desktop.
+
+## Golden Tests
+
+From the `frontend/` directory:
+
+```sh
+flutter test
+```
+
+To update the baseline images after intentional rendering changes:
+
+```sh
+flutter test --update-goldens
+```
+
+The tests load the Bravura/Petaluma fonts from the `flutter_music_notation` package, so they should run from a machine where that package is checked out at `../flutter_music_notation`.
