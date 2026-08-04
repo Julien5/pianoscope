@@ -5,24 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "frontend",
+            "name": "frontend (simulation)",
             "request": "launch",
             "type": "dart",
             "env": {
                 "SIMULATION": "3"
             }
-        },
-        {
-            "name": "frontend (profile mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "frontend (release mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
         }
     ]
 }

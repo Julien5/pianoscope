@@ -12,11 +12,7 @@ class GrandStaffView extends StatelessWidget {
 
   static const int _splitPoint = 60;
 
-  const GrandStaffView({
-    super.key,
-    this.midiNote,
-    this.velocity = 64,
-  });
+  const GrandStaffView({super.key, this.midiNote, this.velocity = 64});
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +70,7 @@ class GrandStaffView extends StatelessWidget {
           showBrace: true,
           showMeasureNumbers: false,
           showTimeSignature: false,
+          leadingSpace: 60,
         ),
       ),
     );
