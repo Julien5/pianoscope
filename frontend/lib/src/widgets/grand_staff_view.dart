@@ -40,6 +40,7 @@ class GrandStaffView extends StatelessWidget {
       keySignature: KeySignature.cMajor,
       notes: upperNotes,
       endBarline: BarlineType.single,
+      startBarline: BarlineType.single,
     );
 
     final lowerMeasure = Measure(
@@ -48,6 +49,7 @@ class GrandStaffView extends StatelessWidget {
       keySignature: KeySignature.cMajor,
       notes: lowerNotes,
       endBarline: BarlineType.single,
+      startBarline: BarlineType.single,
     );
 
     return Container(
@@ -63,7 +65,7 @@ class GrandStaffView extends StatelessWidget {
           lowerStaff: [lowerMeasure],
         ),
         config: const NotationConfig(
-          staffSpaceSize: 12,
+          staffSpaceSize: 10,
           leftMargin: 60,
           topMargin: 30,
           grandStaffGap: 60,
