@@ -73,6 +73,7 @@ class GrandStaffView extends StatelessWidget {
           grandStaffGap: 60,
           showBrace: true,
           showMeasureNumbers: false,
+          showTimeSignature: false,
         ),
       ),
     );
