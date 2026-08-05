@@ -66,6 +66,7 @@ class GrandStaffView extends StatelessWidget {
         ),
         config: const NotationConfig(
           staffSpaceSize: 10,
+          barlineToClefSpace: 10,
           leftMargin: 60,
           topMargin: 30,
           grandStaffGap: 60,
@@ -73,6 +74,7 @@ class GrandStaffView extends StatelessWidget {
           showMeasureNumbers: false,
           showTimeSignature: false,
           leadingSpace: 60,
+          expandWidth: true,
         ),
       ),
     );
