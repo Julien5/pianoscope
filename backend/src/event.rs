@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 pub const NOTE_NAMES: &[&str] = &[
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
 ];
@@ -92,3 +94,6 @@ fn note_name_to_midi(name: &str) -> Option<u8> {
     }
     Some(note as u8)
 }
+
+pub type EventSender = Arc<dyn Fn(Event) + Send + Sync>;
+pub type ErrorSender = Arc<dyn Fn(String) + Send + Sync>;

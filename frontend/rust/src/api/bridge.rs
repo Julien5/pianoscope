@@ -10,12 +10,14 @@ pub fn list_midi_ports() -> Vec<String> {
 
 pub struct Bridge {
     midi: Midi,
+    debug: Option<backend::debug::DebugHandle>,
 }
 
 impl Bridge {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             midi: backend::midi::Midi::new(),
+            debug: Some(backend::debug::DebugHandle::new()),
         }
     }
 
@@ -23,14 +25,11 @@ impl Bridge {
         self.midi.connect(port_index)
     }
 
-    pub fn start_midi_event_stream(
-        &self,
-        sink: StreamSink<Event>,
-        error_sink: StreamSink<String>,
-    ) {
+    pub fn start_midi_event_stream(&self, sink: StreamSink<Event>, error_sink: StreamSink<String>) {
         let sender = Arc::new(move |event| drop(sink.add(event)));
         let error_sender = Arc::new(move |msg| drop(error_sink.add(msg)));
-        self.midi.start_event_stream(sender, error_sender);
+        self.midi
+            .start_event_stream(sender, error_sender);
     }
 
     pub fn disconnect_midi(&self) {

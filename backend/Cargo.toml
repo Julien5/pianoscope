@@ -7,6 +7,17 @@ edition = "2024"
 midir = "0.11.0"
 ndk-context = "0.1.1"
 log = "0.4"
+cpal = "0.18"
+rtrb = "0.3"
+hound = "3"
+zeromq = "0.4"
+tokio = { version = "1", features = ["full"] }
+bytemuck = "1" # Safely converts &[f32] audio buffer to &[u8]
+env_logger = "0.11.8"
+chrono = "0.4.45"
+
+[dev-dependencies]
+env_logger = "0.11"
 
 [target.'cfg(target_os = "android")'.dependencies]
 libc = "0.2"

@@ -1,12 +1,10 @@
 use midir::{MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
-use crate::event::Event;
+use crate::debug::DebugHandle;
+use crate::event::{self, Event};
 use crate::simulation;
-
-pub type EventSender = Arc<dyn Fn(Event) + Send + Sync>;
-pub type ErrorSender = Arc<dyn Fn(String) + Send + Sync>;
 
 pub struct Midi {
     port_index: AtomicU32,
@@ -40,15 +38,25 @@ impl Midi {
         Ok(port_name)
     }
 
-    pub fn start_event_stream(&self, sender: EventSender, error_sender: ErrorSender) {
+    pub fn start_event_stream(
+        &self,
+        sender: event::EventSender,
+        error_sender: event::ErrorSender,
+        debug_handle: &Option<DebugHandle>,
+    ) {
         if simulation::enabled() {
-            simulation::start_stream(sender, error_sender);
+            simulation::start_stream(sender, error_sender, debug_handle.clone());
             return;
         }
-        self.start_real_stream(sender, error_sender);
+        self.start_real_stream(sender, error_sender, debug_handle.clone());
     }
 
-    fn start_real_stream(&self, sender: EventSender, error_sender: ErrorSender) {
+    fn start_real_stream(
+        &self,
+        sender: event::EventSender,
+        error_sender: event::ErrorSender,
+        debug_handle: Option<DebugHandle>,
+    ) {
         let port_index = self.port_index.load(Ordering::Relaxed);
         if port_index == u32::MAX {
             error_sender("Not connected".to_string());
@@ -72,6 +80,9 @@ impl Midi {
         let callback_sender = sender.clone();
         let callback = move |_timestamp: u64, bytes: &[u8], _data: &mut ()| {
             if let Some(event) = Event::from_midi(bytes) {
+                if let Some(debugger) = &debug_handle {
+                    debugger.stream_data(&format!("note:{}", event.note_name).as_bytes());
+                }
                 callback_sender(event);
             }
         };

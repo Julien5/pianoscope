@@ -10,6 +10,8 @@ crate-type = ["cdylib", "staticlib"]
 flutter_rust_bridge = "=2.12.0"
 log = "0.4"
 backend = { version = "*", path = "../../backend" }
+chrono = "0.4.45"
+env_logger = "0.11.11"
 
 [target.'cfg(target_os = "android")'.dependencies]
 libc = "0.2"

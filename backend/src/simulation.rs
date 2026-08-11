@@ -8,7 +8,10 @@ use std::{
 };
 
 use crate::event::{Event, Status};
-use crate::midi::{ErrorSender, EventSender};
+use crate::{
+    debug::DebugHandle,
+    event::{ErrorSender, EventSender},
+};
 
 pub fn setting() -> Option<String> {
     let val = std::env::var("SIMULATION").ok().or_else(|| {
@@ -50,7 +53,11 @@ const SCALE_NOTES: &[&str] = &[
 ];
 static SIM_STOP: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
-pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
+pub fn start_stream(
+    sender: EventSender,
+    _error_sender: ErrorSender,
+    debug_handle: Option<DebugHandle>,
+) {
     let stop = Arc::new(AtomicBool::new(false));
     *SIM_STOP.lock().unwrap() = Some(stop.clone());
 
@@ -77,6 +84,10 @@ pub fn start_stream(sender: EventSender, _error_sender: ErrorSender) {
                     }
                     if let Some(event) = Event::from_note_status(note, Status::NoteOff, 0) {
                         sender(event);
+                        if let Some(debugger) = &debug_handle {
+                            let event = format!("simulation:{}", note);
+                            debugger.stream_data(event.as_bytes());
+                        }
                     }
                     thread::sleep(Duration::from_millis(30));
                 }
