@@ -83,11 +83,10 @@ pub fn start_stream(
                         return;
                     }
                     if let Some(event) = Event::from_note_status(note, Status::NoteOff, 0) {
-                        sender(event);
                         if let Some(debugger) = &debug_handle {
-                            let event = format!("simulation:{}", note);
-                            debugger.stream_data(event.as_bytes());
+                            debugger.stream_data(event.as_json().as_bytes());
                         }
+                        sender(event);
                     }
                     thread::sleep(Duration::from_millis(30));
                 }

@@ -81,7 +81,7 @@ impl Midi {
         let callback = move |_timestamp: u64, bytes: &[u8], _data: &mut ()| {
             if let Some(event) = Event::from_midi(bytes) {
                 if let Some(debugger) = &debug_handle {
-                    debugger.stream_data(&format!("note:{}", event.note_name).as_bytes());
+                    debugger.stream_data(&event.as_json().as_bytes());
                 }
                 callback_sender(event);
             }

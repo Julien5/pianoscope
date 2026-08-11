@@ -79,6 +79,8 @@ function need-generate() {
 }
 
 function pixel() {
+	# usb: 25131JEGR02219
+	# lan: 192.168.1.101:38449
 	if [ -f /tmp/PIXEL ]; then
 		cat /tmp/PIXEL
 		return;

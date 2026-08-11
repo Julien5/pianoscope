@@ -29,7 +29,7 @@ impl Bridge {
         let sender = Arc::new(move |event| drop(sink.add(event)));
         let error_sender = Arc::new(move |msg| drop(error_sink.add(msg)));
         self.midi
-            .start_event_stream(sender, error_sender);
+            .start_event_stream(sender, error_sender, &self.debug);
     }
 
     pub fn disconnect_midi(&self) {

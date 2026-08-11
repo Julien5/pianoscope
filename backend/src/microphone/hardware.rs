@@ -122,6 +122,8 @@ impl AudioStreamHandler {
             return Err("invalid sample rate 0".into());
         }
 
+        log::trace!("sample rate: {}", sample_rate);
+
         let window_len = (sample_rate as f32 * WINDOW_SECONDS) as usize;
         let ring_capacity = sample_rate as usize * 2;
         let (producer, consumer) = rtrb::RingBuffer::new(ring_capacity);

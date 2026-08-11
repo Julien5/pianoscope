@@ -2,7 +2,7 @@ use tokio::{
 	runtime::Runtime,
 	sync::mpsc,
 	task::JoinHandle,
-	time::{interval, Duration},
+	
 };
 use zeromq::{PubSocket, Socket, SocketSend};
 
@@ -36,9 +36,7 @@ struct DebugServer {
 impl DebugServer {
 	/// Opens the ZMQ debug server bound to 0.0.0.0:9000
 	pub fn open() -> Self {
-		log::trace!("new runtime");
 		let rt = Runtime::new().expect("Failed to create Tokio runtime");
-		log::trace!("new runtime ok");
 
 		// Bounded channel to prevent memory leaks if network stalls.
 		// Drops extra frames if the network client falls behind the audio source.
@@ -54,15 +52,11 @@ impl DebugServer {
 			}
 			log::info!("[ZMQ] Server bound successfully to {bind_addr}");
 
-			let mut i = 1;
-			let mut ticker = interval(Duration::from_millis(500));
-			ticker.tick().await; // consume the first immediate tick
 			loop {
 				tokio::select! {
 					data = rx.recv() => {
 						match data {
 							Some(data) => {
-								eprintln!("[DBG stream] {}", data.len());
 								if let Err(e) = socket.send(data.into()).await {
 									log::error!("[ZMQ] Send failed: {e}");
 								}
@@ -72,14 +66,6 @@ impl DebugServer {
 								break;
 							}
 						}
-					}
-					_ = ticker.tick() => {
-						let msg = format!("hello [{}]", i);
-						eprintln!("[DBG ticker] {msg}");
-						if let Err(e) = socket.send(msg.into()).await {
-							eprintln!("[DBG] send hello failed: {e}");
-						}
-						i += 1;
 					}
 				}
 			}
