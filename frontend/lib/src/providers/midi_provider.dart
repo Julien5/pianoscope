@@ -6,11 +6,11 @@ import 'package:frontend/src/rust/api/event.dart';
 
 class MidiProvider extends ChangeNotifier {
   Bridge? _bridge;
-  List<String> _ports = [];
+  List<MidiPort> _ports = [];
   String? _error;
 
   bool get hasBridge => _bridge != null;
-  List<String> get ports => _ports;
+  List<MidiPort> get ports => _ports;
   String? get error => _error;
 
   Future<void> init() async {
@@ -29,18 +29,21 @@ class MidiProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> connect(int portIndex) async {
-    return await _bridge!.connectMidi(portIndex: portIndex);
+  Future<MidiPort> connect(int portIndex) async {
+    MidiPort port = _ports[portIndex];
+    await _bridge!.selectMidi(port: port);
+    return port;
   }
 
-  Future<({Stream<Event> events, Stream<String> errors})> startEventStream() async {
+  Future<({Stream<Event> events, Stream<String> errors})>
+  startEventStream() async {
     final sink = RustStreamSink<Event>();
     final errorSink = RustStreamSink<String>();
-    await _bridge!.startMidiEventStream(sink: sink, errorSink: errorSink);
+    await _bridge!.startStream(sink: sink, errorSink: errorSink);
     return (events: sink.stream, errors: errorSink.stream);
   }
 
   Future<void> disconnect() async {
-    await _bridge?.disconnectMidi();
+    await _bridge?.disconnect();
   }
 }

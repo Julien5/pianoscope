@@ -35,7 +35,6 @@ def save_data_csv(buffer_data, path=DATA_CSV_PATH):
 
 def decode_b64(block):
     raw_bytes = base64.b64decode(block)
-    # Read as 32-bit float (<f4) from Rust [f32], then cast to 64-bit float (<f8)
     return np.frombuffer(raw_bytes, dtype="<f8")
 
 
@@ -81,15 +80,11 @@ def render_plot_pipe(buffer_data, output_path=PLOT_PNG_PATH):
     if os.path.exists("/tmp/tmp.png"):
         os.replace("/tmp/tmp.png", output_path)
 
-def process_audio(data):
-    x = decode_b64(data["base64"])
-    x = x[::DOWNSAMPLE_FACTOR]
-    buffer.extend(x)
-    dirty = True
+def message_audio(x):
     energy = np.sum(np.abs(x) ** 2)
     return f"|{len(x):3d}| => E={energy:6.3f}";
 
-def process_midi(data):
+def message_midi(data):
     name=data["note_name"];
     return f"note: {name}"
                     
@@ -110,9 +105,13 @@ def run(socket, buffer):
                     data = json.loads(raw_bytes)
                     msg = "";
                     if "base64" in data:
-                        msg=process_audio(data);
+                        x = decode_b64(data["base64"])
+                        x = x[::DOWNSAMPLE_FACTOR]
+                        buffer.extend(x)
+                        dirty = True
+                        msg=message_audio(x);
                     else:
-                        msg=process_midi(data);
+                        msg=message_midi(data);
                     elapsed = time.perf_counter() - t0
                     print(f"|{elapsed:5.1f}| {msg}")    
                 except KeyError as e:

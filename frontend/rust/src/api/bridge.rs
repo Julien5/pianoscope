@@ -1,38 +1,51 @@
+#![allow(non_snake_case)]
+
+pub use backend::backend::Backend;
+pub use backend::backend::MidiPort;
+
 use crate::api::event::Event;
 use crate::frb_generated::StreamSink;
-use backend::midi::{self, Midi};
+use flutter_rust_bridge::frb;
 use std::sync::Arc;
 
-#[flutter_rust_bridge::frb(sync)]
-pub fn list_midi_ports() -> Vec<String> {
-    midi::list_midi_ports()
+#[frb(mirror(MidiPort))]
+pub struct _MidiPort {
+    pub name: String,
+    pub id: String,
 }
 
+#[frb(sync)]
+pub fn list_midi_ports() -> Vec<MidiPort> {
+    Backend::list_midi_ports()
+}
+
+#[frb(opaque)]
 pub struct Bridge {
-    midi: Midi,
-    debug: Option<backend::debug::DebugHandle>,
+    backend: backend::backend::Backend,
 }
 
 impl Bridge {
     pub fn new() -> Self {
         Self {
-            midi: backend::midi::Midi::new(),
-            debug: Some(backend::debug::DebugHandle::new()),
+            backend: Backend::new_debug(),
         }
     }
 
-    pub fn connect_midi(&self, port_index: u32) -> Result<String, String> {
-        self.midi.connect(port_index)
+    pub fn select_midi(&mut self, port: &MidiPort) {
+        self.backend.select_midi_port(port)
     }
 
-    pub fn start_midi_event_stream(&self, sink: StreamSink<Event>, error_sink: StreamSink<String>) {
+    pub fn select_microphone(&mut self) {
+        self.backend.select_microphone();
+    }
+
+    pub fn start_stream(&mut self, sink: StreamSink<Event>, error_sink: StreamSink<String>) {
         let sender = Arc::new(move |event| drop(sink.add(event)));
         let error_sender = Arc::new(move |msg| drop(error_sink.add(msg)));
-        self.midi
-            .start_event_stream(sender, error_sender, &self.debug);
+        self.backend.start_stream(sender, error_sender);
     }
 
-    pub fn disconnect_midi(&self) {
-        self.midi.disconnect();
+    pub fn disconnect(&mut self) {
+        self.backend.disconnect();
     }
 }

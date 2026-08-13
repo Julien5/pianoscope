@@ -17,19 +17,19 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{SampleFormat, SizedSample};
 use rtrb::{Consumer, PopError, Producer};
 
+use crate::debug::DebugHandle;
+use crate::event::AudioDatablock;
+
 /// Length of the energy window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.25;
 
 /// Callback invoked once per processed window with the computed energy (RMS).
 pub type EnergySink = Arc<dyn Fn(f64) + Send + Sync>;
 
-/// Callback invoked once per processed window with the raw mono samples.
-pub type SampleSink = Arc<dyn Fn(&[f32]) + Send + Sync>;
-
 /// Callback invoked when an error occurs.
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
 
-/// Where the raw audio signal comes from.
+#[derive(Clone)]
 pub enum Source {
     /// A real microphone; `None` selects the system default input device.
     InputDevice(Option<usize>),
@@ -37,24 +37,13 @@ pub enum Source {
     File(FileSource),
 }
 
-/// Behaviour of the WAV-file source.
+#[derive(Clone)]
 pub struct FileSource {
     pub path: PathBuf,
     /// Replay the file at real-time cadence (true) or as fast as possible (false).
     pub paced: bool,
     /// Loop the file once it reaches the end.
     pub looped: bool,
-}
-
-impl Source {
-    /// A WAV file replayed at real-time cadence.
-    pub fn file(path: impl Into<PathBuf>) -> Self {
-        Source::File(FileSource {
-            path: path.into(),
-            paced: true,
-            looped: false,
-        })
-    }
 }
 
 /// Captures a microphone (or replays a WAV file) and feeds a processing thread.
@@ -84,26 +73,12 @@ impl AudioStreamHandler {
         *self.sample_rate.lock().unwrap()
     }
 
-    /// Start capturing from `source`, aggregating energy over `WINDOW_SECONDS`
-    /// windows delivered to `energy_sink`. Returns an error if the source cannot
-    /// be opened. Calling again stops any running capture first.
     pub fn start(
         &self,
         source: Source,
         energy_sink: EnergySink,
         error_sink: ErrorSink,
-    ) -> Result<(), String> {
-        self.start_with_samples(source, energy_sink, None, error_sink)
-    }
-
-    /// Like [`Self::start`] but additionally delivers each processed window's
-    /// raw mono samples to `samples_sink`.
-    pub fn start_with_samples(
-        &self,
-        source: Source,
-        energy_sink: EnergySink,
-        samples_sink: Option<SampleSink>,
-        error_sink: ErrorSink,
+        debug_handle: &Option<DebugHandle>,
     ) -> Result<(), String> {
         self.stop();
 
@@ -137,15 +112,15 @@ impl AudioStreamHandler {
             consumer,
             window_len,
             energy_sink,
-            samples_sink,
             error_sink.clone(),
             stop.clone(),
+            debug_handle.clone(),
         );
         self.workers.lock().unwrap().push(processor);
 
-        match source {
+        match &source {
             Source::InputDevice(index) => {
-                let device = self.resolve_input_device(index)?;
+                let device = self.resolve_input_device(*index)?;
                 let config = device.default_input_config().map_err(|e| e.to_string())?;
                 let stream = build_cpal_stream(&device, &config, producer, error_sink)
                     .map_err(|e| e.to_string())?;
@@ -288,9 +263,9 @@ fn spawn_processing_thread(
     mut consumer: Consumer<f32>,
     window_len: usize,
     energy_sink: EnergySink,
-    samples_sink: Option<SampleSink>,
     error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
+    debug_handle: Option<DebugHandle>,
 ) -> JoinHandle<()> {
     let spawn_err = error_sink.clone();
     thread::Builder::new()
@@ -308,16 +283,16 @@ fn spawn_processing_thread(
                     }
                 }
                 if buf.len() >= window_len {
-                    if let Some(sink) = &samples_sink {
-                        sink(&buf);
+                    if let Some(debug) = &debug_handle {
+                        debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                     }
                     energy_sink(energy(&buf));
                     buf.clear();
                 }
             }
             if !buf.is_empty() {
-                if let Some(sink) = &samples_sink {
-                    sink(&buf);
+                if let Some(debug) = &debug_handle {
+                    debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                 }
                 energy_sink(energy(&buf));
             }

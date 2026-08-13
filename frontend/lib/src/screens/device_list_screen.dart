@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/src/rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/src/providers/midi_provider.dart';
 import 'midi_signal_screen.dart';
@@ -23,7 +24,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   Future<void> _connect(int index) async {
     final provider = context.read<MidiProvider>();
     try {
-      final portName = await provider.connect(index);
+      final port = await provider.connect(index);
       if (!mounted) return;
       final streams = await provider.startEventStream();
       if (!mounted) return;
@@ -31,7 +32,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => MidiSignalScreen(
-            portName: portName,
+            portName: port.name,
             eventStream: streams.events,
             errorStream: streams.errors,
           ),
@@ -65,7 +66,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     );
   }
 
-  Widget _buildBody(List<String> ports, String? error) {
+  Widget _buildBody(List<MidiPort> ports, String? error) {
     if (error != null) {
       return Center(
         child: Column(
@@ -90,7 +91,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       itemCount: ports.length,
       itemBuilder: (context, index) {
         return ListTile(
-          title: Text(ports[index]),
+          title: Text(ports[index].name),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => _connect(index),
         );
