@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/src/rust/api/bridge.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,8 @@ class DeviceListScreen extends StatefulWidget {
 }
 
 class _DeviceListScreenState extends State<DeviceListScreen> {
+  Timer? _simulationTimer;
+
   @override
   void initState() {
     super.initState();
@@ -19,6 +22,42 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     if (provider.hasBridge) {
       provider.loadPorts();
     }
+    _simulationTimer = Timer(const Duration(seconds: 1), _maybeAutoConnect);
+  }
+
+  bool _isSimulation(String? value) {
+    if (value == null) return false;
+    return value == 'infinity' || num.tryParse(value) != null;
+  }
+
+  Future<void> _maybeAutoConnect() async {
+    if (!mounted) return;
+    final provider = context.read<MidiProvider>();
+    if (!_isSimulation(simulationSetting())) return;
+    if (provider.ports.isEmpty) {
+      provider.loadPorts();
+    }
+    if (provider.ports.isEmpty) {
+      provider.addListener(_retryAutoConnect);
+    } else {
+      _connect(0);
+    }
+  }
+
+  void _retryAutoConnect() {
+    final provider = context.read<MidiProvider>();
+    if (provider.ports.isNotEmpty) {
+      provider.removeListener(_retryAutoConnect);
+      if (mounted) _connect(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _simulationTimer?.cancel();
+    final provider = context.read<MidiProvider>();
+    provider.removeListener(_retryAutoConnect);
+    super.dispose();
   }
 
   Future<void> _connect(int index) async {

@@ -19,6 +19,11 @@ pub fn list_midi_ports() -> Vec<MidiPort> {
     Backend::list_midi_ports()
 }
 
+#[frb(sync)]
+pub fn simulation_setting() -> Option<String> {
+    backend::simulation::setting()
+}
+
 #[frb(opaque)]
 pub struct Bridge {
     backend: backend::backend::Backend,
