@@ -98,3 +98,9 @@ impl Backend {
         self.source = None;
     }
 }
+
+pub fn test_log() {
+    log::trace!("backend test log trace");
+    log::info!("backend test log info");
+    log::error!("backend test log error");
+}

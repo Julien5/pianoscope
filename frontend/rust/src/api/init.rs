@@ -24,6 +24,10 @@ fn setup_log() {
 
 pub fn setup() {
     setup_log();
+    log::trace!("test log trace");
+    log::info!("test log info");
+    log::error!("test log error");
+    backend::backend::test_log();
 }
 
 #[flutter_rust_bridge::frb(init)]

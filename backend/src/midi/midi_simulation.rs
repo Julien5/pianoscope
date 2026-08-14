@@ -1,7 +1,7 @@
 use std::{
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
     },
     thread,
     time::Duration,
@@ -52,9 +52,10 @@ pub fn start_stream(
                         return;
                     }
                     if let Some(event) = Event::from_note_status(note, Status::NoteOn, 0x40) {
+                        log::trace!("simulation sends {}", note);
                         sender(event);
                     }
-                    thread::sleep(Duration::from_millis(500));
+                    thread::sleep(Duration::from_millis(250));
 
                     if stop.load(Ordering::Relaxed) {
                         return;

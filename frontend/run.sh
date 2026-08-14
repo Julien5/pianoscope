@@ -79,6 +79,9 @@ function need-generate() {
 }
 
 function pixel() {
+	# connect: wlan
+	#     adb connect 192.168.1.100:35309
+	#     connected to 192.168.1.100:35309
 	# usb: 25131JEGR02219
 	# lan: 192.168.1.101:38449
 	if [ -f /tmp/PIXEL ]; then
@@ -90,12 +93,17 @@ function pixel() {
 
 function setup-simulation() {
 	if [ -z "${SIMULATION}" ]; then
+		case "$TARGET" in
+			android*)
+				adb shell "setprop debug.frontend.simulation ''"
+				;;
+		esac
 		return
 	fi
+	
 	case "$TARGET" in
 		android*)
-			# not tested !
-			adb shell setprop debug.frontend.sim ${SIMULATION}
+			adb shell setprop debug.frontend.simulation ${SIMULATION}
 			;;
 		linux)
 			export SIMULATION=${SIMULATION}

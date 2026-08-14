@@ -86,7 +86,8 @@ def message_audio(x):
 
 def message_midi(data):
     name=data["note_name"];
-    return f"note: {name}"
+    status=data["status"];
+    return f"{name}:{status}"
                     
 def run(socket, buffer):
     t0 = time.perf_counter()
@@ -129,6 +130,7 @@ def main():
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
     socket.connect("tcp://127.0.0.1:9000")
+    # socket.connect("tcp://192.168.1.100:9000")
 
     # CRITICAL: Subscribe to ALL topics (empty string prefix)
     socket.setsockopt(zmq.SUBSCRIBE, b"")

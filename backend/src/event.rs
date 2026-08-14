@@ -108,8 +108,8 @@ pub struct AudioDatablock {
     pub base64: String,
 }
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 
 fn f32_slice_to_f64_base64(data: &[f32]) -> String {
     // 1. Convert f32 -> f64 -> 8 bytes (little-endian)
