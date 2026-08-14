@@ -19,10 +19,13 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   void initState() {
     super.initState();
     final provider = context.read<MidiProvider>();
-    if (provider.hasBridge) {
-      provider.loadPorts();
+    assert(provider.hasBridge);
+    if (_isSimulation(simulationSetting())) {
+      _simulationTimer = Timer(
+        const Duration(seconds: 1),
+        autoConnectOnSimulation,
+      );
     }
-    _simulationTimer = Timer(const Duration(seconds: 1), _maybeAutoConnect);
   }
 
   bool _isSimulation(String? value) {
@@ -30,40 +33,26 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     return value == 'infinity' || num.tryParse(value) != null;
   }
 
-  Future<void> _maybeAutoConnect() async {
+  Future<void> autoConnectOnSimulation() async {
     if (!mounted) return;
     final provider = context.read<MidiProvider>();
-    if (!_isSimulation(simulationSetting())) return;
-    if (provider.ports.isEmpty) {
-      provider.loadPorts();
-    }
-    if (provider.ports.isEmpty) {
-      provider.addListener(_retryAutoConnect);
-    } else {
-      _connect(0);
-    }
-  }
-
-  void _retryAutoConnect() {
-    final provider = context.read<MidiProvider>();
-    if (provider.ports.isNotEmpty) {
-      provider.removeListener(_retryAutoConnect);
-      if (mounted) _connect(0);
-    }
+    provider.loadPorts();
+    assert(provider.ports.isNotEmpty);
+    _connect(0);
   }
 
   @override
   void dispose() {
-    _simulationTimer?.cancel();
-    final provider = context.read<MidiProvider>();
-    provider.removeListener(_retryAutoConnect);
+    if (_simulationTimer != null) {
+      _simulationTimer?.cancel();
+    }
     super.dispose();
   }
 
   Future<void> _connect(int index) async {
     final provider = context.read<MidiProvider>();
     try {
-      final port = await provider.connect(index);
+      final name = await provider.selectMidi(index);
       if (!mounted) return;
       final streams = await provider.startEventStream();
       if (!mounted) return;
@@ -71,7 +60,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => MidiSignalScreen(
-            portName: port.name,
+            portName: name,
             eventStream: streams.events,
             errorStream: streams.errors,
           ),

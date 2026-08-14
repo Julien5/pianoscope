@@ -13,10 +13,7 @@ Future<void> main() async {
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await windowManager.ensureInitialized();
     await windowManager.waitUntilReadyToShow(
-      const WindowOptions(
-        size: Size(400, 700),
-        center: true,
-      ),
+      const WindowOptions(size: Size(400, 700), center: true),
       () async {
         await windowManager.show();
         await windowManager.focus();
@@ -24,12 +21,10 @@ Future<void> main() async {
     );
   }
   await RustLib.init();
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => MidiProvider()..init(),
-      child: const NanoApp(),
-    ),
-  );
+  final provider = MidiProvider();
+  await provider.init();
+  debugPrint("provided init done");
+  runApp(ChangeNotifierProvider.value(value: provider, child: const NanoApp()));
 }
 
 class NanoApp extends StatelessWidget {

@@ -15,7 +15,6 @@ class MidiProvider extends ChangeNotifier {
 
   Future<void> init() async {
     _bridge = await Bridge.newInstance();
-    notifyListeners();
     loadPorts();
   }
 
@@ -29,10 +28,15 @@ class MidiProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<MidiPort> connect(int portIndex) async {
+  Future<String> selectMidi(int portIndex) async {
     MidiPort port = _ports[portIndex];
     await _bridge!.selectMidi(port: port);
-    return port;
+    return port.name;
+  }
+
+  Future<String> selectMicrophone(int portIndex) async {
+    await _bridge!.selectMicrophone();
+    return "microphone";
   }
 
   Future<({Stream<Event> events, Stream<String> errors})>
