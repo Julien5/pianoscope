@@ -41,13 +41,13 @@ impl Microphone {
         error_sender: event::ErrorSender,
         debug_handle: &Option<DebugHandle>,
     ) {
-        let energy_sink =
+        let sample_sink =
             threshold_recognizer(event_sender, error_sender.clone(), debug_handle.clone());
         let error_sink: hardware::ErrorSink = error_sender.clone();
         let source = self.source.lock().unwrap().clone();
         if let Err(e) = self
             .handler
-            .start(source, energy_sink, error_sink, debug_handle)
+            .start(source, sample_sink, error_sink, debug_handle)
         {
             error_sender(e.to_string());
         }
@@ -64,18 +64,28 @@ impl Default for Microphone {
     }
 }
 
+fn compute_energy(samples: &[f32]) -> f64 {
+    if samples.is_empty() {
+        return 0.0;
+    }
+    //samples.iter().map(|x| x.abs()).fold(0f32 / 0f32, f32::max) as f64
+    let sum_sq: f64 = samples.iter().map(|&s| (s as f64) * (s as f64)).sum();
+    (sum_sq / samples.len() as f64).sqrt()
+}
+
 /// Turns energy windows into note on/off events by thresholding.
 ///
 /// A rising edge (silence → sound) emits a `NoteOn`, a falling edge emits a
 /// `NoteOff`, both for a fixed placeholder note. Real note recognition will
 /// replace this stand-in.
 fn threshold_recognizer(
-    sender: event::EventSender,
-    error_sender: event::ErrorSender,
+    event_sender: event::EventSender,
+    _error_sender: event::ErrorSender,
     debug_handle: Option<DebugHandle>,
-) -> hardware::EnergySink {
+) -> hardware::SamplesSink {
     let sounding = Arc::new(AtomicBool::new(false));
-    Arc::new(move |energy: f64| {
+    Arc::new(move |block: &[f32]| {
+        let energy = compute_energy(block);
         const ENERGY_THRESHOLD: f64 = 0.01;
         const RECOGNIZED_NOTE: &str = "C4";
         const RECOGNIZED_VELOCITY: u32 = 0x40;
@@ -88,15 +98,12 @@ fn threshold_recognizer(
         let on = energy >= ENERGY_THRESHOLD;
         if on != sounding.swap(on, Ordering::Relaxed) {
             let status = if on { Status::NoteOn } else { Status::NoteOff };
-            match Event::from_note_status(RECOGNIZED_NOTE, status, RECOGNIZED_VELOCITY) {
-                Some(event) => {
-                    if let Some(debug) = &debug_handle {
-                        debug.stream_data(&event.as_json().as_bytes());
-                    }
-                    sender(event);
-                }
-                None => error_sender("failed to build note event".to_string()),
+            let event =
+                Event::from_note_status(RECOGNIZED_NOTE, status, RECOGNIZED_VELOCITY).unwrap();
+            if let Some(debug) = &debug_handle {
+                debug.stream_data(&event.as_json().as_bytes());
             }
+            event_sender(event);
         }
     })
 }

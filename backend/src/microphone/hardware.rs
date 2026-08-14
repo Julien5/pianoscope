@@ -1,12 +1,3 @@
-//! Microphone (and WAV file) signal source feeding a processing thread.
-//!
-//! The capture side reads raw audio samples from one of several sources and
-//! writes them, as mono f32, into a wait-free SPSC ring buffer. A single
-//! processing thread drains that buffer and computes the signal energy over a
-//! fixed-length window (defaults to 250 ms). The processing thread is identical
-//! regardless of the source, which is what allows replaying recorded WAV files
-//! during development without a real microphone.
-
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -20,11 +11,11 @@ use rtrb::{Consumer, PopError, Producer};
 use crate::debug::DebugHandle;
 use crate::event::AudioDatablock;
 
-/// Length of the energy window in seconds.
+/// Length of the window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.25;
 
-/// Callback invoked once per processed window with the computed energy (RMS).
-pub type EnergySink = Arc<dyn Fn(f64) + Send + Sync>;
+/// Callback invoked once per processed window with the raw mono samples.
+pub type SamplesSink = Arc<dyn Fn(&[f32]) + Send + Sync>;
 
 /// Callback invoked when an error occurs.
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
@@ -76,7 +67,7 @@ impl AudioStreamHandler {
     pub fn start(
         &self,
         source: Source,
-        energy_sink: EnergySink,
+        samples_sink: SamplesSink,
         error_sink: ErrorSink,
         debug_handle: &Option<DebugHandle>,
     ) -> Result<(), String> {
@@ -111,7 +102,7 @@ impl AudioStreamHandler {
         let processor = spawn_processing_thread(
             consumer,
             window_len,
-            energy_sink,
+            samples_sink,
             error_sink.clone(),
             stop.clone(),
             debug_handle.clone(),
@@ -253,16 +244,10 @@ where
     }
 }
 
-/// Spawns the processing thread.
-///
-/// Reads mono samples from `consumer`, accumulates a window of `window_len`
-/// samples, and emits the RMS energy via `energy_sink` once the window is full.
-/// Exits when explicitly stopped, or when the producer is dropped (e.g. the file
-/// source reached EOF), flushing any partially-filled final window.
 fn spawn_processing_thread(
     mut consumer: Consumer<f32>,
     window_len: usize,
-    energy_sink: EnergySink,
+    samples_sink: SamplesSink,
     error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
     debug_handle: Option<DebugHandle>,
@@ -286,8 +271,8 @@ fn spawn_processing_thread(
                     if let Some(debug) = &debug_handle {
                         debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                     }
-                    log::trace!("call energy sink");
-                    energy_sink(energy(&buf));
+                    log::trace!("call samples sink");
+                    samples_sink(&buf);
                     buf.clear();
                 }
             }
@@ -295,8 +280,8 @@ fn spawn_processing_thread(
                 if let Some(debug) = &debug_handle {
                     debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                 }
-                log::trace!("call energy sink");
-                energy_sink(energy(&buf));
+                log::trace!("call samples sink");
+                samples_sink(&buf);
             }
         })
         .unwrap_or_else(|e| {
@@ -406,39 +391,5 @@ fn normalization(spec: &hound::WavSpec) -> f32 {
         1.0 / (2u32.pow(spec.bits_per_sample as u32 - 1) as f32)
     } else {
         1.0
-    }
-}
-
-/// RMS energy of a window, in the [-1..1] sample unit.
-pub fn energy(samples: &[f32]) -> f64 {
-    if samples.is_empty() {
-        return 0.0;
-    }
-    //samples.iter().map(|x| x.abs()).fold(0f32 / 0f32, f32::max) as f64
-    let sum_sq: f64 = samples.iter().map(|&s| (s as f64) * (s as f64)).sum();
-    (sum_sq / samples.len() as f64).sqrt()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn normalization_of_int_and_float() {
-        let int_spec = hound::WavSpec {
-            channels: 1,
-            sample_rate: 44100,
-            bits_per_sample: 16,
-            sample_format: hound::SampleFormat::Int,
-        };
-        assert!((normalization(&int_spec) - 1.0 / 32768.0).abs() < f32::EPSILON);
-
-        let float_spec = hound::WavSpec {
-            channels: 1,
-            sample_rate: 44100,
-            bits_per_sample: 32,
-            sample_format: hound::SampleFormat::Float,
-        };
-        assert_eq!(normalization(&float_spec), 1.0);
     }
 }
