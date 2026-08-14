@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/src/providers/midi_provider.dart';
+import 'package:frontend/src/providers/input_provider.dart';
 import 'package:frontend/src/rust/api/event.dart';
 import 'package:frontend/src/widgets/grand_staff_view.dart';
 
@@ -59,7 +59,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   void dispose() {
     _eventSubscription?.cancel();
     _errorSubscription?.cancel();
-    context.read<MidiProvider>().disconnect();
+    context.read<InputProvider>().disconnect();
     super.dispose();
   }
 

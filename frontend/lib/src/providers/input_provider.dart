@@ -4,7 +4,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:frontend/src/rust/api/bridge.dart';
 import 'package:frontend/src/rust/api/event.dart';
 
-class MidiProvider extends ChangeNotifier {
+class InputProvider extends ChangeNotifier {
   Bridge? _bridge;
   List<MidiPort> _ports = [];
   String? _error;

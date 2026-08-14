@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/src/rust/api/bridge.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/src/providers/midi_provider.dart';
+import 'package:frontend/src/providers/input_provider.dart';
 import 'midi_signal_screen.dart';
 
 class DeviceListScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   @override
   void initState() {
     super.initState();
-    final provider = context.read<MidiProvider>();
+    final provider = context.read<InputProvider>();
     assert(provider.hasBridge);
     if (_isSimulation(simulationSetting())) {
       _simulationTimer = Timer(
@@ -35,7 +35,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
   Future<void> autoConnectOnSimulation() async {
     if (!mounted) return;
-    final provider = context.read<MidiProvider>();
+    final provider = context.read<InputProvider>();
     provider.loadPorts();
     assert(provider.ports.isNotEmpty);
     _connect(0);
@@ -50,7 +50,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   }
 
   Future<void> _connect(int index) async {
-    final provider = context.read<MidiProvider>();
+    final provider = context.read<InputProvider>();
     try {
       final name = await provider.selectMidi(index);
       if (!mounted) return;
@@ -76,7 +76,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<MidiProvider>();
+    final provider = context.watch<InputProvider>();
 
     if (!provider.hasBridge) {
       return Scaffold(
@@ -103,7 +103,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
             Text('Error: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.read<MidiProvider>().loadPorts(),
+              onPressed: () => context.read<InputProvider>().loadPorts(),
               child: const Text('Retry'),
             ),
           ],
