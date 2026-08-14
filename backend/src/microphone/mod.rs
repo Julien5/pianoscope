@@ -1,3 +1,4 @@
+mod detection;
 mod hardware;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -5,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::debug::DebugHandle;
 use crate::event::{self, Event, Status};
+use crate::microphone::detection::PitchDetector;
 use crate::simulation;
 
 pub struct Microphone {
@@ -73,33 +75,20 @@ fn compute_energy(samples: &[f32]) -> f64 {
     (sum_sq / samples.len() as f64).sqrt()
 }
 
-/// Turns energy windows into note on/off events by thresholding.
-///
-/// A rising edge (silence → sound) emits a `NoteOn`, a falling edge emits a
-/// `NoteOff`, both for a fixed placeholder note. Real note recognition will
-/// replace this stand-in.
 fn threshold_recognizer(
     event_sender: event::EventSender,
     _error_sender: event::ErrorSender,
     debug_handle: Option<DebugHandle>,
 ) -> hardware::SamplesSink {
     let sounding = Arc::new(AtomicBool::new(false));
+    let mut pitch_detector = PitchDetector::new();
     Arc::new(move |block: &[f32]| {
-        let energy = compute_energy(block);
-        const ENERGY_THRESHOLD: f64 = 0.01;
-        const RECOGNIZED_NOTE: &str = "C4";
-        const RECOGNIZED_VELOCITY: u32 = 0x40;
-
-        log::trace!(
-            "run threshold recognizer: {:.5} / {:.5}",
-            energy,
-            ENERGY_THRESHOLD
-        );
-        let on = energy >= ENERGY_THRESHOLD;
+        pitch_detector.update(block);
+        let pitch = pitch_detector.pitch();
+        let on = !pitch.is_empty();
         if on != sounding.swap(on, Ordering::Relaxed) {
             let status = if on { Status::NoteOn } else { Status::NoteOff };
-            let event =
-                Event::from_note_status(RECOGNIZED_NOTE, status, RECOGNIZED_VELOCITY).unwrap();
+            let event = Event::from_note_status(&pitch, status, 0x40).unwrap();
             if let Some(debug) = &debug_handle {
                 debug.stream_data(&event.as_json().as_bytes());
             }
