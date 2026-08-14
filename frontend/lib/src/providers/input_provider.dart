@@ -38,13 +38,11 @@ class InputProvider extends ChangeNotifier {
 
   Future<String> selectMicrophone() async {
     debugPrint("selectMicrophone");
-    if (!Platform.isAndroid) {
-      await _bridge!.selectMicrophone();
-      return "microphone";
-    }
-    var status = await Permission.microphone.request();
-    if (!status.isGranted) {
-      throw Exception('Microphone permission denied');
+    if (Platform.isAndroid) {
+      var status = await Permission.microphone.request();
+      if (!status.isGranted) {
+        throw Exception('Microphone permission denied');
+      }
     }
     await _bridge!.selectMicrophone();
     return "microphone";
