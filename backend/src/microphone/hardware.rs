@@ -286,6 +286,7 @@ fn spawn_processing_thread(
                     if let Some(debug) = &debug_handle {
                         debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                     }
+                    log::trace!("call energy sink");
                     energy_sink(energy(&buf));
                     buf.clear();
                 }
@@ -294,6 +295,7 @@ fn spawn_processing_thread(
                 if let Some(debug) = &debug_handle {
                     debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                 }
+                log::trace!("call energy sink");
                 energy_sink(energy(&buf));
             }
         })

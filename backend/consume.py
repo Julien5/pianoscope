@@ -129,8 +129,10 @@ def run(socket, buffer):
 def main():
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
-    # socket.connect("tcp://127.0.0.1:9000")
-    socket.connect("tcp://192.168.1.100:9000")
+    #ip="192.168.1.100";
+    ip="127.0.0.1";
+    print("connect to",ip)
+    socket.connect(f"tcp://{ip:s}:9000")
 
     # CRITICAL: Subscribe to ALL topics (empty string prefix)
     socket.setsockopt(zmq.SUBSCRIBE, b"")

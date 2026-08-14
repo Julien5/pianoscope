@@ -7,10 +7,6 @@ use crate::debug::DebugHandle;
 use crate::event::{self, Event, Status};
 use crate::simulation;
 
-const ENERGY_THRESHOLD: f64 = 0.02;
-const RECOGNIZED_NOTE: &str = "C4";
-const RECOGNIZED_VELOCITY: u32 = 0x40;
-
 pub struct Microphone {
     handler: hardware::AudioStreamHandler,
     source: Mutex<hardware::Source>,
@@ -78,6 +74,15 @@ fn threshold_recognizer(
 ) -> hardware::EnergySink {
     let sounding = Arc::new(AtomicBool::new(false));
     Arc::new(move |energy: f64| {
+        const ENERGY_THRESHOLD: f64 = 0.01;
+        const RECOGNIZED_NOTE: &str = "C4";
+        const RECOGNIZED_VELOCITY: u32 = 0x40;
+
+        log::trace!(
+            "run threshold recognizer: {:.5} / {:.5}",
+            energy,
+            ENERGY_THRESHOLD
+        );
         let on = energy >= ENERGY_THRESHOLD;
         if on != sounding.swap(on, Ordering::Relaxed) {
             let status = if on { Status::NoteOn } else { Status::NoteOff };
