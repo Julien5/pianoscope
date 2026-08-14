@@ -28,13 +28,14 @@ class InputProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> selectMidi(int portIndex) async {
-    MidiPort port = _ports[portIndex];
-    await _bridge!.selectMidi(port: port);
+  Future<String> selectMidi(String id) async {
+    debugPrint("selectMidi=$id");
+    MidiPort port = _ports.firstWhere((port) => port.id == id);
     return port.name;
   }
 
-  Future<String> selectMicrophone(int portIndex) async {
+  Future<String> selectMicrophone() async {
+    debugPrint("selectMicrophone");
     await _bridge!.selectMicrophone();
     return "microphone";
   }

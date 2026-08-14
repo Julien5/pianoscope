@@ -20,25 +20,40 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     super.initState();
     final provider = context.read<InputProvider>();
     assert(provider.hasBridge);
-    if (_isSimulation(simulationSetting())) {
+    if (_isMidiSimulation(simulationSetting())) {
       _simulationTimer = Timer(
         const Duration(seconds: 1),
-        autoConnectOnSimulation,
+        autoConnectSimulatioMidi,
+      );
+    } else if (_isMicrophoneSimulation(simulationSetting())) {
+      _simulationTimer = Timer(
+        const Duration(seconds: 1),
+        autoConnectSimulatioMicrophone,
       );
     }
   }
 
-  bool _isSimulation(String? value) {
+  bool _isMidiSimulation(String? value) {
     if (value == null) return false;
     return value == 'infinity' || num.tryParse(value) != null;
   }
 
-  Future<void> autoConnectOnSimulation() async {
+  bool _isMicrophoneSimulation(String? value) {
+    if (value == null) return false;
+    return value.contains("wav");
+  }
+
+  Future<void> autoConnectSimulatioMidi() async {
     if (!mounted) return;
     final provider = context.read<InputProvider>();
     provider.loadPorts();
     assert(provider.ports.isNotEmpty);
-    _connect(0);
+    _connect(provider.ports[0].id);
+  }
+
+  Future<void> autoConnectSimulatioMicrophone() async {
+    if (!mounted) return;
+    _connect("");
   }
 
   @override
@@ -49,10 +64,15 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     super.dispose();
   }
 
-  Future<void> _connect(int index) async {
+  Future<void> _connect(String id) async {
     final provider = context.read<InputProvider>();
     try {
-      final name = await provider.selectMidi(index);
+      String name;
+      if (id.isEmpty) {
+        name = await provider.selectMicrophone();
+      } else {
+        name = await provider.selectMidi(id);
+      }
       if (!mounted) return;
       final streams = await provider.startEventStream();
       if (!mounted) return;
@@ -111,17 +131,21 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       );
     }
 
-    if (ports.isEmpty) {
-      return const Center(child: Text('No MIDI devices found'));
-    }
-
     return ListView.builder(
-      itemCount: ports.length,
+      itemCount: ports.length + 1,
       itemBuilder: (context, index) {
+        if (index == 0) {
+          return ListTile(
+            title: Text("Microphone"),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _connect(""),
+          );
+        }
+
         return ListTile(
-          title: Text(ports[index].name),
+          title: Text(ports[index - 1].name),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => _connect(index),
+          onTap: () => _connect(ports[index - 1].id),
         );
       },
     );

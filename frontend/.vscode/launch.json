@@ -5,11 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "frontend (simulation)",
+            "name": "frontend (midi simulation)",
             "request": "launch",
             "type": "dart",
             "env": {
                 "SIMULATION": "3"
+            }
+        },
+        {
+            "name": "frontend (audio simulation)",
+            "request": "launch",
+            "type": "dart",
+            "env": {
+                "SIMULATION": "/home/julien/projects/pianoscope/backend/data/C4.wav"
             }
         }
     ]
