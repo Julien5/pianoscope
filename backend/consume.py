@@ -129,8 +129,8 @@ def run(socket, buffer):
 def main():
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
-    #ip="192.168.1.100";
-    ip="127.0.0.1";
+    ip="192.168.1.100";
+    #ip="127.0.0.1";
     print("connect to",ip)
     socket.connect(f"tcp://{ip:s}:9000")
 

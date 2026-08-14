@@ -37,6 +37,7 @@ dependencies:
   flutter_music_notation:
     path: ../../flutter_music_notation
   flutter_rust_bridge: 2.12.0
+  permission_handler: ^11.3.1
   provider: ^6.1.2
   window_manager: ^0.5.2
 
