@@ -1,7 +1,7 @@
 use std::f32;
 
 pub struct PitchDetector {
-    threshold: f32,
+    _threshold: f32,
     current: String,
 }
 
@@ -17,7 +17,7 @@ fn compute_energy(samples: &[f32]) -> f64 {
 impl PitchDetector {
     pub fn new() -> Self {
         Self {
-            threshold: f32::MAX,
+            _threshold: f32::MAX,
             current: String::new(),
         }
     }

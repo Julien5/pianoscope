@@ -1,8 +1,7 @@
 mod detection;
 mod hardware;
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use crate::debug::DebugHandle;
 use crate::event::{self, Event, Status};
@@ -43,13 +42,13 @@ impl Microphone {
         error_sender: event::ErrorSender,
         debug_handle: &Option<DebugHandle>,
     ) {
-        let sample_sink =
-            threshold_recognizer(event_sender, error_sender.clone(), debug_handle.clone());
+        let sample_processor =
+            PitchRecognizer::new(event_sender, error_sender.clone(), debug_handle.clone());
         let error_sink: hardware::ErrorSink = error_sender.clone();
         let source = self.source.lock().unwrap().clone();
-        if let Err(e) = self
-            .handler
-            .start(source, sample_sink, error_sink, debug_handle)
+        if let Err(e) =
+            self.handler
+                .start(source, Box::new(sample_processor), error_sink, debug_handle)
         {
             error_sender(e.to_string());
         }
@@ -66,33 +65,46 @@ impl Default for Microphone {
     }
 }
 
-fn compute_energy(samples: &[f32]) -> f64 {
-    if samples.is_empty() {
-        return 0.0;
-    }
-    //samples.iter().map(|x| x.abs()).fold(0f32 / 0f32, f32::max) as f64
-    let sum_sq: f64 = samples.iter().map(|&s| (s as f64) * (s as f64)).sum();
-    (sum_sq / samples.len() as f64).sqrt()
+/// Recognizes note on/off events from windows of raw samples.
+///
+/// Owns the detection state and is mutated in place by the single processing
+/// thread via `SampleProcessor::process`.
+struct PitchRecognizer {
+    pitch_detector: PitchDetector,
+    sounding: bool,
+    debug_handle: Option<DebugHandle>,
+    event_sender: event::EventSender,
 }
 
-fn threshold_recognizer(
-    event_sender: event::EventSender,
-    _error_sender: event::ErrorSender,
-    debug_handle: Option<DebugHandle>,
-) -> hardware::SamplesSink {
-    let sounding = Arc::new(AtomicBool::new(false));
-    let mut pitch_detector = PitchDetector::new();
-    Arc::new(move |block: &[f32]| {
-        pitch_detector.update(block);
-        let pitch = pitch_detector.pitch();
-        let on = !pitch.is_empty();
-        if on != sounding.swap(on, Ordering::Relaxed) {
-            let status = if on { Status::NoteOn } else { Status::NoteOff };
-            let event = Event::from_note_status(&pitch, status, 0x40).unwrap();
-            if let Some(debug) = &debug_handle {
-                debug.stream_data(&event.as_json().as_bytes());
-            }
-            event_sender(event);
+impl PitchRecognizer {
+    fn new(
+        event_sender: event::EventSender,
+        _error_sender: event::ErrorSender,
+        debug_handle: Option<DebugHandle>,
+    ) -> Self {
+        Self {
+            pitch_detector: PitchDetector::new(),
+            sounding: false,
+            debug_handle,
+            event_sender,
         }
-    })
+    }
+}
+
+impl hardware::SampleProcessor for PitchRecognizer {
+    fn process(&mut self, block: &[f32]) {
+        self.pitch_detector.update(block);
+        let pitch = self.pitch_detector.pitch();
+        let on = !pitch.is_empty();
+        if on != self.sounding {
+            self.sounding = on;
+            let status = if on { Status::NoteOn } else { Status::NoteOff };
+            if let Some(event) = Event::from_note_status(&pitch, status, 0x40) {
+                if let Some(debug) = &self.debug_handle {
+                    debug.stream_data(&event.as_json().as_bytes());
+                }
+                (self.event_sender)(event);
+            }
+        }
+    }
 }

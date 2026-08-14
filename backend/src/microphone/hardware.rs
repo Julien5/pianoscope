@@ -14,8 +14,13 @@ use crate::event::AudioDatablock;
 /// Length of the window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.25;
 
-/// Callback invoked once per processed window with the raw mono samples.
-pub type SamplesSink = Arc<dyn Fn(&[f32]) + Send + Sync>;
+/// Consumes a processed window of raw mono samples.
+///
+/// A processor is owned by a single thread and mutated in place via `&mut self`,
+/// so it may hold arbitrary state without interior mutability.
+pub trait SampleProcessor: Send {
+    fn process(&mut self, block: &[f32]);
+}
 
 /// Callback invoked when an error occurs.
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
@@ -67,7 +72,7 @@ impl AudioStreamHandler {
     pub fn start(
         &self,
         source: Source,
-        samples_sink: SamplesSink,
+        sample_processor: Box<dyn SampleProcessor>,
         error_sink: ErrorSink,
         debug_handle: &Option<DebugHandle>,
     ) -> Result<(), String> {
@@ -102,7 +107,7 @@ impl AudioStreamHandler {
         let processor = spawn_processing_thread(
             consumer,
             window_len,
-            samples_sink,
+            sample_processor,
             error_sink.clone(),
             stop.clone(),
             debug_handle.clone(),
@@ -247,7 +252,7 @@ where
 fn spawn_processing_thread(
     mut consumer: Consumer<f32>,
     window_len: usize,
-    samples_sink: SamplesSink,
+    mut sample_processor: Box<dyn SampleProcessor>,
     error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
     debug_handle: Option<DebugHandle>,
@@ -272,7 +277,7 @@ fn spawn_processing_thread(
                         debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                     }
                     log::trace!("call samples sink");
-                    samples_sink(&buf);
+                    sample_processor.process(&buf);
                     buf.clear();
                 }
             }
@@ -281,7 +286,7 @@ fn spawn_processing_thread(
                     debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
                 }
                 log::trace!("call samples sink");
-                samples_sink(&buf);
+                sample_processor.process(&buf);
             }
         })
         .unwrap_or_else(|e| {
