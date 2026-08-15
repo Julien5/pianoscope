@@ -80,9 +80,10 @@ def render_plot_pipe(buffer_data, output_path=PLOT_PNG_PATH):
     if os.path.exists("/tmp/tmp.png"):
         os.replace("/tmp/tmp.png", output_path)
 
-def message_audio(x):
-    energy = np.sum(np.abs(x) ** 2)
-    return f"|{len(x):3d}| => E={energy:6.3f}";
+def message_audio(audio_samples,detector):
+    energy = detector["energy"];
+    threshold = detector["threshold"];
+    return f"|{len(audio_samples):3d}| => E={energy:6.3f} threshold={threshold:6.3f}";
 
 def message_midi(data):
     name=data["note_name"];
@@ -106,11 +107,12 @@ def run(socket, buffer):
                     data = json.loads(raw_bytes)
                     msg = "";
                     if "audio" in data:
-                        x = decode_b64(data["audio"]["base64"])
-                        x = x[::DOWNSAMPLE_FACTOR]
-                        buffer.extend(x)
+                        audio = decode_b64(data["audio"]["audio_base64"])
+                        audio = audio[::DOWNSAMPLE_FACTOR]
+                        detector = data["audio"]["pitch_detector"];
+                        buffer.extend(audio)
                         dirty = True
-                        msg=message_audio(x);
+                        msg=message_audio(audio,detector);
                     elif "event" in data:
                         msg=message_midi(data["event"]);
                     elapsed = time.perf_counter() - t0

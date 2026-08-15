@@ -4,6 +4,7 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 
 use crate::event::MidiEvent;
+use crate::microphone::detection::PitchDetector;
 
 fn f32_slice_to_f64_base64(data: &[f32]) -> String {
     let bytes: Vec<u8> = data
@@ -15,7 +16,8 @@ fn f32_slice_to_f64_base64(data: &[f32]) -> String {
 
 #[derive(Clone, Serialize)]
 pub struct AudioDatablock {
-    pub base64: String,
+    pub audio_base64: String,
+    pub pitch_detector: PitchDetector,
 }
 
 #[derive(Clone, Serialize)]
@@ -27,10 +29,11 @@ impl SamplesDebugPacket {
     pub fn as_json(&self) -> String {
         serde_json::to_string(self).unwrap()
     }
-    pub fn from_samples(samples: &[f32]) -> Self {
+    pub fn from_samples(samples: &[f32], pitch_detector: &PitchDetector) -> Self {
         Self {
             audio: AudioDatablock {
-                base64: f32_slice_to_f64_base64(samples),
+                audio_base64: f32_slice_to_f64_base64(samples),
+                pitch_detector: pitch_detector.clone(),
             },
         }
     }

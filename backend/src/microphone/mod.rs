@@ -1,9 +1,9 @@
-mod detection;
+pub mod detection;
 mod hardware;
 
 use std::sync::Mutex;
 
-use crate::debug::packets::EventDebugPacket;
+use crate::debug::packets::{EventDebugPacket, SamplesDebugPacket};
 use crate::debug::DebugHandle;
 use crate::event::{self, MidiEvent, Status};
 use crate::microphone::detection::PitchDetector;
@@ -47,9 +47,9 @@ impl Microphone {
             PitchRecognizer::new(event_sender, error_sender.clone(), debug_handle.clone());
         let error_sink: hardware::ErrorSink = error_sender.clone();
         let source = self.source.lock().unwrap().clone();
-        if let Err(e) =
-            self.handler
-                .start(source, Box::new(sample_processor), error_sink, debug_handle)
+        if let Err(e) = self
+            .handler
+            .start(source, Box::new(sample_processor), error_sink)
         {
             error_sender(e.to_string());
         }
@@ -97,6 +97,13 @@ impl hardware::SampleProcessor for PitchRecognizer {
         self.pitch_detector.update(block);
         let pitch = self.pitch_detector.pitch();
         let on = self.pitch_detector.on();
+        if let Some(debug) = &self.debug_handle {
+            debug.stream_data(
+                SamplesDebugPacket::from_samples(&block, &self.pitch_detector)
+                    .as_json()
+                    .as_bytes(),
+            );
+        }
         if on != self.sounding {
             self.sounding = on;
             let status = if on { Status::NoteOn } else { Status::NoteOff };

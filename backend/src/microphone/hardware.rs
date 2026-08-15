@@ -8,9 +8,6 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{SampleFormat, SizedSample};
 use rtrb::{Consumer, PopError, Producer};
 
-use crate::debug::packets::SamplesDebugPacket;
-use crate::debug::DebugHandle;
-
 /// Length of the window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.25;
 
@@ -33,12 +30,6 @@ pub struct FileSource {
     pub looped: bool,
 }
 
-/// Captures a microphone (or replays a WAV file) and feeds a processing thread.
-///
-/// Threads spawned by [`Microphone::start`]:
-/// - real source: cpal runs its own audio thread which fills the ring buffer;
-/// - file source: a "nano-mic-file" thread reads the WAV and fills the ring buffer;
-/// - in both cases a "nano-mic-processing" thread drains the ring buffer.
 pub struct AudioStreamHandler {
     cpal_stream: Mutex<Option<cpal::Stream>>,
     stop: Mutex<Option<Arc<AtomicBool>>>,
@@ -65,7 +56,6 @@ impl AudioStreamHandler {
         source: Source,
         sample_processor: Box<dyn SampleProcessor>,
         error_sink: ErrorSink,
-        debug_handle: &Option<DebugHandle>,
     ) -> Result<(), String> {
         self.stop();
 
@@ -101,7 +91,6 @@ impl AudioStreamHandler {
             sample_processor,
             error_sink.clone(),
             stop.clone(),
-            debug_handle.clone(),
         );
         self.workers.lock().unwrap().push(processor);
 
@@ -246,7 +235,6 @@ fn spawn_processing_thread(
     mut sample_processor: Box<dyn SampleProcessor>,
     error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
-    debug_handle: Option<DebugHandle>,
 ) -> JoinHandle<()> {
     let spawn_err = error_sink.clone();
     thread::Builder::new()
@@ -264,20 +252,12 @@ fn spawn_processing_thread(
                     }
                 }
                 if buf.len() >= window_len {
-                    if let Some(debug) = &debug_handle {
-                        debug.stream_data(
-                            SamplesDebugPacket::from_samples(&buf).as_json().as_bytes(),
-                        );
-                    }
                     log::trace!("call samples sink");
                     sample_processor.process(&buf);
                     buf.clear();
                 }
             }
             if !buf.is_empty() {
-                if let Some(debug) = &debug_handle {
-                    debug.stream_data(SamplesDebugPacket::from_samples(&buf).as_json().as_bytes());
-                }
                 log::trace!("call samples sink");
                 sample_processor.process(&buf);
             }
