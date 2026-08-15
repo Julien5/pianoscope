@@ -13,6 +13,7 @@ pub const WINDOW_SECONDS: f32 = 0.25;
 
 pub trait SampleProcessor: Send {
     fn process(&mut self, block: &[f32]);
+    fn set_sample_rate(&mut self, sample_rate: u32);
 }
 
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
@@ -88,6 +89,7 @@ impl AudioStreamHandler {
         let processor = spawn_processing_thread(
             consumer,
             window_len,
+            sample_rate,
             sample_processor,
             error_sink.clone(),
             stop.clone(),
@@ -232,6 +234,7 @@ where
 fn spawn_processing_thread(
     mut consumer: Consumer<f32>,
     window_len: usize,
+    sample_rate: u32,
     mut sample_processor: Box<dyn SampleProcessor>,
     error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
@@ -241,6 +244,7 @@ fn spawn_processing_thread(
         .name("nano-mic-processing".into())
         .spawn(move || {
             let mut buf: Vec<f32> = Vec::with_capacity(window_len);
+            sample_processor.set_sample_rate(sample_rate);
             loop {
                 match consumer.pop() {
                     Ok(sample) => buf.push(sample),

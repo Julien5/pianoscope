@@ -115,4 +115,7 @@ impl hardware::SampleProcessor for PitchRecognizer {
             }
         }
     }
+    fn set_sample_rate(&mut self, sample_rate: u32) {
+        self.pitch_detector.set_sample_rate(sample_rate);
+    }
 }

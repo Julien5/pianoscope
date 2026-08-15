@@ -81,9 +81,7 @@ def render_plot_pipe(buffer_data, output_path=PLOT_PNG_PATH):
         os.replace("/tmp/tmp.png", output_path)
 
 def message_audio(audio_samples,detector):
-    energy = detector["energy"];
-    threshold = detector["threshold"];
-    return f"|{len(audio_samples):3d}| => E={energy:6.3f} threshold={threshold:6.3f}";
+    return f"|{len(audio_samples):3d}| => {json.dumps(detector):s}";
 
 def message_midi(data):
     name=data["note_name"];
