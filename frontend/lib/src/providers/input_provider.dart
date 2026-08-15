@@ -33,6 +33,7 @@ class InputProvider extends ChangeNotifier {
   Future<String> selectMidi(String id) async {
     debugPrint("selectMidi=$id");
     MidiPort port = _ports.firstWhere((port) => port.id == id);
+    await _bridge!.selectMidi(port: port);
     return port.name;
   }
 
