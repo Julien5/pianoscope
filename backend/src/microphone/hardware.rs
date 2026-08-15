@@ -256,7 +256,6 @@ fn spawn_processing_thread(
                     }
                 }
                 if buf.len() >= window_len {
-                    log::trace!("call samples sink");
                     sample_processor.process(&buf);
                     buf.clear();
                 }

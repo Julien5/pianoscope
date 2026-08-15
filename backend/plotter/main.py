@@ -1,93 +1,72 @@
 import base64
 import collections
-import csv
 import json
-import os
-import subprocess
 import time
 
 import numpy as np
 import zmq
 
-INPUT_SAMPLE_FREQ = 48_000
-DOWNSAMPLE_FACTOR = 16
-SAMPLE_FREQ = INPUT_SAMPLE_FREQ / DOWNSAMPLE_FACTOR
-WINDOW_SIZE = int(INPUT_SAMPLE_FREQ * 5 / DOWNSAMPLE_FACTOR)
-WINDOW_SECONDS = WINDOW_SIZE / SAMPLE_FREQ
-MIN_PLOT_INTERVAL = 0.5
-DATA_CSV_PATH = "/tmp/plot.csv"
-PLOT_PNG_PATH = "/tmp/plot.png"
-
-
-def save_data_csv(buffer_data, path=DATA_CSV_PATH):
-    if not buffer_data:
-        return
-
-    tmp_path = "/tmp/tmp_data.csv"
-    with open(tmp_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["sample_index", "value"])
-        for index, value in enumerate(buffer_data):
-            writer.writerow([index, value])
-
-    os.replace(tmp_path, path)
+from plot import (
+    MIN_PLOT_INTERVAL,
+    render_plot,
+    trim_buffer,
+)
 
 
 def decode_b64(block):
     raw_bytes = base64.b64decode(block)
     return np.frombuffer(raw_bytes, dtype="<f8")
 
-
-def render_plot_pipe(buffer_data, output_path=PLOT_PNG_PATH):
-    if len(buffer_data) == 0:
-        return
-
-    count = len(buffer_data)
-
-    gnuplot_script = f"""
-    set terminal pngcairo size 1200,600
-    set output '/tmp/tmp.png'
-    set title 'Last {count} Samples'
-    set xlabel 't (s)'
-    set ylabel 'y'
-    set grid
-
-    # set autoscale x
-    # set autoscale y
-    set xrange [0:{WINDOW_SECONDS}]
-    set yrange [-0.1:0.1]
-
-    plot '-' using 1:2 with lines title 'Signal'
-    """
-
-    for index, value in enumerate(buffer_data):
-        t = index / SAMPLE_FREQ
-        gnuplot_script += f"{t:.6f} {value}\n"
-    gnuplot_script += "e\n"
-
-    process = subprocess.Popen(
-        ["gnuplot"],
-        stdin=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    _stdout, stderr = process.communicate(input=gnuplot_script.encode("utf-8"))
-
-    if process.returncode != 0:
-        print(f"[Gnuplot Error]: {stderr.decode('utf-8', errors='replace')}")
-        return
-
-    if os.path.exists("/tmp/tmp.png"):
-        os.replace("/tmp/tmp.png", output_path)
-
-def message_audio(audio_samples,detector):
-    return f"|{len(audio_samples):3d}| => {json.dumps(detector):s}";
-
 def message_midi(data):
     name=data["note_name"];
     status=data["status"];
     return f"{name}:{status}"
-                    
+
+class PitchDetector:
+    def __init__(self, data):
+        self.threshold = data["threshold"]
+        self.level_min = data["level_min"]
+        self.level_max = data["level_max"]
+        self.current = data["current"]
+        self.energy = data["energy"]
+        self.sample_rate = data["sample_rate"]
+
+    def __str__(self):
+        return f"energy={self.energy:.3f} thr={self.threshold} cur={self.current!r} rate={self.sample_rate}"
+
+
+class AudioDatablock:
+    def __init__(self, data):
+        self.audio_base64 = data["audio_base64"]
+        self.pitch_detector = PitchDetector(data["pitch_detector"])
+
+    @property
+    def sample_rate(self):
+        return self.pitch_detector.sample_rate
+
+    @property
+    def num_samples(self):
+        return len(base64.b64decode(self.audio_base64)) // 8
+
+    def samples(self, step=1):
+        raw = decode_b64(self.audio_base64)
+        return raw if step == 1 else raw[::step]
+
+    def __str__(self):
+        return f"n={self.num_samples} {self.pitch_detector}"
+
+
+class AudioDebugPacket:
+    def __init__(self, data):
+        self.audio = AudioDatablock(data["audio"])
+
+    @property
+    def sample_rate(self):
+        return self.audio.sample_rate
+
+    def __str__(self):
+        return f"audio({self.audio})" 
+
 def run(socket, buffer):
     t0 = time.perf_counter()
     last_plot = 0.0
@@ -105,14 +84,13 @@ def run(socket, buffer):
                     data = json.loads(raw_bytes)
                     msg = "";
                     if "audio" in data:
-                        audio = decode_b64(data["audio"]["audio_base64"])
-                        audio = audio[::DOWNSAMPLE_FACTOR]
-                        detector = data["audio"]["pitch_detector"];
-                        buffer.extend(audio)
+                        packet = AudioDebugPacket(data)
+                        buffer.append(packet)
+                        trim_buffer(buffer)
                         dirty = True
-                        msg=message_audio(audio,detector);
+                        msg = str(packet)
                     elif "event" in data:
-                        msg=message_midi(data["event"]);
+                        msg = message_midi(data["event"]);
                     elapsed = time.perf_counter() - t0
                     print(f"|{elapsed:5.1f}| {msg}")    
                 except KeyError as e:
@@ -120,8 +98,7 @@ def run(socket, buffer):
 
         now = time.perf_counter()
         if dirty and now - last_plot >= MIN_PLOT_INTERVAL:
-            save_data_csv(buffer)
-            render_plot_pipe(buffer)
+            render_plot(buffer)
             last_plot = now
             dirty = False
 
@@ -139,7 +116,7 @@ def main():
     # Generous queue so nothing is dropped while gnuplot renders.
     socket.setsockopt(zmq.RCVHWM, 50_000)
 
-    buffer = collections.deque(maxlen=WINDOW_SIZE)
+    buffer = collections.deque()
     run(socket, buffer)
 
 

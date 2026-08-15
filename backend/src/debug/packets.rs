@@ -21,11 +21,11 @@ pub struct AudioDatablock {
 }
 
 #[derive(Clone, Serialize)]
-pub struct SamplesDebugPacket {
+pub struct AudioDebugPacket {
     audio: AudioDatablock,
 }
 
-impl SamplesDebugPacket {
+impl AudioDebugPacket {
     pub fn as_json(&self) -> String {
         serde_json::to_string(self).unwrap()
     }
