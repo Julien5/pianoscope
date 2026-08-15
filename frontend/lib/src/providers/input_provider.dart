@@ -49,9 +49,9 @@ class InputProvider extends ChangeNotifier {
     return "microphone";
   }
 
-  Future<({Stream<Event> events, Stream<String> errors})>
+  Future<({Stream<MidiEvent> events, Stream<String> errors})>
   startEventStream() async {
-    final sink = RustStreamSink<Event>();
+    final sink = RustStreamSink<MidiEvent>();
     final errorSink = RustStreamSink<String>();
     await _bridge!.startStream(sink: sink, errorSink: errorSink);
     return (events: sink.stream, errors: errorSink.stream);

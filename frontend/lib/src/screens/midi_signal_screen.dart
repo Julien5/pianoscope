@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:frontend/src/rust/api/event.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/src/providers/input_provider.dart';
-import 'package:frontend/src/rust/api/event.dart';
 import 'package:frontend/src/widgets/grand_staff_view.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
-  final Stream<Event> eventStream;
+  final Stream<MidiEvent> eventStream;
   final Stream<String> errorStream;
 
   const MidiSignalScreen({
@@ -25,8 +25,8 @@ class MidiSignalScreen extends StatefulWidget {
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _noteName = '---';
   String _rawHex = '';
-  Event? _event;
-  StreamSubscription<Event>? _eventSubscription;
+  MidiEvent? _event;
+  StreamSubscription<MidiEvent>? _eventSubscription;
   StreamSubscription<String>? _errorSubscription;
 
   @override
@@ -36,7 +36,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     _errorSubscription = widget.errorStream.listen(_onError);
   }
 
-  void _onEvent(Event event) {
+  void _onEvent(MidiEvent event) {
     setState(() {
       _noteName = event.noteName;
       _rawHex = _formatRaw(event.raw);

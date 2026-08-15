@@ -3,7 +3,7 @@
 pub use backend::backend::Backend;
 pub use backend::backend::MidiPort;
 
-use crate::api::event::Event;
+pub use crate::api::event::MidiEvent;
 use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::frb;
 use std::sync::Arc;
@@ -44,7 +44,7 @@ impl Bridge {
         self.backend.select_microphone();
     }
 
-    pub fn start_stream(&mut self, sink: StreamSink<Event>, error_sink: StreamSink<String>) {
+    pub fn start_stream(&mut self, sink: StreamSink<MidiEvent>, error_sink: StreamSink<String>) {
         let sender = Arc::new(move |event| drop(sink.add(event)));
         let error_sender = Arc::new(move |msg| drop(error_sink.add(msg)));
         self.backend.start_stream(sender, error_sender);

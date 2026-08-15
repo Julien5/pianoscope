@@ -8,8 +8,8 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{SampleFormat, SizedSample};
 use rtrb::{Consumer, PopError, Producer};
 
+use crate::debug::packets::SamplesDebugPacket;
 use crate::debug::DebugHandle;
-use crate::event::AudioDatablock;
 
 /// Length of the window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.25;
@@ -265,7 +265,9 @@ fn spawn_processing_thread(
                 }
                 if buf.len() >= window_len {
                     if let Some(debug) = &debug_handle {
-                        debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
+                        debug.stream_data(
+                            SamplesDebugPacket::from_samples(&buf).as_json().as_bytes(),
+                        );
                     }
                     log::trace!("call samples sink");
                     sample_processor.process(&buf);
@@ -274,7 +276,7 @@ fn spawn_processing_thread(
             }
             if !buf.is_empty() {
                 if let Some(debug) = &debug_handle {
-                    debug.stream_data(AudioDatablock::from_samples(&buf).as_json().as_bytes());
+                    debug.stream_data(SamplesDebugPacket::from_samples(&buf).as_json().as_bytes());
                 }
                 log::trace!("call samples sink");
                 sample_processor.process(&buf);

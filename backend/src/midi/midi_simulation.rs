@@ -1,15 +1,15 @@
 use std::{
     sync::{
-        Arc, Mutex,
         atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
     },
     thread,
     time::Duration,
 };
 
 use crate::{
-    debug::DebugHandle,
-    event::{ErrorSender, Event, EventSender, Status},
+    debug::{packets::EventDebugPacket, DebugHandle},
+    event::{ErrorSender, EventSender, MidiEvent, Status},
     simulation,
 };
 
@@ -51,7 +51,7 @@ pub fn start_stream(
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    if let Some(event) = Event::from_note_status(note, Status::NoteOn, 0x40) {
+                    if let Some(event) = MidiEvent::from_note_status(note, Status::NoteOn, 0x40) {
                         log::trace!("simulation sends {}", note);
                         sender(event);
                     }
@@ -60,9 +60,11 @@ pub fn start_stream(
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
-                    if let Some(event) = Event::from_note_status(note, Status::NoteOff, 0) {
+                    if let Some(event) = MidiEvent::from_note_status(note, Status::NoteOff, 0) {
                         if let Some(debugger) = &debug_handle {
-                            debugger.stream_data(event.as_json().as_bytes());
+                            debugger.stream_data(
+                                &EventDebugPacket::from_event(&event).as_json().as_bytes(),
+                            );
                         }
                         sender(event);
                     }

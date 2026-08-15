@@ -19,7 +19,7 @@ fn setup_log() {
 
 use std::{sync::Arc, time::Duration};
 
-use backend::{backend::Backend, event::Event};
+use backend::{backend::Backend, event::MidiEvent};
 use clap::{Parser, Subcommand};
 
 #[derive(Subcommand)]
@@ -42,7 +42,7 @@ fn main() {
     let cli = Cli::parse();
     let mut backend = backend::backend::Backend::new_debug();
 
-    let event_sender = Arc::new(|event: Event| log::trace!("midi event: {}", event.note_name));
+    let event_sender = Arc::new(|event: MidiEvent| log::trace!("midi event: {}", event.note_name));
     let error_sender = Arc::new(|msg: String| log::error!("midi error: {msg}"));
 
     match cli.source {

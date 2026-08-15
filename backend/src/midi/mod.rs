@@ -2,8 +2,9 @@ use midir::{MidiInput, MidiInputConnection, MidiInputPort};
 use std::sync::Mutex;
 mod midi_simulation;
 
+use crate::debug::packets::EventDebugPacket;
 use crate::debug::DebugHandle;
-use crate::event::{self, Event};
+use crate::event::{self, MidiEvent};
 
 #[derive(Clone)]
 pub struct MidiPort {
@@ -85,9 +86,10 @@ impl Midi {
 
         let callback_sender = event_sender.clone();
         let callback = move |_timestamp: u64, bytes: &[u8], _data: &mut ()| {
-            if let Some(event) = Event::from_midi(bytes) {
+            if let Some(event) = MidiEvent::from_midi(bytes) {
                 if let Some(debugger) = &debug_handle {
-                    debugger.stream_data(&event.as_json().as_bytes());
+                    debugger
+                        .stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
                 }
                 callback_sender(event);
             }

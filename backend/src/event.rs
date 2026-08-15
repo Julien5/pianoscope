@@ -12,7 +12,7 @@ pub enum Status {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Event {
+pub struct MidiEvent {
     pub status: Status,
     pub velocity: u32,
     pub note: u8,
@@ -20,11 +20,7 @@ pub struct Event {
     pub raw: Vec<u8>,
 }
 
-impl Event {
-    pub fn as_json(&self) -> String {
-        serde_json::to_string(self).unwrap()
-    }
-
+impl MidiEvent {
     pub fn from_midi(bytes: &[u8]) -> Option<Self> {
         if bytes.len() < 3 {
             return None;
@@ -100,35 +96,5 @@ fn note_name_to_midi(name: &str) -> Option<u8> {
     Some(note as u8)
 }
 
-pub type EventSender = Arc<dyn Fn(Event) + Send + Sync>;
+pub type EventSender = Arc<dyn Fn(MidiEvent) + Send + Sync>;
 pub type ErrorSender = Arc<dyn Fn(String) + Send + Sync>;
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct AudioDatablock {
-    pub base64: String,
-}
-
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64;
-
-fn f32_slice_to_f64_base64(data: &[f32]) -> String {
-    // 1. Convert f32 -> f64 -> 8 bytes (little-endian)
-    let bytes: Vec<u8> = data
-        .iter()
-        .flat_map(|&val| (val as f64).to_le_bytes())
-        .collect();
-
-    // 2. Encode to Base64
-    BASE64.encode(&bytes)
-}
-
-impl AudioDatablock {
-    pub fn as_json(&self) -> String {
-        serde_json::to_string(self).unwrap()
-    }
-    pub fn from_samples(samples: &[f32]) -> Self {
-        Self {
-            base64: f32_slice_to_f64_base64(samples),
-        }
-    }
-}

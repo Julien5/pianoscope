@@ -1,6 +1,8 @@
 use tokio::{runtime::Runtime, sync::mpsc, task::JoinHandle};
 use zeromq::{PubSocket, Socket, SocketSend};
 
+pub mod packets;
+
 #[derive(Clone)]
 pub struct DebugHandle {
     server: std::sync::Arc<DebugServer>,

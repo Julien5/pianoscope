@@ -105,18 +105,18 @@ def run(socket, buffer):
                 try:
                     data = json.loads(raw_bytes)
                     msg = "";
-                    if "base64" in data:
-                        x = decode_b64(data["base64"])
+                    if "audio" in data:
+                        x = decode_b64(data["audio"]["base64"])
                         x = x[::DOWNSAMPLE_FACTOR]
                         buffer.extend(x)
                         dirty = True
                         msg=message_audio(x);
-                    else:
-                        msg=message_midi(data);
+                    elif "event" in data:
+                        msg=message_midi(data["event"]);
                     elapsed = time.perf_counter() - t0
                     print(f"|{elapsed:5.1f}| {msg}")    
                 except KeyError as e:
-                    print("error:",e);
+                    print("key error:",e);
 
         now = time.perf_counter()
         if dirty and now - last_plot >= MIN_PLOT_INTERVAL:

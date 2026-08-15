@@ -1,7 +1,7 @@
-pub use backend::event::{Event, Status};
+pub use backend::event::{MidiEvent, Status};
 
-#[flutter_rust_bridge::frb(mirror(Event))]
-pub struct _Event {
+#[flutter_rust_bridge::frb(mirror(MidiEvent))]
+pub struct _MidiEvent {
     pub status: Status,
     pub velocity: u32,
     pub note: u8,

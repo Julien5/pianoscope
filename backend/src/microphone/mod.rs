@@ -3,8 +3,9 @@ mod hardware;
 
 use std::sync::Mutex;
 
+use crate::debug::packets::EventDebugPacket;
 use crate::debug::DebugHandle;
-use crate::event::{self, Event, Status};
+use crate::event::{self, MidiEvent, Status};
 use crate::microphone::detection::PitchDetector;
 use crate::simulation;
 
@@ -99,9 +100,9 @@ impl hardware::SampleProcessor for PitchRecognizer {
         if on != self.sounding {
             self.sounding = on;
             let status = if on { Status::NoteOn } else { Status::NoteOff };
-            if let Some(event) = Event::from_note_status(&pitch, status, 0x40) {
+            if let Some(event) = MidiEvent::from_note_status(&pitch, status, 0x40) {
                 if let Some(debug) = &self.debug_handle {
-                    debug.stream_data(&event.as_json().as_bytes());
+                    debug.stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
                 }
                 (self.event_sender)(event);
             }
