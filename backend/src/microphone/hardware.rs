@@ -14,31 +14,22 @@ use crate::event::AudioDatablock;
 /// Length of the window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.25;
 
-/// Consumes a processed window of raw mono samples.
-///
-/// A processor is owned by a single thread and mutated in place via `&mut self`,
-/// so it may hold arbitrary state without interior mutability.
 pub trait SampleProcessor: Send {
     fn process(&mut self, block: &[f32]);
 }
 
-/// Callback invoked when an error occurs.
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
 
 #[derive(Clone)]
 pub enum Source {
-    /// A real microphone; `None` selects the system default input device.
     InputDevice(Option<usize>),
-    /// A WAV file replayed at (by default) real-time cadence.
     File(FileSource),
 }
 
 #[derive(Clone)]
 pub struct FileSource {
     pub path: PathBuf,
-    /// Replay the file at real-time cadence (true) or as fast as possible (false).
     pub paced: bool,
-    /// Loop the file once it reaches the end.
     pub looped: bool,
 }
 

@@ -95,7 +95,7 @@ impl hardware::SampleProcessor for PitchRecognizer {
     fn process(&mut self, block: &[f32]) {
         self.pitch_detector.update(block);
         let pitch = self.pitch_detector.pitch();
-        let on = !pitch.is_empty();
+        let on = self.pitch_detector.on();
         if on != self.sounding {
             self.sounding = on;
             let status = if on { Status::NoteOn } else { Status::NoteOff };
