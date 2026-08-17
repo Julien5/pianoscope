@@ -38,7 +38,7 @@ class PitchDetector:
 class AudioDatablock:
     def __init__(self, data):
         self.audio_base64 = data["audio_base64"]
-        self.pitch_detector = PitchDetector(data["pitch_detector"])
+        self.pitch_detector = PitchDetector(data["pitch_stats"])
 
     @property
     def sample_rate(self):

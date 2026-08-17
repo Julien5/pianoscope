@@ -43,14 +43,21 @@ impl Microphone {
         error_sender: event::ErrorSender,
         debug_handle: &Option<DebugHandle>,
     ) {
-        let sample_processor =
-            PitchRecognizer::new(event_sender, error_sender.clone(), debug_handle.clone());
+        // Build the recognizer inside the processing thread: `PitchRecognizer`
+        // owns a `!Send` pitch detector, so only its factory crosses the thread
+        // boundary.
         let error_sink: hardware::ErrorSink = error_sender.clone();
+        let error_sender_factory = error_sender.clone();
+        let debug_handle = debug_handle.clone();
+        let factory: hardware::SampleProcessorFactory = Box::new(move || {
+            Box::new(PitchRecognizer::new(
+                event_sender,
+                error_sender_factory,
+                debug_handle,
+            ))
+        });
         let source = self.source.lock().unwrap().clone();
-        if let Err(e) = self
-            .handler
-            .start(source, Box::new(sample_processor), error_sink)
-        {
+        if let Err(e) = self.handler.start(source, factory, error_sink) {
             error_sender(e.to_string());
         }
     }
@@ -99,7 +106,7 @@ impl hardware::SampleProcessor for PitchRecognizer {
         let on = self.pitch_detector.on();
         if let Some(debug) = &self.debug_handle {
             debug.stream_data(
-                AudioDebugPacket::from_samples(&block, &self.pitch_detector)
+                AudioDebugPacket::from_samples(&block, self.pitch_detector.stats())
                     .as_json()
                     .as_bytes(),
             );

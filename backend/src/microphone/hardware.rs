@@ -11,10 +11,15 @@ use rtrb::{Consumer, PopError, Producer};
 /// Length of the window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.25;
 
-pub trait SampleProcessor: Send {
+pub trait SampleProcessor {
     fn process(&mut self, block: &[f32]);
     fn set_sample_rate(&mut self, sample_rate: u32);
 }
+
+/// Builds the sample processor inside the processing thread, so the processor
+/// itself does not need to be `Send`. Only the factory (which captures `Send`
+/// handles) crosses the thread boundary.
+pub type SampleProcessorFactory = Box<dyn FnOnce() -> Box<dyn SampleProcessor> + Send>;
 
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
 
@@ -55,7 +60,7 @@ impl AudioStreamHandler {
     pub fn start(
         &self,
         source: Source,
-        sample_processor: Box<dyn SampleProcessor>,
+        sample_processor_factory: SampleProcessorFactory,
         error_sink: ErrorSink,
     ) -> Result<(), String> {
         self.stop();
@@ -90,7 +95,7 @@ impl AudioStreamHandler {
             consumer,
             window_len,
             sample_rate,
-            sample_processor,
+            sample_processor_factory,
             error_sink.clone(),
             stop.clone(),
         );
@@ -235,7 +240,7 @@ fn spawn_processing_thread(
     mut consumer: Consumer<f32>,
     window_len: usize,
     sample_rate: u32,
-    mut sample_processor: Box<dyn SampleProcessor>,
+    sample_processor_factory: SampleProcessorFactory,
     error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
 ) -> JoinHandle<()> {
@@ -243,6 +248,7 @@ fn spawn_processing_thread(
     thread::Builder::new()
         .name("nano-mic-processing".into())
         .spawn(move || {
+            let mut sample_processor = sample_processor_factory();
             let mut buf: Vec<f32> = Vec::with_capacity(window_len);
             sample_processor.set_sample_rate(sample_rate);
             loop {
