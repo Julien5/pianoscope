@@ -1,4 +1,5 @@
 use midir::{MidiInput, MidiInputConnection, MidiInputPort};
+use std::ops::Deref;
 use std::sync::Mutex;
 use std::thread::JoinHandle;
 mod midi_simulation;
@@ -22,24 +23,30 @@ impl MidiPort {
     }
 }
 
+enum Input {
+    None,
+    Sim(JoinHandle<()>),
+    // Stored for its RAII side effect: dropping the connection stops the midir thread.
+    #[allow(dead_code)]
+    Device(MidiInputConnection<()>),
+}
+
 pub struct Midi {
-    port: Mutex<MidiPort>,
-    connection: Mutex<Option<MidiInputConnection<()>>>,
-    sim_thread: Mutex<Option<JoinHandle<()>>>,
+    port: MidiPort,
+    input: Mutex<Input>,
 }
 
 impl Midi {
     pub fn new(port: &MidiPort) -> Self {
         Self {
-            port: Mutex::new(port.clone()),
-            connection: Mutex::new(None),
-            sim_thread: Mutex::new(None),
+            port: port.clone(),
+            input: Mutex::new(Input::None),
         }
     }
 
     pub fn connect(&self) -> Result<MidiPort, String> {
         // no op
-        Ok(self.port.lock().unwrap().clone())
+        Ok(self.port.clone())
     }
 
     pub fn start_event_stream(
@@ -49,19 +56,20 @@ impl Midi {
         debug_handle: &Option<DebugHandle>,
     ) {
         if crate::simulation::enabled() {
-            let handle = midi_simulation::start_stream(event_sender, error_sender, debug_handle.clone());
-            *self.sim_thread.lock().unwrap() = Some(handle);
+            let handle =
+                midi_simulation::start_stream(event_sender, error_sender, debug_handle.clone());
+            *self.input.lock().unwrap() = Input::Sim(handle);
             return;
         }
         self.start_real_stream(event_sender, error_sender, debug_handle.clone());
     }
 
     pub fn stream_done(&self) -> bool {
-        self.sim_thread
-            .lock()
-            .unwrap()
-            .as_ref()
-            .map_or(false, |h| h.is_finished())
+        match self.input.lock().unwrap().deref() {
+            Input::Sim(handle) => handle.is_finished(),
+            Input::Device(_) => false,
+            Input::None => false,
+        }
     }
 
     fn start_real_stream(
@@ -70,7 +78,7 @@ impl Midi {
         error_sender: event::ErrorSender,
         debug_handle: Option<DebugHandle>,
     ) {
-        let wanted_port = self.port.lock().unwrap().clone();
+        let wanted_port = self.port.clone();
         if wanted_port.name.is_empty() {
             error_sender(format!("port name is empty"));
             return;
@@ -109,7 +117,7 @@ impl Midi {
 
         match midi_in.connect(&in_port, "nano", callback, ()) {
             Ok(conn) => {
-                *self.connection.lock().unwrap() = Some(conn);
+                *self.input.lock().unwrap() = Input::Device(conn);
             }
             Err(e) => {
                 error_sender(format!("{e}"));
@@ -121,7 +129,7 @@ impl Midi {
         if crate::simulation::enabled() {
             midi_simulation::disconnect_midi();
         }
-        *self.connection.lock().unwrap() = None;
+        *self.input.lock().unwrap() = Input::None;
     }
 }
 
