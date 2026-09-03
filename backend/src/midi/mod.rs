@@ -23,7 +23,7 @@ impl MidiPort {
     }
 }
 
-enum Input {
+enum Connection {
     None,
     Sim(JoinHandle<()>),
     // Stored for its RAII side effect: dropping the connection stops the midir thread.
@@ -33,14 +33,14 @@ enum Input {
 
 pub struct Midi {
     port: MidiPort,
-    input: Mutex<Input>,
+    connection: Mutex<Connection>,
 }
 
 impl Midi {
     pub fn new(port: &MidiPort) -> Self {
         Self {
             port: port.clone(),
-            input: Mutex::new(Input::None),
+            connection: Mutex::new(Connection::None),
         }
     }
 
@@ -58,17 +58,17 @@ impl Midi {
         if crate::simulation::enabled() {
             let handle =
                 midi_simulation::start_stream(event_sender, error_sender, debug_handle.clone());
-            *self.input.lock().unwrap() = Input::Sim(handle);
-            return;
+            *self.connection.lock().unwrap() = Connection::Sim(handle);
+        } else {
+            self.start_real_stream(event_sender, error_sender, debug_handle.clone());
         }
-        self.start_real_stream(event_sender, error_sender, debug_handle.clone());
     }
 
     pub fn stream_done(&self) -> bool {
-        match self.input.lock().unwrap().deref() {
-            Input::Sim(handle) => handle.is_finished(),
-            Input::Device(_) => false,
-            Input::None => false,
+        match self.connection.lock().unwrap().deref() {
+            Connection::Sim(handle) => handle.is_finished(),
+            Connection::Device(_) => false,
+            Connection::None => false,
         }
     }
 
@@ -117,7 +117,7 @@ impl Midi {
 
         match midi_in.connect(&in_port, "nano", callback, ()) {
             Ok(conn) => {
-                *self.input.lock().unwrap() = Input::Device(conn);
+                *self.connection.lock().unwrap() = Connection::Device(conn);
             }
             Err(e) => {
                 error_sender(format!("{e}"));
@@ -129,7 +129,7 @@ impl Midi {
         if crate::simulation::enabled() {
             midi_simulation::disconnect_midi();
         }
-        *self.input.lock().unwrap() = Input::None;
+        *self.connection.lock().unwrap() = Connection::None;
     }
 }
 
