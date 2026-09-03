@@ -1,7 +1,7 @@
 #![allow(dead_code, unused)]
 
 use crate::{
-    debug::DebugHandle,
+    debug::DebugServerHandle,
     event,
     microphone::{self, Microphone},
     midi,
@@ -16,21 +16,21 @@ enum Source {
 
 pub struct Backend {
     source: Option<Source>,
-    debug_handle: Option<DebugHandle>,
+    debug_server: Option<DebugServerHandle>,
 }
 
 impl Backend {
     pub fn new() -> Self {
         Self {
             source: None,
-            debug_handle: None,
+            debug_server: None,
         }
     }
 
-    pub fn new_debug() -> Self {
+    pub fn new_debug_server() -> Self {
         Self {
             source: None,
-            debug_handle: Some(DebugHandle::new()),
+            debug_server: Some(DebugServerHandle::new()),
         }
     }
 
@@ -52,7 +52,7 @@ impl Backend {
         midi: &midi::Midi,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: &Option<DebugHandle>,
+        debug_handle: &Option<DebugServerHandle>,
     ) {
         midi.start_event_stream(event_sender, error_sender, debug_handle);
     }
@@ -61,7 +61,7 @@ impl Backend {
         mic: &microphone::Microphone,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: &Option<DebugHandle>,
+        debug_handle: &Option<DebugServerHandle>,
     ) {
         mic.start_stream(event_sender, error_sender, debug_handle);
     }
@@ -70,14 +70,14 @@ impl Backend {
         assert!(!self.source.is_none());
         match self.source.as_ref().unwrap() {
             Source::Midi(midi) => {
-                Self::start_midi_stream(midi, event_sender, error_sender, &self.debug_handle);
+                Self::start_midi_stream(midi, event_sender, error_sender, &self.debug_server);
             }
             Source::Microphone(microphone) => {
                 Self::start_microphone_stream(
                     microphone,
                     event_sender,
                     error_sender,
-                    &self.debug_handle,
+                    &self.debug_server,
                 );
             }
         }

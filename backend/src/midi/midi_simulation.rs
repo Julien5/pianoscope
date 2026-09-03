@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::{
-    debug::{packets::EventDebugPacket, DebugHandle},
+    debug::{packets::EventDebugPacket, DebugServerHandle},
     event::{ErrorSender, EventSender, MidiEvent, Status},
     simulation,
 };
@@ -33,7 +33,7 @@ static SIM_STOP: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 pub fn start_stream(
     sender: EventSender,
     _error_sender: ErrorSender,
-    debug_handle: Option<DebugHandle>,
+    debug_handle: Option<DebugServerHandle>,
 ) -> thread::JoinHandle<()> {
     let stop = Arc::new(AtomicBool::new(false));
     *SIM_STOP.lock().unwrap() = Some(stop.clone());

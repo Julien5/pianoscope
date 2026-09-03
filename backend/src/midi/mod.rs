@@ -5,7 +5,7 @@ use std::thread::JoinHandle;
 mod midi_simulation;
 
 use crate::debug::packets::EventDebugPacket;
-use crate::debug::DebugHandle;
+use crate::debug::DebugServerHandle;
 use crate::event::{self, MidiEvent};
 
 #[derive(Clone)]
@@ -53,7 +53,7 @@ impl Midi {
         &self,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: &Option<DebugHandle>,
+        debug_handle: &Option<DebugServerHandle>,
     ) {
         if crate::simulation::enabled() {
             let handle =
@@ -76,7 +76,7 @@ impl Midi {
         &self,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: Option<DebugHandle>,
+        debug_handle: Option<DebugServerHandle>,
     ) {
         let wanted_port = self.port.clone();
         if wanted_port.name.is_empty() {

@@ -4,7 +4,7 @@ mod hardware;
 use std::sync::Mutex;
 
 use crate::debug::packets::{AudioDebugPacket, EventDebugPacket};
-use crate::debug::DebugHandle;
+use crate::debug::DebugServerHandle;
 use crate::event::{self, MidiEvent, Status};
 use crate::microphone::detection::PitchDetector;
 use crate::simulation;
@@ -41,7 +41,7 @@ impl Microphone {
         &self,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: &Option<DebugHandle>,
+        debug_handle: &Option<DebugServerHandle>,
     ) {
         // Build the recognizer inside the processing thread: `PitchRecognizer`
         // owns a `!Send` pitch detector, so only its factory crosses the thread
@@ -84,7 +84,7 @@ impl Default for Microphone {
 struct PitchRecognizer {
     pitch_detector: PitchDetector,
     sounding: bool,
-    debug_handle: Option<DebugHandle>,
+    debug_handle: Option<DebugServerHandle>,
     event_sender: event::EventSender,
 }
 
@@ -92,7 +92,7 @@ impl PitchRecognizer {
     fn new(
         event_sender: event::EventSender,
         _error_sender: event::ErrorSender,
-        debug_handle: Option<DebugHandle>,
+        debug_handle: Option<DebugServerHandle>,
     ) -> Self {
         Self {
             pitch_detector: PitchDetector::new(),

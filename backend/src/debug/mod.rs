@@ -4,11 +4,11 @@ use zeromq::{PubSocket, Socket, SocketSend};
 pub mod packets;
 
 #[derive(Clone)]
-pub struct DebugHandle {
+pub struct DebugServerHandle {
     server: std::sync::Arc<DebugServer>,
 }
 
-impl DebugHandle {
+impl DebugServerHandle {
     pub fn new() -> Self {
         Self {
             server: std::sync::Arc::new(DebugServer::open()),

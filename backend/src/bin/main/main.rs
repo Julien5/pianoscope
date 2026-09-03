@@ -33,6 +33,8 @@ enum Source {
 #[derive(Parser)]
 #[command(version, about)]
 struct Cli {
+    #[arg(long)]
+    debug_server: bool,
     #[command(subcommand)]
     source: Source,
 }
@@ -40,7 +42,11 @@ struct Cli {
 fn main() {
     setup_log();
     let cli = Cli::parse();
-    let mut backend = backend::backend::Backend::new_debug();
+    let mut backend = if cli.debug_server {
+        backend::backend::Backend::new_debug_server()
+    } else {
+        backend::backend::Backend::new()
+    };
 
     let event_sender = Arc::new(|event: MidiEvent| log::trace!("midi event: {}", event.note_name));
     let error_sender = Arc::new(|msg: String| log::error!("midi error: {msg}"));
