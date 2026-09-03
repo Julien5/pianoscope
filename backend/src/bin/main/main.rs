@@ -75,6 +75,10 @@ fn main() {
     }
     log::trace!("stream is started");
     loop {
-        std::thread::sleep(Duration::from_secs(1));
+        if backend.stream_done() {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(100));
     }
+    log::trace!("stream is done");
 }

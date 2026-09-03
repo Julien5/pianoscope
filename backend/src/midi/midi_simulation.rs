@@ -34,7 +34,7 @@ pub fn start_stream(
     sender: EventSender,
     _error_sender: ErrorSender,
     debug_handle: Option<DebugHandle>,
-) {
+) -> thread::JoinHandle<()> {
     let stop = Arc::new(AtomicBool::new(false));
     *SIM_STOP.lock().unwrap() = Some(stop.clone());
 
@@ -72,7 +72,7 @@ pub fn start_stream(
                 }
             }
         })
-        .ok();
+        .expect("failed to spawn midi simulation thread")
 }
 
 pub fn disconnect_midi() {

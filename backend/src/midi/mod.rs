@@ -1,5 +1,6 @@
 use midir::{MidiInput, MidiInputConnection, MidiInputPort};
 use std::sync::Mutex;
+use std::thread::JoinHandle;
 mod midi_simulation;
 
 use crate::debug::packets::EventDebugPacket;
@@ -24,6 +25,7 @@ impl MidiPort {
 pub struct Midi {
     port: Mutex<MidiPort>,
     connection: Mutex<Option<MidiInputConnection<()>>>,
+    sim_thread: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl Midi {
@@ -31,6 +33,7 @@ impl Midi {
         Self {
             port: Mutex::new(port.clone()),
             connection: Mutex::new(None),
+            sim_thread: Mutex::new(None),
         }
     }
 
@@ -46,10 +49,19 @@ impl Midi {
         debug_handle: &Option<DebugHandle>,
     ) {
         if crate::simulation::enabled() {
-            midi_simulation::start_stream(event_sender, error_sender, debug_handle.clone());
+            let handle = midi_simulation::start_stream(event_sender, error_sender, debug_handle.clone());
+            *self.sim_thread.lock().unwrap() = Some(handle);
             return;
         }
         self.start_real_stream(event_sender, error_sender, debug_handle.clone());
+    }
+
+    pub fn stream_done(&self) -> bool {
+        self.sim_thread
+            .lock()
+            .unwrap()
+            .as_ref()
+            .map_or(false, |h| h.is_finished())
     }
 
     fn start_real_stream(

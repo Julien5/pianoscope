@@ -83,6 +83,14 @@ impl Backend {
         }
     }
 
+    pub fn stream_done(&self) -> bool {
+        match self.source.as_ref() {
+            None => false,
+            Some(Source::Midi(midi)) => midi.stream_done(),
+            Some(Source::Microphone(microphone)) => microphone.stream_done(),
+        }
+    }
+
     pub fn disconnect(&mut self) {
         if self.source.is_none() {
             return;

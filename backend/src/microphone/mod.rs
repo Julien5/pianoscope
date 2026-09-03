@@ -18,7 +18,7 @@ pub fn wavfile(filename: String) -> hardware::FileSource {
     hardware::FileSource {
         path: std::path::PathBuf::from(filename),
         paced: true,
-        looped: true,
+        looped: false,
     }
 }
 
@@ -64,6 +64,10 @@ impl Microphone {
 
     pub fn disconnect(&self) {
         self.handler.stop();
+    }
+
+    pub fn stream_done(&self) -> bool {
+        self.handler.stream_done()
     }
 }
 

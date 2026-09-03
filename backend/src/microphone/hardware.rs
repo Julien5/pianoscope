@@ -57,6 +57,10 @@ impl AudioStreamHandler {
         *self.sample_rate.lock().unwrap()
     }
 
+    pub fn stream_done(&self) -> bool {
+        self.workers.lock().unwrap().iter().all(|w| w.is_finished())
+    }
+
     pub fn start(
         &self,
         source: Source,
@@ -241,10 +245,9 @@ fn spawn_processing_thread(
     window_len: usize,
     sample_rate: u32,
     sample_processor_factory: SampleProcessorFactory,
-    error_sink: ErrorSink,
+    _error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
 ) -> JoinHandle<()> {
-    let spawn_err = error_sink.clone();
     thread::Builder::new()
         .name("nano-mic-processing".into())
         .spawn(move || {
@@ -270,12 +273,9 @@ fn spawn_processing_thread(
                 log::trace!("call samples sink");
                 sample_processor.process(&buf);
             }
+            log::trace!("consumer thread is done.");
         })
-        .unwrap_or_else(|e| {
-            spawn_err(format!("failed to spawn processing thread: {e}"));
-            // A failed spawn must still give us a joinable handle.
-            thread::Builder::new().spawn(|| {}).unwrap()
-        })
+        .expect("failed to spawn microphone processing thread")
 }
 
 /// Reads a WAV file, downmixes it to mono f32, and feeds `producer` — mimicking
@@ -329,6 +329,7 @@ fn spawn_file_reader(
                     break;
                 }
             }
+            log::trace!("producer thread is done.");
             // Producer dropped here → the processing thread sees `is_abandoned()`.
         })
         .unwrap_or_else(|e| {
