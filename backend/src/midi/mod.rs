@@ -7,12 +7,15 @@ mod midi_simulation;
 use crate::debug::packets::EventDebugPacket;
 use crate::debug::DebugServerHandle;
 use crate::event::{self, MidiEvent};
+use crate::simulation;
 
 #[derive(Clone)]
 pub struct MidiPort {
     pub name: String,
     pub id: String,
 }
+
+static SIMULATEDMIDI: &str = &"Simulated MIDI Device";
 
 impl MidiPort {
     pub fn from_midir(name: &String, p: &MidiInputPort) -> Self {
@@ -21,32 +24,63 @@ impl MidiPort {
             id: p.id(),
         }
     }
+    pub fn simulation() -> Self {
+        Self {
+            name: SIMULATEDMIDI.to_string(),
+            id: SIMULATEDMIDI.to_string(),
+        }
+    }
+    pub fn is_simulation(&self) -> bool {
+        self.name.contains(SIMULATEDMIDI) && self.id.contains(SIMULATEDMIDI)
+    }
 }
 
 enum Connection {
     None,
-    Sim(JoinHandle<()>),
+    Simulation(JoinHandle<()>),
     // Stored for its RAII side effect: dropping the connection stops the midir thread.
     #[allow(dead_code)]
     Device(MidiInputConnection<()>),
 }
 
+#[derive(Clone)]
+pub enum Input {
+    Simulation(String),
+    Device(MidiPort),
+}
+
 pub struct Midi {
-    port: MidiPort,
+    input: Input,
     connection: Mutex<Connection>,
 }
 
 impl Midi {
-    pub fn new(port: &MidiPort) -> Self {
+    pub fn new_device(port: &MidiPort) -> Self {
+        match port.is_simulation() {
+            true => {
+                let looop = simulation::setting();
+                Self {
+                    input: Input::Simulation(format!("{}", looop.unwrap())),
+                    connection: Mutex::new(Connection::None),
+                }
+            }
+            false => Self {
+                input: Input::Device(port.clone()),
+                connection: Mutex::new(Connection::None),
+            },
+        }
+    }
+
+    pub fn new_simulation(looop: &str) -> Self {
         Self {
-            port: port.clone(),
+            input: Input::Simulation(format!("{}", looop)),
             connection: Mutex::new(Connection::None),
         }
     }
 
-    pub fn connect(&self) -> Result<MidiPort, String> {
+    pub fn connect(&self) -> Result<Input, String> {
         // no op
-        Ok(self.port.clone())
+        Ok(self.input.clone())
     }
 
     pub fn start_event_stream(
@@ -55,30 +89,49 @@ impl Midi {
         error_sender: event::ErrorSender,
         debug_handle: &Option<DebugServerHandle>,
     ) {
-        if crate::simulation::enabled() {
-            let handle =
-                midi_simulation::start_stream(event_sender, error_sender, debug_handle.clone());
-            *self.connection.lock().unwrap() = Connection::Sim(handle);
-        } else {
-            self.start_real_stream(event_sender, error_sender, debug_handle.clone());
+        match &self.input {
+            Input::Simulation(looop) => {
+                self.start_simulation_stream(
+                    looop,
+                    event_sender,
+                    error_sender,
+                    debug_handle.clone(),
+                );
+            }
+            Input::Device(port) => {
+                debug_assert!(!port.is_simulation());
+                self.start_device_stream(port, event_sender, error_sender, debug_handle.clone());
+            }
         }
     }
 
     pub fn stream_done(&self) -> bool {
         match self.connection.lock().unwrap().deref() {
-            Connection::Sim(handle) => handle.is_finished(),
+            Connection::Simulation(handle) => handle.is_finished(),
             Connection::Device(_) => false,
             Connection::None => false,
         }
     }
 
-    fn start_real_stream(
+    fn start_simulation_stream(
         &self,
+        looop: &str,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
         debug_handle: Option<DebugServerHandle>,
     ) {
-        let wanted_port = self.port.clone();
+        let handle =
+            midi_simulation::start_stream(&looop, event_sender, error_sender, debug_handle.clone());
+        *self.connection.lock().unwrap() = Connection::Simulation(handle);
+    }
+
+    fn start_device_stream(
+        &self,
+        wanted_port: &MidiPort,
+        event_sender: event::EventSender,
+        error_sender: event::ErrorSender,
+        debug_handle: Option<DebugServerHandle>,
+    ) {
         if wanted_port.name.is_empty() {
             error_sender(format!("port name is empty"));
             return;
@@ -135,10 +188,7 @@ impl Midi {
 
 pub fn list_midi_ports() -> Vec<MidiPort> {
     if crate::simulation::enabled() {
-        return vec![MidiPort {
-            name: "Simulated MIDI Device".to_string(),
-            id: "Simulated MIDI Device ID".to_string(),
-        }];
+        return vec![MidiPort::simulation()];
     }
     if let Ok(midi_in) = MidiInput::new("nano-list") {
         return midi_in

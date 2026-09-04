@@ -29,7 +29,7 @@ function convert-to-wav() {
 		mkdir -p ${O}/C${n}
 		cp "${a}" ${O}/C${n}/all.m4a
 		echo "copy C${n}"
-		ffmpeg -i ${O}/C${n}/all.m4a ${O}/C${n}/all.wav &> /tmp/convert.txt
+		ffmpeg -nostdin -i ${O}/C${n}/all.m4a ${O}/C${n}/all.wav &> /tmp/convert.txt
 		n=$((n+1))
 	done 
 }

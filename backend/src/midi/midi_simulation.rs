@@ -10,17 +10,14 @@ use std::{
 use crate::{
     debug::{packets::EventDebugPacket, DebugServerHandle},
     event::{ErrorSender, EventSender, MidiEvent, Status},
-    simulation,
 };
 
-pub fn infinite() -> bool {
-    matches!(simulation::setting().as_deref(), Some("infinity"))
+pub fn infinite(looop: &str) -> bool {
+    matches!(looop, "infinity")
 }
 
-pub fn loop_count() -> u32 {
-    simulation::setting()
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(0)
+pub fn loop_count(looop: &str) -> u32 {
+    looop.parse::<u32>().unwrap_or(0)
 }
 
 const SCALE_NOTES: &[&str] = &[
@@ -31,6 +28,7 @@ const SCALE_NOTES: &[&str] = &[
 static SIM_STOP: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
 pub fn start_stream(
+    looop: &str,
     sender: EventSender,
     _error_sender: ErrorSender,
     debug_handle: Option<DebugServerHandle>,
@@ -38,7 +36,11 @@ pub fn start_stream(
     let stop = Arc::new(AtomicBool::new(false));
     *SIM_STOP.lock().unwrap() = Some(stop.clone());
 
-    let loops = if infinite() { u32::MAX } else { loop_count() };
+    let loops = if infinite(&looop) {
+        u32::MAX
+    } else {
+        loop_count(&looop)
+    };
 
     thread::Builder::new()
         .name("nano-midi-sim".into())
@@ -52,7 +54,6 @@ pub fn start_stream(
                         return;
                     }
                     if let Some(event) = MidiEvent::from_note_status(note, Status::NoteOn, 0x40) {
-                        log::trace!("simulation sends {}", note);
                         sender(event);
                     }
                     thread::sleep(Duration::from_millis(250));

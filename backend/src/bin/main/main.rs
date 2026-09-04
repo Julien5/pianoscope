@@ -70,11 +70,23 @@ fn main() {
                 std::env::set_var("SIMULATION", format!("{}", loops));
             }
             let list = Backend::list_midi_ports();
+            if list.is_empty() {
+                panic!("no port found");
+            }
+            for port in &list {
+                log::trace!("port {}:{}", port.name, port.id);
+            }
             backend.select_midi_port(list.first().unwrap());
             backend.start_stream(event_sender, error_sender);
         }
         Source::Midi { port } => {
             let list = Backend::list_midi_ports();
+            if list.is_empty() {
+                panic!("no port found");
+            }
+            for port in &list {
+                log::trace!("port {}:{}", port.name, port.id);
+            }
             backend.select_midi_port(&list[port]);
             backend.start_stream(event_sender, error_sender);
         }

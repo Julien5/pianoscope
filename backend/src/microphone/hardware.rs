@@ -24,26 +24,26 @@ pub type SampleProcessorFactory = Box<dyn FnOnce() -> Box<dyn SampleProcessor> +
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
 
 #[derive(Clone)]
-pub enum Source {
-    InputDevice(Option<usize>),
-    File(FileSource),
+pub enum Input {
+    Device(Option<usize>),
+    Simulation(Wavfile),
 }
 
 #[derive(Clone)]
-pub struct FileSource {
+pub struct Wavfile {
     pub path: PathBuf,
     pub paced: bool,
     pub looped: bool,
 }
 
-pub struct AudioStreamHandler {
+pub struct Connection {
     cpal_stream: Mutex<Option<cpal::Stream>>,
     stop: Mutex<Option<Arc<AtomicBool>>>,
     workers: Mutex<Vec<JoinHandle<()>>>,
     sample_rate: Mutex<u32>,
 }
 
-impl AudioStreamHandler {
+impl Connection {
     pub const fn new() -> Self {
         Self {
             cpal_stream: Mutex::new(None),
@@ -63,19 +63,19 @@ impl AudioStreamHandler {
 
     pub fn start(
         &self,
-        source: Source,
+        source: Input,
         sample_processor_factory: SampleProcessorFactory,
         error_sink: ErrorSink,
     ) -> Result<(), String> {
         self.stop();
 
         let sample_rate = match &source {
-            Source::InputDevice(index) => {
+            Input::Device(index) => {
                 let device = self.resolve_input_device(*index)?;
                 let config = device.default_input_config().map_err(|e| e.to_string())?;
                 config.sample_rate()
             }
-            Source::File(file) => {
+            Input::Simulation(file) => {
                 let reader = hound::WavReader::open(&file.path).map_err(|e| e.to_string())?;
                 reader.spec().sample_rate
             }
@@ -83,8 +83,6 @@ impl AudioStreamHandler {
         if sample_rate == 0 {
             return Err("invalid sample rate 0".into());
         }
-
-        log::trace!("sample rate: {}", sample_rate);
 
         let window_len = (sample_rate as f32 * WINDOW_SECONDS) as usize;
         let ring_capacity = sample_rate as usize * 2;
@@ -106,14 +104,14 @@ impl AudioStreamHandler {
         self.workers.lock().unwrap().push(processor);
 
         match &source {
-            Source::InputDevice(index) => {
+            Input::Device(index) => {
                 let device = self.resolve_input_device(*index)?;
                 let config = device.default_input_config().map_err(|e| e.to_string())?;
                 let stream = build_cpal_stream(&device, &config, producer, error_sink)
                     .map_err(|e| e.to_string())?;
                 *self.cpal_stream.lock().unwrap() = Some(stream);
             }
-            Source::File(file) => self.start_file_source(&file, producer, error_sink),
+            Input::Simulation(file) => self.start_file_source(&file, producer, error_sink),
         }
 
         Ok(())
@@ -136,7 +134,7 @@ impl AudioStreamHandler {
         Ok(device)
     }
 
-    fn start_file_source(&self, file: &FileSource, producer: Producer<f32>, error_sink: ErrorSink) {
+    fn start_file_source(&self, file: &Wavfile, producer: Producer<f32>, error_sink: ErrorSink) {
         let path = file.path.clone();
         let paced = file.paced;
         let looped = file.looped;
@@ -168,13 +166,13 @@ impl AudioStreamHandler {
     }
 }
 
-impl Default for AudioStreamHandler {
+impl Default for Connection {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Drop for AudioStreamHandler {
+impl Drop for Connection {
     fn drop(&mut self) {
         self.stop();
     }
@@ -270,10 +268,8 @@ fn spawn_processing_thread(
                 }
             }
             if !buf.is_empty() {
-                log::trace!("call samples sink");
                 sample_processor.process(&buf);
             }
-            log::trace!("consumer thread is done.");
         })
         .expect("failed to spawn microphone processing thread")
 }
@@ -329,7 +325,6 @@ fn spawn_file_reader(
                     break;
                 }
             }
-            log::trace!("producer thread is done.");
             // Producer dropped here → the processing thread sees `is_abandoned()`.
         })
         .unwrap_or_else(|e| {

@@ -4,7 +4,7 @@ use crate::{
     debug::DebugServerHandle,
     event,
     microphone::{self, Microphone},
-    midi,
+    midi, simulation,
 };
 
 pub type MidiPort = midi::MidiPort;
@@ -40,12 +40,28 @@ impl Backend {
 
     pub fn select_midi_port(&mut self, port: &MidiPort) {
         assert!(self.source.is_none());
-        self.source = Some(Source::Midi(midi::Midi::new(port)));
+        self.source = Some(Source::Midi(midi::Midi::new_device(port)));
+    }
+
+    pub fn select_midi_simulation(&mut self, looop: &str) {
+        assert!(self.source.is_none());
+        self.source = Some(Source::Midi(midi::Midi::new_simulation(looop)));
     }
 
     pub fn select_microphone(&mut self) {
         assert!(self.source.is_none());
-        self.source = Some(Source::Microphone(Microphone::new()));
+        let source = if simulation::enabled() {
+            Microphone::new_wavfile(&simulation::setting().unwrap())
+        } else {
+            Microphone::new_device()
+        };
+        self.source = Some(Source::Microphone(source));
+    }
+
+    pub fn select_wavfile(&mut self, path: &str) {
+        assert!(self.source.is_none());
+        let source = Microphone::new_wavfile(path);
+        self.source = Some(Source::Microphone(source));
     }
 
     fn start_midi_stream(

@@ -7,15 +7,14 @@ use crate::debug::packets::{AudioDebugPacket, EventDebugPacket};
 use crate::debug::DebugServerHandle;
 use crate::event::{self, MidiEvent, Status};
 use crate::microphone::detection::PitchDetector;
-use crate::simulation;
 
 pub struct Microphone {
-    handler: hardware::AudioStreamHandler,
-    source: Mutex<hardware::Source>,
+    connection: hardware::Connection,
+    source: Mutex<hardware::Input>,
 }
 
-pub fn wavfile(filename: String) -> hardware::FileSource {
-    hardware::FileSource {
+pub fn wavfile(filename: &str) -> hardware::Wavfile {
+    hardware::Wavfile {
         path: std::path::PathBuf::from(filename),
         paced: true,
         looped: false,
@@ -23,16 +22,18 @@ pub fn wavfile(filename: String) -> hardware::FileSource {
 }
 
 impl Microphone {
-    pub fn new() -> Self {
-        let source = if simulation::enabled() {
-            log::trace!("source is {}", simulation::setting().unwrap());
-            hardware::Source::File(wavfile(simulation::setting().unwrap()))
-        } else {
-            log::trace!("source is audio (microphone)");
-            hardware::Source::InputDevice(None)
-        };
+    pub fn new_device() -> Self {
+        let source = hardware::Input::Device(None);
         Self {
-            handler: hardware::AudioStreamHandler::new(),
+            connection: hardware::Connection::new(),
+            source: Mutex::new(source),
+        }
+    }
+
+    pub fn new_wavfile(path: &str) -> Self {
+        let source = hardware::Input::Simulation(wavfile(path));
+        Self {
+            connection: hardware::Connection::new(),
             source: Mutex::new(source),
         }
     }
@@ -57,23 +58,26 @@ impl Microphone {
             ))
         });
         let source = self.source.lock().unwrap().clone();
-        if let Err(e) = self.handler.start(source, factory, error_sink) {
+        if let Err(e) = self.connection.start(source, factory, error_sink) {
             error_sender(e.to_string());
         }
     }
 
     pub fn disconnect(&self) {
-        self.handler.stop();
+        self.connection.stop();
     }
 
     pub fn stream_done(&self) -> bool {
-        self.handler.stream_done()
+        self.connection.stream_done()
     }
 }
 
 impl Default for Microphone {
     fn default() -> Self {
-        Self::new()
+        Self {
+            connection: hardware::Connection::new(),
+            source: Mutex::new(hardware::Input::Device(None)),
+        }
     }
 }
 
