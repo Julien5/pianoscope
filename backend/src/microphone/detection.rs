@@ -12,7 +12,7 @@ const DETECT_PADDING: usize = DETECT_WINDOW / 2;
 /// Internal power gate of the detector. We already gate on our own energy.
 const POWER_THRESHOLD: f32 = 0.0;
 /// Confidence required for a pitch candidate to be accepted.
-const CLARITY_THRESHOLD: f32 = 0.7;
+const CLARITY_THRESHOLD: f32 = 0.6;
 
 /// Snapshot of the detector's public state, used for debug serialization.
 ///
@@ -24,6 +24,7 @@ pub struct PitchStats {
     pub level_min: f32,
     pub level_max: f32,
     pub current: String,
+    pub current_frequency: f32,
     pub energy: f32,
     pub threshold: f32,
     pub sample_rate: u32,
@@ -32,9 +33,10 @@ pub struct PitchStats {
 impl PitchStats {
     fn new() -> Self {
         Self {
-            level_min: f32::MAX,
+            level_min: 0f32,
             level_max: -f32::MAX,
             current: String::new(),
+            current_frequency: 0.0,
             energy: 0.0,
             threshold: f32::MAX,
             sample_rate: 0,
@@ -76,15 +78,18 @@ impl PitchDetector {
         self.stats.level_max = (1.0 - alpha) * self.stats.level_max + alpha * self.stats.energy;
         self.stats.level_min = (1.0 - alpha) * self.stats.level_min + alpha * self.stats.energy;
         self.stats.threshold = self.compute_threshold();
-        /*log::trace!(
-            "run threshold recognizer: {:.5} | {:.5} | {:.5}",
-            self.stats.level_min,
-            self.stats.energy,
-            self.stats.level_max,
-        );*/
         if self.stats.energy >= self.stats.threshold {
             self.update_pitch(buffer);
         }
+        log::trace!(
+            "min:{:.3}|curr:{:.3}|max:{:.3} threshold:{:.3} => {:>5} ({5:.1} Hz)",
+            self.stats.level_min,
+            self.stats.energy,
+            self.stats.level_max,
+            self.stats.threshold,
+            self.stats.current,
+            self.stats.current_frequency
+        );
     }
     /// Run pitch detection on the current block and store the best note name.
     /// Only called when sound is detected (`energy >= threshold`).
@@ -98,6 +103,7 @@ impl PitchDetector {
             POWER_THRESHOLD,
             CLARITY_THRESHOLD,
         ) {
+            self.stats.current_frequency = pitch.frequency;
             self.stats.current = freq_to_note_name(pitch.frequency);
         }
     }
@@ -147,6 +153,7 @@ mod tests {
                 level_min: 0.001,
                 level_max: 0.1,
                 current: String::new(),
+                current_frequency: 0.0,
                 energy: 0.0,
                 threshold: 0.0,
                 sample_rate: 48_000,

@@ -99,6 +99,7 @@ fn old_piano_samples() {
                     elapsed.as_millis()
                 );
                 bad.push(file);
+                //debug_assert!(false);
             } else {
                 log::info!(
                     "{} ({}K, {:.3} ms)",

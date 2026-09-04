@@ -87,7 +87,6 @@ impl Default for Microphone {
 /// thread via `SampleProcessor::process`.
 struct PitchRecognizer {
     pitch_detector: PitchDetector,
-    sounding: bool,
     debug_handle: Option<DebugServerHandle>,
     event_sender: event::EventSender,
 }
@@ -100,7 +99,6 @@ impl PitchRecognizer {
     ) -> Self {
         Self {
             pitch_detector: PitchDetector::new(),
-            sounding: false,
             debug_handle,
             event_sender,
         }
@@ -119,15 +117,12 @@ impl hardware::SampleProcessor for PitchRecognizer {
                     .as_bytes(),
             );
         }
-        if on != self.sounding {
-            self.sounding = on;
-            let status = if on { Status::NoteOn } else { Status::NoteOff };
-            if let Some(event) = MidiEvent::from_note_status(&pitch, status, 0x40) {
-                if let Some(debug) = &self.debug_handle {
-                    debug.stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
-                }
-                (self.event_sender)(event);
+        let status = if on { Status::NoteOn } else { Status::NoteOff };
+        if let Some(event) = MidiEvent::from_note_status(&pitch, status, 0x40) {
+            if let Some(debug) = &self.debug_handle {
+                debug.stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
             }
+            (self.event_sender)(event);
         }
     }
     fn set_sample_rate(&mut self, sample_rate: u32) {
