@@ -2,17 +2,8 @@ use serde::Serialize;
 use std::f32;
 
 use crate::event::NOTE_NAMES;
-use pitch_detection::detector::mcleod::McLeodDetector;
+use pitch_detection::detector::yin::YINDetector;
 use pitch_detection::detector::PitchDetector as PitchDetectorTrait;
-
-/// FFT window (in samples) fed to the pitch detector on each block.
-const DETECT_WINDOW: usize = 8192;
-/// FFT padding, half the window, as recommended by the `pitch-detection` crate.
-const DETECT_PADDING: usize = DETECT_WINDOW / 2;
-/// Internal power gate of the detector. We already gate on our own energy.
-const POWER_THRESHOLD: f32 = 0.0;
-/// Confidence required for a pitch candidate to be accepted.
-const CLARITY_THRESHOLD: f32 = 0.6;
 
 /// Snapshot of the detector's public state, used for debug serialization.
 ///
@@ -46,7 +37,8 @@ impl PitchStats {
 
 pub struct PitchDetector {
     stats: PitchStats,
-    detector: McLeodDetector<f32>,
+    //detector: McLeodDetector<f32>,
+    detector: YINDetector<f32>,
 }
 
 fn compute_energy(samples: &[f32]) -> f32 {
@@ -62,7 +54,11 @@ impl PitchDetector {
     pub fn new() -> Self {
         Self {
             stats: PitchStats::new(),
-            detector: McLeodDetector::new(DETECT_WINDOW, DETECT_PADDING),
+            //detector: McLeodDetector::new(DETECT_WINDOW, DETECT_PADDING),
+            detector: YINDetector::new(
+                super::hardware::DETECT_WINDOW,
+                super::hardware::DETECT_PADDING,
+            ),
         }
     }
     pub fn update(&mut self, buffer: &[f32]) {
@@ -94,14 +90,14 @@ impl PitchDetector {
     /// Run pitch detection on the current block and store the best note name.
     /// Only called when sound is detected (`energy >= threshold`).
     fn update_pitch(&mut self, buffer: &[f32]) {
-        if self.stats.sample_rate == 0 || buffer.len() < DETECT_WINDOW {
+        if self.stats.sample_rate == 0 || buffer.len() < super::hardware::DETECT_WINDOW {
             return;
         }
         if let Some(pitch) = self.detector.get_pitch(
-            &buffer[..DETECT_WINDOW],
+            &buffer[..super::hardware::DETECT_WINDOW],
             self.stats.sample_rate as usize,
-            POWER_THRESHOLD,
-            CLARITY_THRESHOLD,
+            super::hardware::POWER_THRESHOLD,
+            super::hardware::CLARITY_THRESHOLD,
         ) {
             self.stats.current_frequency = pitch.frequency;
             self.stats.current = freq_to_note_name(pitch.frequency);
@@ -158,9 +154,12 @@ mod tests {
                 threshold: 0.0,
                 sample_rate: 48_000,
             },
-            detector: McLeodDetector::new(DETECT_WINDOW, DETECT_PADDING),
+            detector: YINDetector::new(
+                super::super::hardware::DETECT_WINDOW,
+                super::super::hardware::DETECT_PADDING,
+            ),
         };
-        let buffer = sine_buffer(261.63, 48_000, DETECT_WINDOW);
+        let buffer = sine_buffer(261.63, 48_000, super::super::hardware::DETECT_WINDOW);
         pd.update(&buffer);
         assert!(pd.on());
         assert_eq!(pd.pitch(), "C4");

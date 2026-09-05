@@ -9,7 +9,15 @@ use cpal::{SampleFormat, SizedSample};
 use rtrb::{Consumer, PopError, Producer};
 
 /// Length of the window in seconds.
-pub const WINDOW_SECONDS: f32 = 0.25;
+pub const WINDOW_SECONDS: f32 = 0.125;
+/// FFT window (in samples) fed to the pitch detector on each block.
+pub const DETECT_WINDOW: usize = 8192 / 2;
+/// FFT padding, half the window, as recommended by the `pitch-detection` crate.
+pub const DETECT_PADDING: usize = DETECT_WINDOW / 2;
+/// Internal power gate of the detector. We already gate on our own energy.
+pub const POWER_THRESHOLD: f32 = 0.0;
+/// Confidence required for a pitch candidate to be accepted.
+pub const CLARITY_THRESHOLD: f32 = 0.6;
 
 pub trait SampleProcessor {
     fn process(&mut self, block: &[f32]);

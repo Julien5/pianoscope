@@ -118,7 +118,8 @@ impl hardware::SampleProcessor for PitchRecognizer {
             );
         }
         let status = if on { Status::NoteOn } else { Status::NoteOff };
-        if let Some(event) = MidiEvent::from_note_status(&pitch, status, 0x40) {
+        let velocity = 0x40;
+        if let Some(event) = MidiEvent::from_note_status(&pitch, status, velocity) {
             if let Some(debug) = &self.debug_handle {
                 debug.stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
             }
