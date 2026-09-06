@@ -86,6 +86,7 @@ impl Default for Microphone {
 #[derive(Clone, Debug)]
 pub enum PitchRecognizerAlgorithm {
     McLeod,
+    YIN,
     PYIN,
     Swipe,
 }
@@ -115,6 +116,13 @@ impl PitchRecognizerParameters {
     fn new_swipe(sample_rate: u32, window_len: usize) -> Self {
         Self {
             algorithm: PitchRecognizerAlgorithm::Swipe,
+            sample_rate,
+            window_len,
+        }
+    }
+    fn new_yin(sample_rate: u32, window_len: usize) -> Self {
+        Self {
+            algorithm: PitchRecognizerAlgorithm::YIN,
             sample_rate,
             window_len,
         }

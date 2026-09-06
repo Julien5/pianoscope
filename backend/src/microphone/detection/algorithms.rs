@@ -49,6 +49,7 @@ pub fn make_detector(parameters: &PitchRecognizerParameters) -> Box<dyn Detector
         crate::microphone::PitchRecognizerAlgorithm::McLeod => {
             Box::new(McLeodDetector::new(parameters))
         }
+        crate::microphone::PitchRecognizerAlgorithm::YIN => Box::new(YinDetector::new(parameters)),
         crate::microphone::PitchRecognizerAlgorithm::Swipe => {
             Box::new(SwipeDetector::new(parameters))
         }
@@ -140,6 +141,50 @@ impl Detector for McLeodDetector {
             };
         } else if buffer.len() > self.parameters.window_len {
             log::trace!("McLeodDetector process: buffer larger than window_len => bad");
+        }
+        debug_assert_eq!(buffer.len(), self.parameters.window_len);
+        if let Some(pitch) = self.detector.get_pitch(
+            &buffer,
+            self.parameters.sample_rate as usize,
+            0.0, // power detect is upfront
+            0.6, // clarity
+        ) {
+            ret.push(Estimate {
+                frequency: pitch.frequency,
+                confidence: 0.75,
+                annotation: None,
+            });
+        }
+        Estimates { estimates: ret }
+    }
+}
+
+use pitch_detection::detector::yin::YINDetector as YIN;
+
+pub struct YinDetector {
+    detector: YIN<f32>,
+    parameters: PitchRecognizerParameters,
+}
+
+impl YinDetector {
+    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        Self {
+            detector: YIN::new(parameters.window_len, parameters.window_len / 4),
+            parameters: parameters.clone(),
+        }
+    }
+}
+
+impl Detector for YinDetector {
+    fn process(&mut self, buffer: &[f32]) -> Estimates {
+        let mut ret = Vec::new();
+        if buffer.len() < self.parameters.window_len {
+            log::trace!("YIN process: filling buffer: {}", buffer.len());
+            return Estimates {
+                estimates: Vec::new(),
+            };
+        } else if buffer.len() > self.parameters.window_len {
+            log::trace!("YIN process: buffer larger than window_len => bad");
         }
         debug_assert_eq!(buffer.len(), self.parameters.window_len);
         if let Some(pitch) = self.detector.get_pitch(

@@ -141,6 +141,7 @@ mod tests {
             PitchRecognizerParameters::new_mcleod(sample_rate, window_len),
             PitchRecognizerParameters::new_pyin(sample_rate, window_len),
             PitchRecognizerParameters::new_swipe(sample_rate, window_len),
+            PitchRecognizerParameters::new_yin(sample_rate, window_len),
         ];
         let table = [
             (32.7, "C1"),

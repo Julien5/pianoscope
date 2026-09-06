@@ -95,6 +95,7 @@ impl Connection {
         *self.stop.lock().unwrap() = Some(stop.clone());
 
         let parameters = PitchRecognizerParameters::new_mcleod(sample_rate, window_len);
+        //let parameters = PitchRecognizerParameters::new_yin(sample_rate, window_len);
         //let parameters = PitchRecognizerParameters::new_pyin(sample_rate, window_len);
         //let parameters = PitchRecognizerParameters::new_swipe(sample_rate, window_len);
 
