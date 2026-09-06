@@ -49,6 +49,9 @@ pub fn make_detector(parameters: &PitchRecognizerParameters) -> Box<dyn Detector
         crate::microphone::PitchRecognizerAlgorithm::McLeod => {
             Box::new(McLeodDetector::new(parameters))
         }
+        crate::microphone::PitchRecognizerAlgorithm::Swipe => {
+            Box::new(SwipeDetector::new(parameters))
+        }
     }
 }
 
@@ -69,6 +72,36 @@ impl Detector for PYInDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
         log::trace!("PYin process");
         let mut ret = Vec::new();
+
+        for estimate in self.tracker.process(&buffer).unwrap() {
+            ret.push(Estimate {
+                frequency: estimate.pitch_hz,
+                confidence: estimate.confidence,
+                annotation: Some(format!("prelim:{}", estimate.is_preliminary)),
+            });
+        }
+        Estimates { estimates: ret }
+    }
+}
+
+pub struct SwipeDetector {
+    tracker: pitch_core::PitchTracker,
+}
+
+impl SwipeDetector {
+    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        let est = pitch_core::SwipeEstimator::new().unwrap();
+        let tracker = pitch_core::PitchTracker::new(est, parameters.sample_rate, 1024)
+            .expect("could not build tracker");
+        Self { tracker }
+    }
+}
+
+impl Detector for SwipeDetector {
+    fn process(&mut self, buffer: &[f32]) -> Estimates {
+        log::trace!("Swipe process");
+        let mut ret = Vec::new();
+
         for estimate in self.tracker.process(&buffer).unwrap() {
             ret.push(Estimate {
                 frequency: estimate.pitch_hz,
@@ -91,7 +124,7 @@ pub struct McLeodDetector {
 impl McLeodDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
         Self {
-            detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
+            detector: McLeod::new(parameters.window_len, parameters.window_len / 4),
             parameters: parameters.clone(),
         }
     }
@@ -99,8 +132,15 @@ impl McLeodDetector {
 
 impl Detector for McLeodDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
-        log::trace!("McLeodDetector process");
         let mut ret = Vec::new();
+        if buffer.len() < self.parameters.window_len {
+            log::trace!("McLeodDetector process: filling buffer: {}", buffer.len());
+            return Estimates {
+                estimates: Vec::new(),
+            };
+        } else if buffer.len() > self.parameters.window_len {
+            log::trace!("McLeodDetector process: buffer larger than window_len => bad");
+        }
         debug_assert_eq!(buffer.len(), self.parameters.window_len);
         if let Some(pitch) = self.detector.get_pitch(
             &buffer,

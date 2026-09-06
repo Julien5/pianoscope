@@ -11,7 +11,7 @@ use rtrb::{Consumer, PopError, Producer};
 use crate::microphone::PitchRecognizerParameters;
 
 /// Length of the window in seconds.
-pub const WINDOW_SECONDS: f32 = 0.125;
+pub const WINDOW_SECONDS: f32 = 0.25;
 
 pub trait SampleProcessor {
     fn process(&mut self, block: &[f32]);
@@ -95,6 +95,8 @@ impl Connection {
         *self.stop.lock().unwrap() = Some(stop.clone());
 
         let parameters = PitchRecognizerParameters::new_mcleod(sample_rate, window_len);
+        //let parameters = PitchRecognizerParameters::new_pyin(sample_rate, window_len);
+        //let parameters = PitchRecognizerParameters::new_swipe(sample_rate, window_len);
 
         let processor = spawn_processing_thread(
             consumer,
@@ -265,11 +267,17 @@ fn spawn_processing_thread(
                     }
                 }
                 if buf.len() >= window_len {
+                    log::trace!("process {} samples (window_len={})", buf.len(), window_len);
                     sample_processor.process(&buf);
                     buf.clear();
                 }
             }
             if !buf.is_empty() {
+                log::trace!(
+                    "process {} samples (tail,window_len={})",
+                    buf.len(),
+                    window_len
+                );
                 sample_processor.process(&buf);
             }
         })
@@ -300,6 +308,7 @@ fn spawn_file_reader(
                         return;
                     }
                 };
+                log::trace!("file has {} samples", samples.len());
                 let mut batch: Vec<f32> = Vec::with_capacity(BATCH);
                 for &s in &samples {
                     if stop.load(Ordering::Relaxed) {

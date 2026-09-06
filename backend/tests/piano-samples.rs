@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -56,6 +57,44 @@ fn detect(path: &PathBuf) -> Vec<String> {
         .collect()
 }
 
+fn old_piano_note(pos: usize, note: &str, octave: usize) -> (bool, String, String) {
+    let absnote = format!("{}{}", note, octave);
+    let directory = format!(
+        "/home/julien/delme/old-piano-recordings/position-{}/C{}",
+        pos, octave
+    );
+    let files: Vec<PathBuf> =
+        find_wav_files(Path::new(&directory), &format!("{}.wav", note)).expect("no files");
+    if files.len() != 1 {
+        log::error!("no unique file found for {} {}", directory, note);
+    }
+    debug_assert_eq!(files.len(), 1);
+    let file = files.first().unwrap().clone();
+    let file_name = file.to_str().unwrap().to_string();
+    let estimates = detect(&file);
+    let local_goods = estimates
+        .iter()
+        .cloned()
+        .filter(|estimate| **estimate == absnote)
+        .collect::<Vec<_>>();
+    let local_bads = estimates
+        .iter()
+        .cloned()
+        .filter(|estimate| **estimate != absnote)
+        .collect::<Vec<_>>();
+    let (ok, message) = (
+        local_goods.len() > local_bads.len(),
+        format!(
+            "expected={:4} | {} vs. {}",
+            absnote,
+            local_goods.len(),
+            local_bads.len()
+        ),
+    );
+
+    (ok, message, file_name)
+}
+
 #[test]
 fn old_piano_samples() {
     let _ = env_logger::try_init();
@@ -66,60 +105,13 @@ fn old_piano_samples() {
             "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
         ] {
             for n in 1..=7 {
-                let directory = format!(
-                    "/home/julien/delme/old-piano-recordings/position-{}/C{}",
-                    pos, n
-                );
-                let note = format!("{}{}", gnote, n);
-                let files: Vec<PathBuf> =
-                    find_wav_files(Path::new(&directory), &format!("{}.wav", gnote))
-                        .expect("no files");
-                if files.len() != 1 {
-                    log::error!("no unique file found for {} {}", directory, gnote);
-                }
-                debug_assert_eq!(files.len(), 1);
-                let file = files.first().unwrap().clone();
-                let file_name = file.to_str().unwrap().to_string();
-                let file_size = std::fs::metadata(&file).unwrap().len() / 1024;
-                let now = Instant::now();
-                let estimates = detect(&file);
-                let elapsed = now.elapsed();
-                let local_goods = estimates
-                    .iter()
-                    .cloned()
-                    .filter(|estimate| **estimate == note)
-                    .collect::<Vec<_>>();
-                let local_bads = estimates
-                    .iter()
-                    .cloned()
-                    .filter(|estimate| **estimate != note)
-                    .collect::<Vec<_>>();
-                let (ok, message) = (
-                    local_goods.len() > local_bads.len(),
-                    format!(
-                        "expected={:4} | {} vs. {}",
-                        note,
-                        local_goods.len(),
-                        local_bads.len()
-                    ),
-                );
-
+                let (ok, message, file_name) = old_piano_note(pos, gnote, n);
                 if !ok {
-                    log::error!(
-                        "{} ({}K, {:.3} ms)",
-                        message,
-                        file_size,
-                        elapsed.as_millis()
-                    );
+                    log::error!("{}", message,);
                     bad.push(file_name.clone());
-                    //debug_assert!(false);
+                    debug_assert!(false);
                 } else {
-                    log::info!(
-                        "{} ({}K, {:.3} ms)",
-                        message,
-                        file_size,
-                        elapsed.as_millis()
-                    );
+                    log::info!("{}", message,);
                     good.push(file_name.clone());
                 }
             }
@@ -130,4 +122,31 @@ fn old_piano_samples() {
     println!("{} good, {} bad", good.len(), bad.len());
     std::fs::write(&badname, bad.join("\n").clone()).unwrap();
     println!("see {} for details", badname);
+}
+
+#[test]
+fn old_piano_some() {
+    let _ = env_logger::try_init();
+    let position = 1;
+    let octave = 1;
+    let mut results = BTreeMap::new();
+    for gnote in ["C", "C#", "D"] {
+        let (ok, message, file_name) = old_piano_note(position, gnote, octave);
+        log::trace!("filename:{}", file_name);
+        if !ok {
+            log::error!("{}", message,);
+        } else {
+            log::info!("{}", message,);
+        }
+        let key = format!("{:>3}{} | {:>15}", gnote, octave, message);
+        results.insert(key, ok);
+    }
+    let mut good = true;
+    for (key, ok) in results {
+        log::trace!("{} => {}", key, ok);
+        if !ok {
+            good = false;
+        }
+    }
+    debug_assert!(good);
 }

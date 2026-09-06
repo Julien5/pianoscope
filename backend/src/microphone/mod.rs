@@ -16,7 +16,7 @@ pub struct Microphone {
 pub fn wavfile(filename: &str) -> hardware::Wavfile {
     hardware::Wavfile {
         path: std::path::PathBuf::from(filename),
-        paced: true,
+        paced: false,
         looped: false,
     }
 }
@@ -83,16 +83,11 @@ impl Default for Microphone {
     }
 }
 
-struct PitchRecognizer {
-    pitch_detector: PitchDetector,
-    debug_handle: Option<DebugServerHandle>,
-    event_sender: event::EventSender,
-}
-
 #[derive(Clone, Debug)]
 pub enum PitchRecognizerAlgorithm {
     McLeod,
     PYIN,
+    Swipe,
 }
 
 #[derive(Clone, Debug)]
@@ -117,6 +112,19 @@ impl PitchRecognizerParameters {
             window_len,
         }
     }
+    fn new_swipe(sample_rate: u32, window_len: usize) -> Self {
+        Self {
+            algorithm: PitchRecognizerAlgorithm::Swipe,
+            sample_rate,
+            window_len,
+        }
+    }
+}
+
+struct PitchRecognizer {
+    pitch_detector: PitchDetector,
+    debug_handle: Option<DebugServerHandle>,
+    event_sender: event::EventSender,
 }
 
 impl PitchRecognizer {

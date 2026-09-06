@@ -67,9 +67,9 @@ impl PitchDetector {
         self.stats.level_max = (1.0 - alpha) * self.stats.level_max + alpha * self.stats.energy;
         self.stats.level_min = (1.0 - alpha) * self.stats.level_min + alpha * self.stats.energy;
         self.stats.threshold = self.compute_threshold();
-        if self.stats.energy >= self.stats.threshold {
-            self.update_pitch(buffer);
-        }
+        //if self.stats.energy >= self.stats.threshold {
+        self.update_pitch(buffer);
+        //}
         log::trace!(
             "min:{:.3}|curr:{:.3}|max:{:.3} threshold:{:.3} => {:>5} ({5:.1} Hz)",
             self.stats.level_min,
@@ -91,9 +91,7 @@ impl PitchDetector {
             self.stats.current = freq_to_note_name(best.frequency);
         } else {
             debug_assert!(estimates.estimates.is_empty());
-            log::trace!("NO ESTIMATE UPDATE");
         }
-        log::trace!("est:{:?}", self.stats);
     }
     fn compute_threshold(&self) -> f32 {
         self.stats.level_min + (self.stats.level_max - self.stats.level_min) / 3.0
@@ -123,6 +121,8 @@ pub fn freq_to_note_name(freq: f32) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::*;
 
     fn sine_buffer(freq: f32, sample_rate: u32, len: usize) -> Vec<f32> {
@@ -134,21 +134,41 @@ mod tests {
     #[test]
     fn detects_c4() {
         let _ = env_logger::try_init();
-        let sample_rate = 1024 * 4;
-        let signal_length = sample_rate as usize; //  1 sec
+        let sample_rate = 48_000;
+        let signal_length = (sample_rate / 2) as usize; //  1 sec
         let window_len = signal_length;
         let algorithms = vec![
             PitchRecognizerParameters::new_mcleod(sample_rate, window_len),
             PitchRecognizerParameters::new_pyin(sample_rate, window_len),
+            PitchRecognizerParameters::new_swipe(sample_rate, window_len),
         ];
-        log::trace!("make signal");
-        let buffer = sine_buffer(261.63, sample_rate, signal_length);
-        for algorithm in algorithms {
-            log::trace!("testing {:?}", algorithm.algorithm);
-            let mut pd = PitchDetector::new(&algorithm);
-            pd.update(&buffer);
-            assert!(pd.on());
-            assert_eq!(pd.pitch(), "C4");
+        let table = [
+            (32.7, "C1"),
+            (34.65, "C#1"),
+            (36.71, "D1"),
+            (65.4, "C2"),
+            (261.63, "C4"),
+        ];
+        let mut results = BTreeMap::new();
+        for (freq, note) in table {
+            log::trace!("test: {} {}", freq, note);
+            let signal = sine_buffer(freq, sample_rate, signal_length);
+            for algorithm in &algorithms {
+                log::trace!("testing {:?}", algorithm.algorithm);
+                let mut pd = PitchDetector::new(&algorithm);
+                pd.update(&signal);
+                assert!(pd.on());
+                let key = format!("{:?}|{}", algorithm.algorithm, note);
+                results.insert(key, pd.pitch() == note);
+            }
         }
+        let mut good = true;
+        for (key, ok) in results {
+            log::trace!("{} => {}", key, ok);
+            if !ok {
+                good = false;
+            }
+        }
+        debug_assert!(good);
     }
 }
