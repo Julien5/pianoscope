@@ -89,21 +89,32 @@ struct PitchRecognizer {
     event_sender: event::EventSender,
 }
 
+#[derive(Clone, Debug)]
 pub enum PitchRecognizerAlgorithm {
     McLeod,
     PYIN,
 }
 
+#[derive(Clone, Debug)]
 pub struct PitchRecognizerParameters {
-    _algorithm: PitchRecognizerAlgorithm,
+    algorithm: PitchRecognizerAlgorithm,
     sample_rate: u32,
+    window_len: usize,
 }
 
 impl PitchRecognizerParameters {
-    fn new(sample_rate: u32) -> Self {
+    fn new_pyin(sample_rate: u32, window_len: usize) -> Self {
         Self {
-            _algorithm: PitchRecognizerAlgorithm::PYIN,
+            algorithm: PitchRecognizerAlgorithm::PYIN,
             sample_rate,
+            window_len,
+        }
+    }
+    fn new_mcleod(sample_rate: u32, window_len: usize) -> Self {
+        Self {
+            algorithm: PitchRecognizerAlgorithm::McLeod,
+            sample_rate,
+            window_len,
         }
     }
 }

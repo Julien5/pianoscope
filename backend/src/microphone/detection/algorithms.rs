@@ -10,7 +10,7 @@ pub struct Estimate {
 #[derive(Clone)]
 pub struct Estimates {
     // (confidence, frequency)
-    estimates: Vec<Estimate>,
+    pub estimates: Vec<Estimate>,
 }
 
 impl Estimates {
@@ -28,7 +28,9 @@ impl Estimates {
         }
     }
     pub fn best(&self) -> Option<Estimate> {
-        if let Some(e) = self.estimates.first() {
+        let mut sorted = self.estimates.clone();
+        sorted.sort_by(|ea, eb| ea.confidence.total_cmp(&eb.confidence));
+        if let Some(e) = sorted.last() {
             return Some(e.clone());
         }
         None
@@ -40,12 +42,12 @@ pub trait Detector {
 }
 
 pub fn make_detector(parameters: &PitchRecognizerParameters) -> Box<dyn Detector> {
-    match parameters._algorithm {
+    match parameters.algorithm {
         crate::microphone::PitchRecognizerAlgorithm::PYIN => {
             Box::new(PYInDetector::new(parameters))
         }
         crate::microphone::PitchRecognizerAlgorithm::McLeod => {
-            Box::new(PYInDetector::new(parameters))
+            Box::new(McLeodDetector::new(parameters))
         }
     }
 }
@@ -65,12 +67,51 @@ impl PYInDetector {
 
 impl Detector for PYInDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
+        log::trace!("PYin process");
         let mut ret = Vec::new();
         for estimate in self.tracker.process(&buffer).unwrap() {
             ret.push(Estimate {
                 frequency: estimate.pitch_hz,
                 confidence: estimate.confidence,
                 annotation: Some(format!("prelim:{}", estimate.is_preliminary)),
+            });
+        }
+        Estimates { estimates: ret }
+    }
+}
+
+use pitch_detection::detector::mcleod::McLeodDetector as McLeod;
+use pitch_detection::detector::PitchDetector as PitchDetectorTrait;
+
+pub struct McLeodDetector {
+    detector: McLeod<f32>,
+    parameters: PitchRecognizerParameters,
+}
+
+impl McLeodDetector {
+    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        Self {
+            detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
+            parameters: parameters.clone(),
+        }
+    }
+}
+
+impl Detector for McLeodDetector {
+    fn process(&mut self, buffer: &[f32]) -> Estimates {
+        log::trace!("McLeodDetector process");
+        let mut ret = Vec::new();
+        debug_assert_eq!(buffer.len(), self.parameters.window_len);
+        if let Some(pitch) = self.detector.get_pitch(
+            &buffer,
+            self.parameters.sample_rate as usize,
+            0.0, // power detect is upfront
+            0.6, // clarity
+        ) {
+            ret.push(Estimate {
+                frequency: pitch.frequency,
+                confidence: 0.75,
+                annotation: None,
             });
         }
         Estimates { estimates: ret }

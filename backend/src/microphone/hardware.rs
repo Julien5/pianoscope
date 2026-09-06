@@ -94,7 +94,7 @@ impl Connection {
         let stop = Arc::new(AtomicBool::new(false));
         *self.stop.lock().unwrap() = Some(stop.clone());
 
-        let parameters = PitchRecognizerParameters::new(sample_rate);
+        let parameters = PitchRecognizerParameters::new_mcleod(sample_rate, window_len);
 
         let processor = spawn_processing_thread(
             consumer,

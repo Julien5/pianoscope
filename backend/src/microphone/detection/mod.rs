@@ -8,7 +8,7 @@ use crate::{
     microphone::{detection::algorithms::Detector, PitchRecognizerParameters},
 };
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct PitchStats {
     pub level_min: f32,
     pub level_max: f32,
@@ -86,9 +86,14 @@ impl PitchDetector {
         debug_assert!(self.stats.sample_rate != 0);
         let estimates = self.detector.process(&buffer);
         estimates.print();
-        if let Some(estimate) = estimates.best() {
-            self.stats.current_frequency = estimate.frequency;
+        if let Some(best) = estimates.best() {
+            self.stats.current_frequency = best.frequency;
+            self.stats.current = freq_to_note_name(best.frequency);
+        } else {
+            debug_assert!(estimates.estimates.is_empty());
+            log::trace!("NO ESTIMATE UPDATE");
         }
+        log::trace!("est:{:?}", self.stats);
     }
     fn compute_threshold(&self) -> f32 {
         self.stats.level_min + (self.stats.level_max - self.stats.level_min) / 3.0
@@ -128,11 +133,22 @@ mod tests {
 
     #[test]
     fn detects_c4() {
-        let parameters = PitchRecognizerParameters::new(48_000);
-        let mut pd = PitchDetector::new(&parameters);
-        let buffer = sine_buffer(261.63, 48_000, 1024 * 16);
-        pd.update(&buffer);
-        assert!(pd.on());
-        assert_eq!(pd.pitch(), "C4");
+        let _ = env_logger::try_init();
+        let sample_rate = 1024 * 4;
+        let signal_length = sample_rate as usize; //  1 sec
+        let window_len = signal_length;
+        let algorithms = vec![
+            PitchRecognizerParameters::new_mcleod(sample_rate, window_len),
+            PitchRecognizerParameters::new_pyin(sample_rate, window_len),
+        ];
+        log::trace!("make signal");
+        let buffer = sine_buffer(261.63, sample_rate, signal_length);
+        for algorithm in algorithms {
+            log::trace!("testing {:?}", algorithm.algorithm);
+            let mut pd = PitchDetector::new(&algorithm);
+            pd.update(&buffer);
+            assert!(pd.on());
+            assert_eq!(pd.pitch(), "C4");
+        }
     }
 }
