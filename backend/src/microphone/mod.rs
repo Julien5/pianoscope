@@ -50,13 +50,15 @@ impl Microphone {
         let error_sink: hardware::ErrorSink = error_sender.clone();
         let error_sender_factory = error_sender.clone();
         let debug_handle = debug_handle.clone();
-        let factory: hardware::SampleProcessorFactory = Box::new(move || {
-            Box::new(PitchRecognizer::new(
-                event_sender,
-                error_sender_factory,
-                debug_handle,
-            ))
-        });
+        let factory: hardware::SampleProcessorFactory =
+            Box::new(move |parameters: &PitchRecognizerParameters| {
+                Box::new(PitchRecognizer::new(
+                    parameters,
+                    event_sender,
+                    error_sender_factory,
+                    debug_handle,
+                ))
+            });
         let source = self.source.lock().unwrap().clone();
         if let Err(e) = self.connection.start(source, factory, error_sink) {
             error_sender(e.to_string());
@@ -81,24 +83,40 @@ impl Default for Microphone {
     }
 }
 
-/// Recognizes note on/off events from windows of raw samples.
-///
-/// Owns the detection state and is mutated in place by the single processing
-/// thread via `SampleProcessor::process`.
 struct PitchRecognizer {
     pitch_detector: PitchDetector,
     debug_handle: Option<DebugServerHandle>,
     event_sender: event::EventSender,
 }
 
+pub enum PitchRecognizerAlgorithm {
+    McLeod,
+    PYIN,
+}
+
+pub struct PitchRecognizerParameters {
+    _algorithm: PitchRecognizerAlgorithm,
+    sample_rate: u32,
+}
+
+impl PitchRecognizerParameters {
+    fn new(sample_rate: u32) -> Self {
+        Self {
+            _algorithm: PitchRecognizerAlgorithm::PYIN,
+            sample_rate,
+        }
+    }
+}
+
 impl PitchRecognizer {
     fn new(
+        parameters: &PitchRecognizerParameters,
         event_sender: event::EventSender,
         _error_sender: event::ErrorSender,
         debug_handle: Option<DebugServerHandle>,
     ) -> Self {
         Self {
-            pitch_detector: PitchDetector::new(),
+            pitch_detector: PitchDetector::new(parameters),
             debug_handle,
             event_sender,
         }
@@ -125,8 +143,5 @@ impl hardware::SampleProcessor for PitchRecognizer {
             }
             (self.event_sender)(event);
         }
-    }
-    fn set_sample_rate(&mut self, sample_rate: u32) {
-        self.pitch_detector.set_sample_rate(sample_rate);
     }
 }

@@ -1,15 +1,13 @@
+pub mod algorithms;
+
 use serde::Serialize;
 use std::f32;
 
-use crate::event::NOTE_NAMES;
-use pitch_detection::detector::yin::YINDetector;
-use pitch_detection::detector::PitchDetector as PitchDetectorTrait;
+use crate::{
+    event::NOTE_NAMES,
+    microphone::{detection::algorithms::Detector, PitchRecognizerParameters},
+};
 
-/// Snapshot of the detector's public state, used for debug serialization.
-///
-/// `PitchDetector` itself cannot be serialized or cloned: it owns a
-/// `McLeodDetector`, which is neither. This is fine because detection runs on a
-/// single dedicated processing thread, so the detector never crosses threads.
 #[derive(Clone, Serialize)]
 pub struct PitchStats {
     pub level_min: f32,
@@ -22,7 +20,7 @@ pub struct PitchStats {
 }
 
 impl PitchStats {
-    fn new() -> Self {
+    fn new(sample_rate: u32) -> Self {
         Self {
             level_min: 0f32,
             level_max: -f32::MAX,
@@ -30,15 +28,14 @@ impl PitchStats {
             current_frequency: 0.0,
             energy: 0.0,
             threshold: f32::MAX,
-            sample_rate: 0,
+            sample_rate,
         }
     }
 }
 
 pub struct PitchDetector {
     stats: PitchStats,
-    //detector: McLeodDetector<f32>,
-    detector: YINDetector<f32>,
+    detector: Box<dyn Detector>,
 }
 
 fn compute_energy(samples: &[f32]) -> f32 {
@@ -51,19 +48,15 @@ fn compute_energy(samples: &[f32]) -> f32 {
 }
 
 impl PitchDetector {
-    pub fn new() -> Self {
+    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
         Self {
-            stats: PitchStats::new(),
-            //detector: McLeodDetector::new(DETECT_WINDOW, DETECT_PADDING),
-            detector: YINDetector::new(
-                super::hardware::DETECT_WINDOW,
-                super::hardware::DETECT_PADDING,
-            ),
+            stats: PitchStats::new(parameters.sample_rate),
+            detector: algorithms::make_detector(parameters),
         }
     }
+
     pub fn update(&mut self, buffer: &[f32]) {
         self.stats.energy = compute_energy(buffer);
-
         if self.stats.energy < self.stats.level_min {
             self.stats.level_min = self.stats.energy;
         }
@@ -90,17 +83,11 @@ impl PitchDetector {
     /// Run pitch detection on the current block and store the best note name.
     /// Only called when sound is detected (`energy >= threshold`).
     fn update_pitch(&mut self, buffer: &[f32]) {
-        if self.stats.sample_rate == 0 || buffer.len() < super::hardware::DETECT_WINDOW {
-            return;
-        }
-        if let Some(pitch) = self.detector.get_pitch(
-            &buffer[..super::hardware::DETECT_WINDOW],
-            self.stats.sample_rate as usize,
-            super::hardware::POWER_THRESHOLD,
-            super::hardware::CLARITY_THRESHOLD,
-        ) {
-            self.stats.current_frequency = pitch.frequency;
-            self.stats.current = freq_to_note_name(pitch.frequency);
+        debug_assert!(self.stats.sample_rate != 0);
+        let estimates = self.detector.process(&buffer);
+        estimates.print();
+        if let Some(estimate) = estimates.best() {
+            self.stats.current_frequency = estimate.frequency;
         }
     }
     fn compute_threshold(&self) -> f32 {
@@ -112,16 +99,13 @@ impl PitchDetector {
     pub fn pitch(&self) -> String {
         self.stats.current.clone()
     }
-    pub fn set_sample_rate(&mut self, sample_rate: u32) {
-        self.stats.sample_rate = sample_rate;
-    }
     pub fn stats(&self) -> PitchStats {
         self.stats.clone()
     }
 }
 
 /// Convert a frequency (Hz) into the nearest note name, e.g. "C#4".
-fn freq_to_note_name(freq: f32) -> String {
+pub fn freq_to_note_name(freq: f32) -> String {
     if !freq.is_finite() || freq <= 0.0 {
         return String::new();
     }
@@ -144,22 +128,9 @@ mod tests {
 
     #[test]
     fn detects_c4() {
-        let mut pd = PitchDetector {
-            stats: PitchStats {
-                level_min: 0.001,
-                level_max: 0.1,
-                current: String::new(),
-                current_frequency: 0.0,
-                energy: 0.0,
-                threshold: 0.0,
-                sample_rate: 48_000,
-            },
-            detector: YINDetector::new(
-                super::super::hardware::DETECT_WINDOW,
-                super::super::hardware::DETECT_PADDING,
-            ),
-        };
-        let buffer = sine_buffer(261.63, 48_000, super::super::hardware::DETECT_WINDOW);
+        let parameters = PitchRecognizerParameters::new(48_000);
+        let mut pd = PitchDetector::new(&parameters);
+        let buffer = sine_buffer(261.63, 48_000, 1024 * 16);
         pd.update(&buffer);
         assert!(pd.on());
         assert_eq!(pd.pitch(), "C4");

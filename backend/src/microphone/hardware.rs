@@ -8,26 +8,18 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{SampleFormat, SizedSample};
 use rtrb::{Consumer, PopError, Producer};
 
+use crate::microphone::PitchRecognizerParameters;
+
 /// Length of the window in seconds.
 pub const WINDOW_SECONDS: f32 = 0.125;
-/// FFT window (in samples) fed to the pitch detector on each block.
-pub const DETECT_WINDOW: usize = 8192 / 2;
-/// FFT padding, half the window, as recommended by the `pitch-detection` crate.
-pub const DETECT_PADDING: usize = DETECT_WINDOW / 2;
-/// Internal power gate of the detector. We already gate on our own energy.
-pub const POWER_THRESHOLD: f32 = 0.0;
-/// Confidence required for a pitch candidate to be accepted.
-pub const CLARITY_THRESHOLD: f32 = 0.6;
 
 pub trait SampleProcessor {
     fn process(&mut self, block: &[f32]);
-    fn set_sample_rate(&mut self, sample_rate: u32);
 }
 
-/// Builds the sample processor inside the processing thread, so the processor
-/// itself does not need to be `Send`. Only the factory (which captures `Send`
-/// handles) crosses the thread boundary.
-pub type SampleProcessorFactory = Box<dyn FnOnce() -> Box<dyn SampleProcessor> + Send>;
+// u32 = sample_rate
+pub type SampleProcessorFactory =
+    Box<dyn FnOnce(&PitchRecognizerParameters) -> Box<dyn SampleProcessor> + Send>;
 
 pub type ErrorSink = Arc<dyn Fn(String) + Send + Sync>;
 
@@ -91,6 +83,7 @@ impl Connection {
         if sample_rate == 0 {
             return Err("invalid sample rate 0".into());
         }
+        log::trace!("sample rate: {}", sample_rate);
 
         let window_len = (sample_rate as f32 * WINDOW_SECONDS) as usize;
         let ring_capacity = sample_rate as usize * 2;
@@ -101,10 +94,12 @@ impl Connection {
         let stop = Arc::new(AtomicBool::new(false));
         *self.stop.lock().unwrap() = Some(stop.clone());
 
+        let parameters = PitchRecognizerParameters::new(sample_rate);
+
         let processor = spawn_processing_thread(
             consumer,
             window_len,
-            sample_rate,
+            parameters,
             sample_processor_factory,
             error_sink.clone(),
             stop.clone(),
@@ -249,7 +244,7 @@ where
 fn spawn_processing_thread(
     mut consumer: Consumer<f32>,
     window_len: usize,
-    sample_rate: u32,
+    parameters: PitchRecognizerParameters,
     sample_processor_factory: SampleProcessorFactory,
     _error_sink: ErrorSink,
     stop: Arc<AtomicBool>,
@@ -257,9 +252,8 @@ fn spawn_processing_thread(
     thread::Builder::new()
         .name("nano-mic-processing".into())
         .spawn(move || {
-            let mut sample_processor = sample_processor_factory();
+            let mut sample_processor = sample_processor_factory(&parameters);
             let mut buf: Vec<f32> = Vec::with_capacity(window_len);
-            sample_processor.set_sample_rate(sample_rate);
             loop {
                 match consumer.pop() {
                     Ok(sample) => buf.push(sample),

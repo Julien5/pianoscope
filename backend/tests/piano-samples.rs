@@ -62,14 +62,14 @@ fn old_piano_samples() {
     let mut bad = Vec::new();
     let mut good = Vec::new();
     for pos in 1..=2 {
-        for n in 1..=5 {
-            let directory = format!(
-                "/home/julien/delme/old-piano-recordings/position-{}/C{}",
-                pos, n
-            );
-            for gnote in [
-                "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
-            ] {
+        for gnote in [
+            "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+        ] {
+            for n in 1..=7 {
+                let directory = format!(
+                    "/home/julien/delme/old-piano-recordings/position-{}/C{}",
+                    pos, n
+                );
                 let note = format!("{}{}", gnote, n);
                 let files: Vec<PathBuf> =
                     find_wav_files(Path::new(&directory), &format!("{}.wav", gnote))
