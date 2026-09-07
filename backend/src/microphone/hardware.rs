@@ -11,7 +11,7 @@ use rtrb::{Consumer, PopError, Producer};
 use crate::microphone::PitchRecognizerParameters;
 
 /// Length of the window in seconds.
-pub const WINDOW_SECONDS: f32 = 0.25;
+pub const WINDOW_SECONDS: f32 = 0.125;
 
 pub trait SampleProcessor {
     fn process(&mut self, block: &[f32]);
@@ -83,7 +83,6 @@ impl Connection {
         if sample_rate == 0 {
             return Err("invalid sample rate 0".into());
         }
-        log::trace!("sample rate: {}", sample_rate);
 
         let window_len = (sample_rate as f32 * WINDOW_SECONDS) as usize;
         let ring_capacity = sample_rate as usize * 2;
@@ -268,17 +267,11 @@ fn spawn_processing_thread(
                     }
                 }
                 if buf.len() >= window_len {
-                    log::trace!("process {} samples (window_len={})", buf.len(), window_len);
                     sample_processor.process(&buf);
                     buf.clear();
                 }
             }
             if !buf.is_empty() {
-                log::trace!(
-                    "process {} samples (tail,window_len={})",
-                    buf.len(),
-                    window_len
-                );
                 sample_processor.process(&buf);
             }
         })

@@ -15,6 +15,9 @@ pub struct Estimates {
 
 impl Estimates {
     pub fn print(&self) {
+        if self.estimates.is_empty() {
+            log::trace!("no estimate");
+        }
         for (index, estimate) in self.estimates.iter().enumerate() {
             let note = super::freq_to_note_name(estimate.frequency);
             log::trace!(
@@ -62,6 +65,7 @@ pub struct PYInDetector {
 
 impl PYInDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        log::trace!("make PYIN detector");
         let est = pitch_core::PyinEstimator::new().unwrap();
         let tracker = pitch_core::PitchTracker::new(est, parameters.sample_rate, 1024)
             .expect("could not build tracker");
@@ -71,7 +75,6 @@ impl PYInDetector {
 
 impl Detector for PYInDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
-        log::trace!("PYin process");
         let mut ret = Vec::new();
 
         for estimate in self.tracker.process(&buffer).unwrap() {
@@ -91,6 +94,7 @@ pub struct SwipeDetector {
 
 impl SwipeDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        log::trace!("make Swipe detector");
         let est = pitch_core::SwipeEstimator::new().unwrap();
         let tracker = pitch_core::PitchTracker::new(est, parameters.sample_rate, 1024)
             .expect("could not build tracker");
@@ -100,7 +104,6 @@ impl SwipeDetector {
 
 impl Detector for SwipeDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
-        log::trace!("Swipe process");
         let mut ret = Vec::new();
 
         for estimate in self.tracker.process(&buffer).unwrap() {
@@ -124,8 +127,9 @@ pub struct McLeodDetector {
 
 impl McLeodDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        log::trace!("make McLeod detector");
         Self {
-            detector: McLeod::new(parameters.window_len, parameters.window_len / 4),
+            detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
             parameters: parameters.clone(),
         }
     }
@@ -135,12 +139,10 @@ impl Detector for McLeodDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
         let mut ret = Vec::new();
         if buffer.len() < self.parameters.window_len {
-            log::trace!("McLeodDetector process: filling buffer: {}", buffer.len());
             return Estimates {
                 estimates: Vec::new(),
             };
         } else if buffer.len() > self.parameters.window_len {
-            log::trace!("McLeodDetector process: buffer larger than window_len => bad");
         }
         debug_assert_eq!(buffer.len(), self.parameters.window_len);
         if let Some(pitch) = self.detector.get_pitch(
@@ -168,6 +170,7 @@ pub struct YinDetector {
 
 impl YinDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        log::trace!("make YIN detector");
         Self {
             detector: YIN::new(parameters.window_len, parameters.window_len / 4),
             parameters: parameters.clone(),
@@ -179,12 +182,10 @@ impl Detector for YinDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
         let mut ret = Vec::new();
         if buffer.len() < self.parameters.window_len {
-            log::trace!("YIN process: filling buffer: {}", buffer.len());
             return Estimates {
                 estimates: Vec::new(),
             };
         } else if buffer.len() > self.parameters.window_len {
-            log::trace!("YIN process: buffer larger than window_len => bad");
         }
         debug_assert_eq!(buffer.len(), self.parameters.window_len);
         if let Some(pitch) = self.detector.get_pitch(

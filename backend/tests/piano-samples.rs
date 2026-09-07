@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use backend::event::MidiEvent;
 
@@ -96,7 +96,7 @@ fn old_piano_note(pos: usize, note: &str, octave: usize) -> (bool, String, Strin
 }
 
 #[test]
-fn old_piano_samples() {
+fn old_piano_all() {
     let _ = env_logger::try_init();
     let mut bad = Vec::new();
     let mut good = Vec::new();
@@ -104,12 +104,11 @@ fn old_piano_samples() {
         for gnote in [
             "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
         ] {
-            for n in 1..=7 {
-                let (ok, message, file_name) = old_piano_note(pos, gnote, n);
+            for octave in 1..=7 {
+                let (ok, message, file_name) = old_piano_note(pos, gnote, octave);
                 if !ok {
                     log::error!("{}", message,);
                     bad.push(file_name.clone());
-                    debug_assert!(false);
                 } else {
                     log::info!("{}", message,);
                     good.push(file_name.clone());
@@ -131,8 +130,8 @@ fn old_piano_some() {
     let octave = 1;
     let mut results = BTreeMap::new();
     for gnote in ["C", "C#", "D"] {
-        let (ok, message, file_name) = old_piano_note(position, gnote, octave);
-        log::trace!("filename:{}", file_name);
+        log::trace!("** test: {:>3}{}", gnote, octave);
+        let (ok, message, _file_name) = old_piano_note(position, gnote, octave);
         if !ok {
             log::error!("{}", message,);
         } else {

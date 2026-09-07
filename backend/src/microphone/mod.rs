@@ -98,6 +98,7 @@ pub struct PitchRecognizerParameters {
     window_len: usize,
 }
 
+#[allow(dead_code)]
 impl PitchRecognizerParameters {
     fn new_pyin(sample_rate: u32, window_len: usize) -> Self {
         Self {

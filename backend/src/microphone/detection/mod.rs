@@ -70,6 +70,7 @@ impl PitchDetector {
         //if self.stats.energy >= self.stats.threshold {
         self.update_pitch(buffer);
         //}
+        /*
         log::trace!(
             "min:{:.3}|curr:{:.3}|max:{:.3} threshold:{:.3} => {:>5} ({5:.1} Hz)",
             self.stats.level_min,
@@ -78,7 +79,7 @@ impl PitchDetector {
             self.stats.threshold,
             self.stats.current,
             self.stats.current_frequency
-        );
+        );*/
     }
     /// Run pitch detection on the current block and store the best note name.
     /// Only called when sound is detected (`energy >= threshold`).
