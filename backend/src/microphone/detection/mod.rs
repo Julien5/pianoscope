@@ -12,7 +12,7 @@ use crate::{
 pub struct PitchStats {
     pub level_min: f32,
     pub level_max: f32,
-    pub current: String,
+    pub current_note: String,
     pub current_frequency: f32,
     pub energy: f32,
     pub threshold: f32,
@@ -24,12 +24,23 @@ impl PitchStats {
         Self {
             level_min: 0f32,
             level_max: -f32::MAX,
-            current: String::new(),
+            current_note: String::new(),
             current_frequency: 0.0,
             energy: 0.0,
             threshold: f32::MAX,
             sample_rate,
         }
+    }
+    pub fn velocity(&self) -> u8 {
+        debug_assert!(self.threshold >= self.level_min);
+        if self.energy <= self.threshold {
+            return 0u8;
+        }
+        debug_assert!(self.threshold <= self.energy && self.energy <= self.level_max);
+        let scaled =
+            1.0 + 126.0 * (self.energy - self.threshold) / (self.level_max - self.threshold);
+        debug_assert!(0.9 <= scaled && scaled <= 127.1, "scaled={}", scaled);
+        return scaled.round() as u8;
     }
 }
 
@@ -67,6 +78,9 @@ impl PitchDetector {
         self.stats.level_max = (1.0 - alpha) * self.stats.level_max + alpha * self.stats.energy;
         self.stats.level_min = (1.0 - alpha) * self.stats.level_min + alpha * self.stats.energy;
         self.stats.threshold = self.compute_threshold();
+        // zero the current estimate
+        self.stats.current_frequency = 0.0;
+        self.stats.current_note = String::new();
         if self.stats.energy >= self.stats.threshold {
             self.update_pitch(buffer);
         }
@@ -89,7 +103,7 @@ impl PitchDetector {
         estimates.print();
         if let Some(best) = estimates.best() {
             self.stats.current_frequency = best.frequency;
-            self.stats.current = freq_to_note_name(best.frequency);
+            self.stats.current_note = freq_to_note_name(best.frequency);
         } else {
             debug_assert!(estimates.estimates.is_empty());
         }
@@ -101,7 +115,7 @@ impl PitchDetector {
         self.stats.energy >= self.stats.threshold
     }
     pub fn pitch(&self) -> String {
-        self.stats.current.clone()
+        self.stats.current_note.clone()
     }
     pub fn stats(&self) -> PitchStats {
         self.stats.clone()

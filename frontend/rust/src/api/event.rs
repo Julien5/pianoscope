@@ -3,7 +3,7 @@ pub use backend::event::{MidiEvent, Status};
 #[flutter_rust_bridge::frb(mirror(MidiEvent))]
 pub struct _MidiEvent {
     pub status: Status,
-    pub velocity: u32,
+    pub velocity: u8,
     pub note: u8,
     pub note_name: String,
     pub raw: Vec<u8>,

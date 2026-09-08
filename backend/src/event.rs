@@ -14,7 +14,7 @@ pub enum Status {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MidiEvent {
     pub status: Status,
-    pub velocity: u32,
+    pub velocity: u8,
     pub note: u8,
     pub note_name: String,
     pub raw: Vec<u8>,
@@ -42,7 +42,7 @@ impl MidiEvent {
 
         Some(Self {
             status,
-            velocity: velocity as u32,
+            velocity,
             note,
             note_name: name,
             raw: bytes.to_vec(),
@@ -53,7 +53,7 @@ impl MidiEvent {
         Self::from_note_status(name, Status::NoteOn, 0x40)
     }
 
-    pub fn from_note_status(name: &str, status: Status, velocity: u32) -> Option<Self> {
+    pub fn from_note_status(name: &str, status: Status, velocity: u8) -> Option<Self> {
         let note = note_name_to_midi(name)?;
         let status_byte = match status {
             Status::NoteOn => 0x90,
