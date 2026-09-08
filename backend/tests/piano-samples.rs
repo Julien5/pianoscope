@@ -51,10 +51,6 @@ fn detect(path: &PathBuf) -> Vec<String> {
         std::thread::sleep(Duration::from_millis(100));
     }
     let captured = events.read().unwrap();
-    // baseline returns only the first
-    for e in captured.iter() {
-        return vec![format!("{}", e.note_name)];
-    }
     captured
         .iter()
         .map(|e| format!("{}", e.note_name))
@@ -76,7 +72,6 @@ fn old_piano_note(pos: usize, note: &str, octave: usize) -> (bool, String, Strin
     let file = files.first().unwrap().clone();
     let file_name = file.to_str().unwrap().to_string();
     let estimates = detect(&file);
-    debug_assert!(estimates.len() <= 1);
     let local_goods = estimates
         .iter()
         .cloned()
@@ -105,7 +100,7 @@ fn old_piano_all() {
     let _ = env_logger::try_init();
     let mut bad = Vec::new();
     let mut good = Vec::new();
-    for pos in 1..=1 {
+    for pos in 1..=2 {
         for gnote in [
             "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
         ] {

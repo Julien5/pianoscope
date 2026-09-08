@@ -56,6 +56,9 @@ pub fn make_detector(parameters: &PitchRecognizerParameters) -> Box<dyn Detector
         crate::microphone::PitchRecognizerAlgorithm::Swipe => {
             Box::new(SwipeDetector::new(parameters))
         }
+        crate::microphone::PitchRecognizerAlgorithm::AutoCorrelation => {
+            Box::new(AutoCorrelationDetector::new(parameters))
+        }
     }
 }
 
@@ -128,13 +131,8 @@ pub struct McLeodDetector {
 impl McLeodDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
         log::trace!("make McLeod detector");
-        log::trace!("parameters.window_len:{}", parameters.window_len);
-        let mut parameters = parameters.clone();
-        parameters.window_len = 8192;
-        log::trace!("parameters.window_len:{}", parameters.window_len);
         Self {
-            //detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
-            detector: McLeod::new(8192, 8192 / 2),
+            detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
             parameters: parameters.clone(),
         }
     }
@@ -150,9 +148,9 @@ impl Detector for McLeodDetector {
             return empty;
         } else if buffer.len() > self.parameters.window_len {
         }
-        // debug_assert_eq!(buffer.len(), self.parameters.window_len);
+        debug_assert_eq!(buffer.len(), self.parameters.window_len);
         if let Some(pitch) = self.detector.get_pitch(
-            &buffer[..self.parameters.window_len],
+            &buffer,
             self.parameters.sample_rate as usize,
             0.0, // power detect is upfront
             0.6, // clarity
@@ -178,13 +176,56 @@ impl YinDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
         log::trace!("make YIN detector");
         Self {
-            detector: YIN::new(parameters.window_len, parameters.window_len / 4),
+            detector: YIN::new(parameters.window_len, parameters.window_len / 2),
             parameters: parameters.clone(),
         }
     }
 }
 
 impl Detector for YinDetector {
+    fn process(&mut self, buffer: &[f32]) -> Estimates {
+        let mut ret = Vec::new();
+        if buffer.len() < self.parameters.window_len {
+            return Estimates {
+                estimates: Vec::new(),
+            };
+        } else if buffer.len() > self.parameters.window_len {
+        }
+        debug_assert_eq!(buffer.len(), self.parameters.window_len);
+        if let Some(pitch) = self.detector.get_pitch(
+            &buffer,
+            self.parameters.sample_rate as usize,
+            0.0, // power detect is upfront
+            0.6, // clarity
+        ) {
+            ret.push(Estimate {
+                frequency: pitch.frequency,
+                confidence: 0.75,
+                annotation: None,
+            });
+        }
+        Estimates { estimates: ret }
+    }
+}
+
+use pitch_detection::detector::autocorrelation::AutocorrelationDetector as AutoCorrelation;
+
+pub struct AutoCorrelationDetector {
+    detector: AutoCorrelation<f32>,
+    parameters: PitchRecognizerParameters,
+}
+
+impl AutoCorrelationDetector {
+    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        log::trace!("make AutoCorrelationDetector");
+        Self {
+            detector: AutoCorrelation::new(parameters.window_len, parameters.window_len / 2),
+            parameters: parameters.clone(),
+        }
+    }
+}
+
+impl Detector for AutoCorrelationDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
         let mut ret = Vec::new();
         if buffer.len() < self.parameters.window_len {

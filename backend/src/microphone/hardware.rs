@@ -11,7 +11,7 @@ use rtrb::{Consumer, PopError, Producer};
 use crate::microphone::PitchRecognizerParameters;
 
 /// Length of the window in seconds.
-pub const WINDOW_SECONDS: f32 = 0.25;
+pub const WINDOW_SECONDS: f32 = 0.125;
 
 pub trait SampleProcessor {
     fn process(&mut self, block: &[f32]);
@@ -97,6 +97,7 @@ impl Connection {
         //let parameters = PitchRecognizerParameters::new_yin(sample_rate, window_len);
         //let parameters = PitchRecognizerParameters::new_pyin(sample_rate, window_len);
         //let parameters = PitchRecognizerParameters::new_swipe(sample_rate, window_len);
+        //let parameters = PitchRecognizerParameters::new_autocorrelation(sample_rate, window_len);
 
         let processor = spawn_processing_thread(
             consumer,

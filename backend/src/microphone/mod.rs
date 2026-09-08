@@ -89,6 +89,7 @@ pub enum PitchRecognizerAlgorithm {
     YIN,
     PYIN,
     Swipe,
+    AutoCorrelation,
 }
 
 #[derive(Clone, Debug)]
@@ -124,6 +125,13 @@ impl PitchRecognizerParameters {
     fn new_yin(sample_rate: u32, window_len: usize) -> Self {
         Self {
             algorithm: PitchRecognizerAlgorithm::YIN,
+            sample_rate,
+            window_len,
+        }
+    }
+    fn new_autocorrelation(sample_rate: u32, window_len: usize) -> Self {
+        Self {
+            algorithm: PitchRecognizerAlgorithm::AutoCorrelation,
             sample_rate,
             window_len,
         }
