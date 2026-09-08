@@ -27,7 +27,7 @@ class PitchDetector:
         self.threshold = data["threshold"]
         self.level_min = data["level_min"]
         self.level_max = data["level_max"]
-        self.current = data["current"]
+        self.current = data["current_note"]
         self.energy = data["energy"]
         self.sample_rate = data["sample_rate"]
 

@@ -5,6 +5,7 @@ import 'package:frontend/src/rust/api/event.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/src/providers/input_provider.dart';
 import 'package:frontend/src/widgets/grand_staff_view.dart';
+import 'package:frontend/src/widgets/velocity_indicator.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -65,16 +66,28 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final signalVelocity = (_event?.velocity ?? 0).clamp(0, 127);
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.portName)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            GrandStaffView(
-              midiNote: _event?.note,
-              velocity: _event?.velocity ?? 64,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: GrandStaffView(
+                    midiNote: _event?.note,
+                    velocity: signalVelocity,
+                  ),
+                ),
+                VelocityIndicator(velocity: signalVelocity),
+                const SizedBox(width: 25),
+              ],
             ),
+
             const SizedBox(height: 16),
             Text(
               _noteName,

@@ -52,30 +52,22 @@ class GrandStaffView extends StatelessWidget {
       startBarline: BarlineType.single,
     );
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(8),
+    return NotationView(
+      grandStaff: GrandStaff(
+        upperStaff: [upperMeasure],
+        lowerStaff: [lowerMeasure],
       ),
-      child: NotationView(
-        grandStaff: GrandStaff(
-          upperStaff: [upperMeasure],
-          lowerStaff: [lowerMeasure],
-        ),
-        config: const NotationConfig(
-          staffSpaceSize: 10,
-          barlineToClefSpace: 10,
-          leftMargin: 60,
-          topMargin: 30,
-          grandStaffGap: 60,
-          showBrace: true,
-          showMeasureNumbers: false,
-          showTimeSignature: false,
-          leadingSpace: 60,
-          expandWidth: true,
-        ),
+      config: const NotationConfig(
+        staffSpaceSize: 10,
+        barlineToClefSpace: 10,
+        leftMargin: 20,
+        topMargin: 30,
+        grandStaffGap: 60,
+        showBrace: true,
+        showMeasureNumbers: false,
+        showTimeSignature: false,
+        leadingSpace: 60,
+        expandWidth: true,
       ),
     );
   }

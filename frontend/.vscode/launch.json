@@ -12,12 +12,21 @@
                 "SIMULATION": "3"
             }
         },
+
         {
-            "name": "frontend (audio simulation)",
+            "name": "frontend (pure C4)",
             "request": "launch",
             "type": "dart",
             "env": {
                 "SIMULATION": "/home/julien/projects/pianoscope/backend/data/C4.wav"
+            }
+        },
+        {
+            "name": "frontend (old piano C4)",
+            "request": "launch",
+            "type": "dart",
+            "env": {
+                "SIMULATION": "/home/julien/delme/old-piano-recordings/position-1/C4/mark-all.wav"
             }
         }
     ]
