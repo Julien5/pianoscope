@@ -67,9 +67,9 @@ impl PitchDetector {
         self.stats.level_max = (1.0 - alpha) * self.stats.level_max + alpha * self.stats.energy;
         self.stats.level_min = (1.0 - alpha) * self.stats.level_min + alpha * self.stats.energy;
         self.stats.threshold = self.compute_threshold();
-        //if self.stats.energy >= self.stats.threshold {
-        self.update_pitch(buffer);
-        //}
+        if self.stats.energy >= self.stats.threshold {
+            self.update_pitch(buffer);
+        }
         /*
         log::trace!(
             "min:{:.3}|curr:{:.3}|max:{:.3} threshold:{:.3} => {:>5} ({5:.1} Hz)",

@@ -128,6 +128,10 @@ pub struct McLeodDetector {
 impl McLeodDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
         log::trace!("make McLeod detector");
+        log::trace!("parameters.window_len:{}", parameters.window_len);
+        let mut parameters = parameters.clone();
+        parameters.window_len = 8192;
+        log::trace!("parameters.window_len:{}", parameters.window_len);
         Self {
             //detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
             detector: McLeod::new(8192, 8192 / 2),
@@ -138,16 +142,17 @@ impl McLeodDetector {
 
 impl Detector for McLeodDetector {
     fn process(&mut self, buffer: &[f32]) -> Estimates {
+        let empty = Estimates {
+            estimates: Vec::new(),
+        };
         let mut ret = Vec::new();
         if buffer.len() < self.parameters.window_len {
-            return Estimates {
-                estimates: Vec::new(),
-            };
+            return empty;
         } else if buffer.len() > self.parameters.window_len {
         }
-        debug_assert_eq!(buffer.len(), self.parameters.window_len);
+        // debug_assert_eq!(buffer.len(), self.parameters.window_len);
         if let Some(pitch) = self.detector.get_pitch(
-            &buffer[..8192],
+            &buffer[..self.parameters.window_len],
             self.parameters.sample_rate as usize,
             0.0, // power detect is upfront
             0.6, // clarity
