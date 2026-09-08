@@ -10,7 +10,7 @@ set style fill transparent solid 0.35 border
 # set autoscale x
 # set autoscale y
 set xrange [0:{WINDOW_SECONDS}]
-set yrange [-0.1:0.1]
+set yrange [-0.5:0.5]
 
 plot '{audio_csv}' using 1:2 with lines title 'Signal', \
      '{pitch_csv}' using 2:4:3 with boxes title 'Energy', \

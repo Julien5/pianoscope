@@ -7,7 +7,7 @@ fn setup_log() {
             writeln!(
                 buf,
                 "{} [{}] - {}",
-                chrono::Local::now().format("%H:%M:%S:%f"),
+                chrono::Local::now().format("%H:%M:%S:%3f"),
                 record.level(),
                 record.args()
             )

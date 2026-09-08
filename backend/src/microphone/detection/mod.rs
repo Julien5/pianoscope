@@ -95,7 +95,7 @@ impl PitchDetector {
         }
     }
     fn compute_threshold(&self) -> f32 {
-        self.stats.level_min + (self.stats.level_max - self.stats.level_min) / 3.0
+        self.stats.level_min + (self.stats.level_max - self.stats.level_min) / 6.0
     }
     pub fn on(&self) -> bool {
         self.stats.energy >= self.stats.threshold
