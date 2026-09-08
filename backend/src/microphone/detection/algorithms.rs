@@ -129,7 +129,8 @@ impl McLeodDetector {
     pub fn new(parameters: &PitchRecognizerParameters) -> Self {
         log::trace!("make McLeod detector");
         Self {
-            detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
+            //detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
+            detector: McLeod::new(8192, 8192 / 2),
             parameters: parameters.clone(),
         }
     }
@@ -146,14 +147,14 @@ impl Detector for McLeodDetector {
         }
         debug_assert_eq!(buffer.len(), self.parameters.window_len);
         if let Some(pitch) = self.detector.get_pitch(
-            &buffer,
+            &buffer[..8192],
             self.parameters.sample_rate as usize,
             0.0, // power detect is upfront
             0.6, // clarity
         ) {
             ret.push(Estimate {
                 frequency: pitch.frequency,
-                confidence: 0.75,
+                confidence: 0.6,
                 annotation: None,
             });
         }

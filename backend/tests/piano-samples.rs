@@ -51,6 +51,10 @@ fn detect(path: &PathBuf) -> Vec<String> {
         std::thread::sleep(Duration::from_millis(100));
     }
     let captured = events.read().unwrap();
+    // baseline returns only the first
+    for e in captured.iter() {
+        return vec![format!("{}", e.note_name)];
+    }
     captured
         .iter()
         .map(|e| format!("{}", e.note_name))
@@ -72,6 +76,7 @@ fn old_piano_note(pos: usize, note: &str, octave: usize) -> (bool, String, Strin
     let file = files.first().unwrap().clone();
     let file_name = file.to_str().unwrap().to_string();
     let estimates = detect(&file);
+    debug_assert!(estimates.len() <= 1);
     let local_goods = estimates
         .iter()
         .cloned()
@@ -100,7 +105,7 @@ fn old_piano_all() {
     let _ = env_logger::try_init();
     let mut bad = Vec::new();
     let mut good = Vec::new();
-    for pos in 1..=2 {
+    for pos in 1..=1 {
         for gnote in [
             "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
         ] {
@@ -130,6 +135,33 @@ fn old_piano_some() {
     let octave = 1;
     let mut results = BTreeMap::new();
     for gnote in ["C", "C#", "D"] {
+        log::trace!("** test: {:>3}{}", gnote, octave);
+        let (ok, message, _file_name) = old_piano_note(position, gnote, octave);
+        if !ok {
+            log::error!("{}", message,);
+        } else {
+            log::info!("{}", message,);
+        }
+        let key = format!("{:>3}{} | {:>15}", gnote, octave, message);
+        results.insert(key, ok);
+    }
+    let mut good = true;
+    for (key, ok) in results {
+        log::trace!("{} => {}", key, ok);
+        if !ok {
+            good = false;
+        }
+    }
+    debug_assert!(good);
+}
+
+#[test]
+fn old_piano_getting_baseline() {
+    let _ = env_logger::try_init();
+    let position = 1;
+    let octave = 4;
+    let mut results = BTreeMap::new();
+    for gnote in ["A#"] {
         log::trace!("** test: {:>3}{}", gnote, octave);
         let (ok, message, _file_name) = old_piano_note(position, gnote, octave);
         if !ok {

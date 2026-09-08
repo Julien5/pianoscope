@@ -11,7 +11,7 @@ use rtrb::{Consumer, PopError, Producer};
 use crate::microphone::PitchRecognizerParameters;
 
 /// Length of the window in seconds.
-pub const WINDOW_SECONDS: f32 = 0.125;
+pub const WINDOW_SECONDS: f32 = 0.25;
 
 pub trait SampleProcessor {
     fn process(&mut self, block: &[f32]);

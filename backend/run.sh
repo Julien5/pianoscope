@@ -37,8 +37,8 @@ function run-test-detection-all() {
 	ffprobe -v error -show_entries stream=sample_rate,duration -of default=noprint_wrappers=1 \
 			~/delme/old-piano-recordings/position-1/C1/mark-4-C.wav
 	2>&1 cargo test -- --nocapture piano_all | tee /tmp/test.log | cut -f2- -d"]"
-	echo position-1: $(cat /tmp/old-piano-bad.txt  | grep position-1 | wc -l)
-	echo position-2: $(cat /tmp/old-piano-bad.txt  | grep position-2 | wc -l)
+	echo bad position-1: $(cat /tmp/old-piano-bad.txt  | grep position-1 | wc -l)
+	echo bad position-2: $(cat /tmp/old-piano-bad.txt  | grep position-2 | wc -l)
 }
 
 function run-test() {
