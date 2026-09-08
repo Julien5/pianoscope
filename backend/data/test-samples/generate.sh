@@ -139,10 +139,11 @@ function main() {
 				notename=$(note-name ${octave} ${note})
 				cp ${note} ${TMPDIR}/position-${k}/sorted/${octave}/mark-${notename}.wav
 			done
+			cp ${TMPDIR}/position-${k}/sorted/${octave}/all.wav \
+			   ${TMPDIR}/position-${k}/sorted/${octave}/mark-all.wav
 			echo
 		done
 	done
-
 	find ${TMPDIR} -not -name mark* -type f -delete
 	mkdir ${OUTDIR}
 	cp -Rf ${TMPDIR}/position-1/sorted/. ${OUTDIR}/position-1
