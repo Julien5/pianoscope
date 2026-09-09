@@ -5,13 +5,13 @@ pub const NOTE_NAMES: &[&str] = &[
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
 ];
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Status {
     NoteOn,
     NoteOff,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MidiEvent {
     pub status: Status,
     pub velocity: u8,
@@ -66,6 +66,12 @@ impl MidiEvent {
             note_name: name.to_string(),
             raw: vec![status_byte, note, velocity as u8],
         })
+    }
+
+    pub fn off_clone(&self) -> Self {
+        let mut ret = self.clone();
+        ret.status = Status::NoteOff;
+        ret
     }
 }
 

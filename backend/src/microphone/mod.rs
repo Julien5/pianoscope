@@ -142,6 +142,7 @@ struct PitchRecognizer {
     pitch_detector: PitchDetector,
     debug_handle: Option<DebugServerHandle>,
     event_sender: event::EventSender,
+    last_event: Option<MidiEvent>,
 }
 
 impl PitchRecognizer {
@@ -155,15 +156,23 @@ impl PitchRecognizer {
             pitch_detector: PitchDetector::new(parameters),
             debug_handle,
             event_sender,
+            last_event: None,
         }
+    }
+
+    fn send(&mut self, event: &MidiEvent) {
+        if let Some(debug) = &self.debug_handle {
+            debug.stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
+        }
+        // log::trace!("send: {:?} status: {:?}", event.note_name, event.status);
+        (self.event_sender)(event.clone());
+        self.last_event = Some(event.clone());
     }
 }
 
 impl hardware::SampleProcessor for PitchRecognizer {
     fn process(&mut self, block: &[f32]) {
         self.pitch_detector.update(block);
-        let pitch = self.pitch_detector.pitch();
-        let on = self.pitch_detector.on();
         if let Some(debug) = &self.debug_handle {
             debug.stream_data(
                 AudioDebugPacket::from_samples(&block, self.pitch_detector.stats())
@@ -171,13 +180,21 @@ impl hardware::SampleProcessor for PitchRecognizer {
                     .as_bytes(),
             );
         }
-        let status = if on { Status::NoteOn } else { Status::NoteOff };
+        let pitch = self.pitch_detector.pitch();
+        let status = if self.pitch_detector.on() {
+            Status::NoteOn
+        } else {
+            Status::NoteOff
+        };
         let velocity = self.pitch_detector.stats().velocity();
         if let Some(event) = MidiEvent::from_note_status(&pitch, status, velocity) {
-            if let Some(debug) = &self.debug_handle {
-                debug.stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
+            if let Some(last_event) = &self.last_event {
+                // end the last note.
+                if last_event.status == Status::NoteOn && last_event.note != event.note {
+                    self.send(&last_event.off_clone());
+                }
             }
-            (self.event_sender)(event);
+            self.send(&event);
         }
     }
 }
