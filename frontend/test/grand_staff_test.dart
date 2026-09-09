@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/frontend.dart';
+import 'package:pianoscope/pianoscope.dart';
 
 void main() {
   testWidgets('grand staff paints for various notes', (WidgetTester tester) async {

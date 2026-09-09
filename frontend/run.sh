@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #set -euo pipefail
-# set -x
+set -x
 
 function init() {
 	SCRIPTDIR=$(realpath $(dirname $0))
@@ -95,7 +95,7 @@ function setup-simulation() {
 	if [ -z "${SIMULATION}" ]; then
 		case "$TARGET" in
 			android*)
-				adb shell "setprop debug.frontend.simulation ''"
+				adb shell "setprop debug.pianoscope.simulation ''"
 				;;
 		esac
 		return
@@ -103,7 +103,7 @@ function setup-simulation() {
 	
 	case "$TARGET" in
 		android*)
-			adb shell setprop debug.frontend.simulation ${SIMULATION}
+			adb shell setprop debug.pianoscope.simulation ${SIMULATION}
 			;;
 		linux)
 			export SIMULATION=${SIMULATION}

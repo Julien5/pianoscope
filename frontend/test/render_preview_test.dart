@@ -6,7 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:frontend/frontend.dart';
+import 'package:pianoscope/pianoscope.dart';
 
 const _fontDir = '/home/julien/projects/flutter_music_notation/assets/fonts';
 

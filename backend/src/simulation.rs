@@ -3,7 +3,7 @@ pub fn setting() -> Option<String> {
         #[cfg(target_os = "android")]
         {
             use crate::init::android;
-            android::system_property("debug.frontend.simulation")
+            android::system_property("debug.pianoscope.simulation")
         }
         #[cfg(not(target_os = "android"))]
         {
