@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:frontend/src/rust/api/event.dart';
+import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/src/providers/input_provider.dart';
-import 'package:frontend/src/widgets/grand_staff_view.dart';
-import 'package:frontend/src/widgets/velocity_indicator.dart';
+import '../providers/input_provider.dart';
+import '../widgets/grand_staff_view.dart';
+import '../widgets/velocity_indicator.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -84,7 +84,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                   ),
                 ),
                 VelocityIndicator(velocity: signalVelocity),
-                const SizedBox(width: 25),
+                const SizedBox(width: 10),
               ],
             ),
 

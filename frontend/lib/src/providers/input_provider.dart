@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:frontend/src/rust/api/bridge.dart';
-import 'package:frontend/src/rust/api/event.dart';
+import '../rust/api/bridge.dart';
+import '../rust/api/event.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class InputProvider extends ChangeNotifier {

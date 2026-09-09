@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:frontend/src/providers/input_provider.dart';
-import 'package:frontend/src/rust/frb_generated.dart';
+import 'src/providers/input_provider.dart';
+import 'src/rust/frb_generated.dart';
 import 'package:frontend/src/screens/device_list_screen.dart';
 
 Future<void> main() async {

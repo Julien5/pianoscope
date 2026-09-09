@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:frontend/src/rust/api/bridge.dart';
+import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/src/providers/input_provider.dart';
+import '../providers/input_provider.dart';
 import 'midi_signal_screen.dart';
 
 class DeviceListScreen extends StatefulWidget {

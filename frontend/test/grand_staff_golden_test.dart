@@ -9,11 +9,14 @@ const _fontDir = '../../flutter_music_notation/assets/fonts';
 
 Future<void> _loadFonts() async {
   final bravura = ByteData.sublistView(
-      await File('$_fontDir/Bravura.otf').readAsBytes());
+    await File('$_fontDir/Bravura.otf').readAsBytes(),
+  );
   final petaluma = ByteData.sublistView(
-      await File('$_fontDir/Petaluma.otf').readAsBytes());
+    await File('$_fontDir/Petaluma.otf').readAsBytes(),
+  );
   final bravuraLoader = FontLoader('Bravura')..addFont(Future.value(bravura));
-  final petalumaLoader = FontLoader('Petaluma')..addFont(Future.value(petaluma));
+  final petalumaLoader = FontLoader('Petaluma')
+    ..addFont(Future.value(petaluma));
   await bravuraLoader.load();
   await petalumaLoader.load();
 }
