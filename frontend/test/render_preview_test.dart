@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/src/widgets/grand_staff_view.dart';
+
+import 'package:frontend/frontend.dart';
 
 const _fontDir = '/home/julien/projects/flutter_music_notation/assets/fonts';
 
@@ -40,7 +41,7 @@ Future<void> _capture(WidgetTester tester, String name, int? midi) async {
         key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final image = await boundary.toImage();
     final byteData = await image.toByteData(format: ImageByteFormat.png);
-    File('/tmp/opencode/preview_$name.png')
+    File('/tmp/preview_$name.png')
         .writeAsBytesSync(byteData!.buffer.asUint8List());
   });
 }

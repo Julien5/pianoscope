@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/src/widgets/grand_staff_view.dart';
+import 'package:frontend/frontend.dart';
 
 const _fontDir = '../../flutter_music_notation/assets/fonts';
 

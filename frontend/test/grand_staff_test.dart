@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/src/widgets/grand_staff_view.dart';
+import 'package:frontend/frontend.dart';
 
 void main() {
   testWidgets('grand staff paints for various notes', (WidgetTester tester) async {
