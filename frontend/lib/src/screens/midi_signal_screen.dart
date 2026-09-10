@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
 import '../widgets/grand_staff_view.dart';
 import '../widgets/velocity_indicator.dart';
+import '../notation/models/note.dart';
+import '../notation/models/pitch.dart';
+import '../notation/models/duration.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -79,8 +82,16 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
               children: [
                 Expanded(
                   child: GrandStaffView(
-                    midiNote: _event?.note,
-                    velocity: signalVelocity,
+                    notes: _event == null
+                        ? const []
+                        : [
+                            Note(
+                              pitch: Pitch.fromMidiNumber(_event!.note),
+                              duration: const NoteDuration.quarter(),
+                              velocity: signalVelocity,
+                              startBeat: 0,
+                            ),
+                          ],
                   ),
                 ),
                 VelocityIndicator(velocity: signalVelocity),

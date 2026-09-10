@@ -34,8 +34,6 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  flutter_music_notation:
-    path: ../../flutter_music_notation
   flutter_rust_bridge: 2.12.0
   permission_handler: ^11.3.1
   provider: ^6.1.2
@@ -62,6 +60,14 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  fonts:
+    - family: Bravura
+      fonts:
+        - asset: assets/fonts/Bravura.otf
+    - family: Petaluma
+      fonts:
+        - asset: assets/fonts/Petaluma.otf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

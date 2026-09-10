@@ -1,73 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_music_notation/flutter_music_notation.dart';
+import '../notation/models/key_signature.dart';
+import '../notation/models/note.dart';
+import '../notation/grand_staff_painter.dart';
 
-/// Renders a grand staff (treble above, bass below) for the current MIDI note,
-/// delegating to the fork's GrandStaff rendering.
+/// Renders a single-measure grand staff (treble above, bass below) from a
+/// flat list of notes.
 ///
-/// Notes at MIDI >= 60 go on the treble staff, notes < 60 on the bass staff;
-/// the other staff stays blank.
+/// Notes at MIDI >= [splitPoint] go on the treble staff, notes below on the
+/// bass staff; the other staff stays blank. Notes sharing a start beat are
+/// painted as a chord, notes at different beats are laid out left to right.
 class GrandStaffView extends StatelessWidget {
-  final int? midiNote;
-  final int velocity;
+  final List<Note> notes;
+  final KeySignature keySignature;
+  final int splitPoint;
+  final double staffSpaceSize;
+  final double grandStaffGap;
+  final double leftMargin;
+  final double rightMargin;
+  final double topMargin;
+  final double leadingSpace;
+  final double barlineToClefSpace;
+  final double measureSpacing;
+  final bool showBrace;
+  final bool expandWidth;
 
-  static const int _splitPoint = 60;
-
-  const GrandStaffView({super.key, this.midiNote, this.velocity = 64});
+  const GrandStaffView({
+    super.key,
+    this.notes = const [],
+    this.keySignature = KeySignature.cMajor,
+    this.splitPoint = 60,
+    this.staffSpaceSize = 10,
+    this.grandStaffGap = 60,
+    this.leftMargin = 20,
+    this.rightMargin = 20,
+    this.topMargin = 30,
+    this.leadingSpace = 60,
+    this.barlineToClefSpace = 10,
+    this.measureSpacing = 40,
+    this.showBrace = true,
+    this.expandWidth = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final note = midiNote;
-    final upperNotes = <Note>[];
-    final lowerNotes = <Note>[];
+    final staffHeight = staffSpaceSize * 4;
+    final systemHeight = staffHeight + grandStaffGap + staffHeight;
+    final height = topMargin + systemHeight + 60 + topMargin;
 
-    if (note != null) {
-      final noteModel = Note(
-        pitch: Pitch.fromMidiNumber(note),
-        duration: const NoteDuration.quarter(),
-        velocity: velocity,
-        startBeat: 0,
-      );
-      if (note >= _splitPoint) {
-        upperNotes.add(noteModel);
-      } else {
-        lowerNotes.add(noteModel);
-      }
-    }
-
-    final upperMeasure = Measure(
-      number: 0,
-      timeSignature: TimeSignature.fourFour,
-      keySignature: KeySignature.cMajor,
-      notes: upperNotes,
-      endBarline: BarlineType.single,
-      startBarline: BarlineType.single,
-    );
-
-    final lowerMeasure = Measure(
-      number: 0,
-      timeSignature: TimeSignature.fourFour,
-      keySignature: KeySignature.cMajor,
-      notes: lowerNotes,
-      endBarline: BarlineType.single,
-      startBarline: BarlineType.single,
-    );
-
-    return NotationView(
-      grandStaff: GrandStaff(
-        upperStaff: [upperMeasure],
-        lowerStaff: [lowerMeasure],
-      ),
-      config: const NotationConfig(
-        staffSpaceSize: 10,
-        barlineToClefSpace: 10,
-        leftMargin: 20,
-        topMargin: 30,
-        grandStaffGap: 60,
-        showBrace: true,
-        showMeasureNumbers: false,
-        showTimeSignature: false,
-        leadingSpace: 60,
-        expandWidth: true,
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(20),
+      child: CustomPaint(
+        painter: GrandStaffPainter(
+          notes: notes,
+          keySignature: keySignature,
+          splitPoint: splitPoint,
+          staffSpaceSize: staffSpaceSize,
+          grandStaffGap: grandStaffGap,
+          leftMargin: leftMargin,
+          rightMargin: rightMargin,
+          topMargin: topMargin,
+          leadingSpace: leadingSpace,
+          barlineToClefSpace: barlineToClefSpace,
+          measureSpacing: measureSpacing,
+          showBrace: showBrace,
+          expandWidth: expandWidth,
+        ),
+        size: Size.infinite,
       ),
     );
   }

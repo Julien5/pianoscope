@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pianoscope/pianoscope.dart';
 
-const _fontDir = '/home/julien/projects/flutter_music_notation/assets/fonts';
+const _fontDir = 'assets/fonts';
 
 Future<void> _loadFonts() async {
   final bravura = ByteData.sublistView(
@@ -29,7 +29,18 @@ Future<void> _capture(WidgetTester tester, String name, int? midi) async {
       home: Center(
         child: RepaintBoundary(
           key: key,
-          child: GrandStaffView(midiNote: midi, velocity: 90),
+          child: GrandStaffView(
+            notes: midi == null
+                ? const []
+                : [
+                    Note(
+                      pitch: Pitch.fromMidiNumber(midi),
+                      duration: const NoteDuration.quarter(),
+                      velocity: 90,
+                      startBeat: 0,
+                    ),
+                  ],
+          ),
         ),
       ),
     ),

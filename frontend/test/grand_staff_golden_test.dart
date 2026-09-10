@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/pianoscope.dart';
 
-const _fontDir = '../../flutter_music_notation/assets/fonts';
+const _fontDir = 'assets/fonts';
 
 Future<void> _loadFonts() async {
   final bravura = ByteData.sublistView(
@@ -36,7 +36,7 @@ Future<void> _expectGolden(WidgetTester tester, String name, int? midi) async {
         body: Center(
           child: RepaintBoundary(
             key: key,
-            child: GrandStaffView(midiNote: midi, velocity: 90),
+            child: _grandStaffView(midi),
           ),
         ),
       ),
@@ -47,6 +47,21 @@ Future<void> _expectGolden(WidgetTester tester, String name, int? midi) async {
   await expectLater(
     find.byKey(key),
     matchesGoldenFile('goldens/grand_staff_$name.png'),
+  );
+}
+
+GrandStaffView _grandStaffView(int? midi) {
+  return GrandStaffView(
+    notes: midi == null
+        ? const []
+        : [
+            Note(
+              pitch: Pitch.fromMidiNumber(midi),
+              duration: const NoteDuration.quarter(),
+              velocity: 90,
+              startBeat: 0,
+            ),
+          ],
   );
 }
 
