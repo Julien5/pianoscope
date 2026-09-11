@@ -166,6 +166,91 @@ void main() {
     );
   });
 
+  testWidgets('MIDI 70 in B-flat major is spelled B-flat on the middle line', (
+    tester,
+  ) async {
+    final pitch = KeySignature.bFlatMajor.spell(Pitch.fromMidiNumber(70));
+    expect(pitch.noteName, NoteName.B);
+    expect(pitch.accidental, Accidental.flat);
+    expect(
+      KeySignature.bFlatMajor.needsAccidental(pitch),
+      isFalse,
+      reason: 'B-flat is in the key signature',
+    );
+    expect(
+      StaffPosition.forPitch(pitch, ClefType.treble).value,
+      4,
+      reason: 'B-flat4 sits on the middle line',
+    );
+  });
+
+  testWidgets('MIDI 70 in D major is spelled A-sharp with an accidental', (
+    tester,
+  ) async {
+    final pitch = KeySignature.dMajor.spell(Pitch.fromMidiNumber(70));
+    expect(pitch.noteName, NoteName.A);
+    expect(pitch.accidental, Accidental.sharp);
+    expect(
+      KeySignature.dMajor.needsAccidental(pitch),
+      isTrue,
+      reason: 'A-sharp is not in the D major key signature',
+    );
+  });
+
+  testWidgets(
+    'MIDI 70 in B-flat major paints on the middle line without an accidental',
+    (tester) async {
+      late final Rect? fixedBounds;
+      late final Rect? buggyBounds;
+
+      await tester.runAsync(() async {
+        final fixedPitch = KeySignature.bFlatMajor.spell(
+          Pitch.fromMidiNumber(70),
+        );
+        final fixed = await _renderNoteCanvas(
+          note: Note(
+            pitch: fixedPitch,
+            duration: const NoteDuration.whole(),
+            startBeat: 0,
+          ),
+          showAccidental: KeySignature.bFlatMajor.needsAccidental(fixedPitch),
+        );
+        final buggy = await _renderNoteCanvas(
+          note: Note(
+            pitch: Pitch.fromMidiNumber(70),
+            duration: const NoteDuration.whole(),
+            startBeat: 0,
+          ),
+          showAccidental: true,
+        );
+        fixedBounds = await _darkPixelBounds(fixed);
+        buggyBounds = await _darkPixelBounds(buggy);
+      });
+
+      expect(fixedBounds, isNotNull);
+      expect(buggyBounds, isNotNull);
+
+      // staffTopLeft.dy is 100; the middle line (position 4) is at y=120.
+      expect(
+        (fixedBounds!.center.dy - 120).abs(),
+        lessThan(3),
+        reason: 'B-flat4 notehead must sit on the middle line',
+      );
+      // A-sharp sits one space lower, on the A space.
+      expect(
+        buggyBounds!.center.dy,
+        greaterThan(fixedBounds!.center.dy),
+        reason: 'A-sharp4 must sit below the middle line',
+      );
+      // A sharp glyph would extend further left than the bare notehead.
+      expect(
+        fixedBounds!.left,
+        greaterThan(buggyBounds!.left),
+        reason: 'no accidental glyph may appear left of the notehead',
+      );
+    },
+  );
+
   /*testWidgets('A-flat in A-flat major does not need anything', (tester) async {
     expect(
       KeySignature.aFlatMajor.needsAccidental(

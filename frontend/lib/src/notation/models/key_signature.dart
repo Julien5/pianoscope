@@ -36,6 +36,18 @@ class KeySignature {
   /// Whether this key uses sharps (true) or flats (false)
   bool get usesSharps => accidentals >= 0;
 
+  /// Return a spelling of the given pitch appropriate for this key signature.
+  ///
+  /// A MIDI note number is enharmonically ambiguous (e.g. 70 is both A♯ and
+  /// B♭). Flat keys spell black keys as flats (B♭ in F major), sharp keys as
+  /// sharps (F♯ in G major).
+  Pitch spell(Pitch pitch) {
+    return Pitch.fromMidiNumber(
+      pitch.midiNumber,
+      preferredAccidental: usesSharps ? Accidental.sharp : Accidental.flat,
+    );
+  }
+
   /// Get the pitch classes that are altered in this key signature
   /// Returns MIDI pitch classes (0-11) that should be sharp/flat
   List<int> getAlteredPitchClasses() {

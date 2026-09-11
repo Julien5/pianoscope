@@ -220,7 +220,10 @@ class GrandStaffPainter extends CustomPainter {
 
     final elementsByBeat = <double, List<Note>>{};
     for (final note in staffNotes) {
-      elementsByBeat.putIfAbsent(note.startBeat, () => []).add(note);
+      // Spell each note enharmonically for this key signature so notehead
+      // position and accidentals are correct (e.g. 70 -> B♭ in B♭ major).
+      final respelled = note.copyWith(pitch: keySignature.spell(note.pitch));
+      elementsByBeat.putIfAbsent(note.startBeat, () => []).add(respelled);
     }
     final sortedBeats = elementsByBeat.keys.toList()..sort();
 

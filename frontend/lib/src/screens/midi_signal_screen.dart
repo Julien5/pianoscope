@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../notation/models/key_signature.dart';
 import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
@@ -95,6 +96,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
               children: [
                 Expanded(
                   child: GrandStaffView(
+                    keySignature: KeySignature.cMajor,
                     notes: _activeEvents.isEmpty
                         ? const []
                         : _activeEvents.values
