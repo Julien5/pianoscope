@@ -1,25 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/pianoscope.dart';
 
-const _fontDir = 'assets/fonts';
-
-Future<void> _loadFonts() async {
-  final bravura = ByteData.sublistView(
-    await File('$_fontDir/Bravura.otf').readAsBytes(),
-  );
-  final petaluma = ByteData.sublistView(
-    await File('$_fontDir/Petaluma.otf').readAsBytes(),
-  );
-  final bravuraLoader = FontLoader('Bravura')..addFont(Future.value(bravura));
-  final petalumaLoader = FontLoader('Petaluma')
-    ..addFont(Future.value(petaluma));
-  await bravuraLoader.load();
-  await petalumaLoader.load();
-}
+import 'helper.dart';
 
 Future<void> _expectGolden(WidgetTester tester, String name, int? midi) async {
   final key = GlobalKey();
@@ -34,10 +17,7 @@ Future<void> _expectGolden(WidgetTester tester, String name, int? midi) async {
       home: Scaffold(
         backgroundColor: Colors.white,
         body: Center(
-          child: RepaintBoundary(
-            key: key,
-            child: _grandStaffView(midi),
-          ),
+          child: RepaintBoundary(key: key, child: _grandStaffView(midi)),
         ),
       ),
     ),
@@ -67,7 +47,7 @@ GrandStaffView _grandStaffView(int? midi) {
 
 void main() {
   testWidgets('grand staff renders each note state correctly', (tester) async {
-    await tester.runAsync(_loadFonts);
+    await tester.runAsync(loadFonts);
 
     const cases = <String, int?>{
       'idle': null,

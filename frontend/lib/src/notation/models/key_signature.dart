@@ -105,10 +105,15 @@ class KeySignature {
 
   /// Check if a pitch needs an accidental in this key
   bool needsAccidental(Pitch pitch) {
-    final pitchClass = pitch.midiNumber % 12;
+    // The key signature alters note-name positions (e.g. D major: F# and
+    // C#), so compare the natural note name, not the altered pitch class.
+
+
+    final naturalPitchClass =
+        (pitch.midiNumber - pitch.accidental.semitoneOffset) % 12;
     final altered = getAlteredPitchClasses();
 
-    if (altered.contains(pitchClass)) {
+    if (altered.contains(naturalPitchClass)) {
       // This pitch is in the key signature
       // Only needs accidental if it differs from key signature
       if (usesSharps) {

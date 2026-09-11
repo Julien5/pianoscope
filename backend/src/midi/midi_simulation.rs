@@ -61,6 +61,7 @@ pub fn start_stream(
                     if stop.load(Ordering::Relaxed) {
                         return;
                     }
+
                     if let Some(event) = MidiEvent::from_note_status(note, Status::NoteOff, 0) {
                         if let Some(debugger) = &debug_handle {
                             debugger.stream_data(

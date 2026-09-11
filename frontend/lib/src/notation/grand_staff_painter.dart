@@ -88,7 +88,8 @@ class GrandStaffPainter extends CustomPainter {
 
     // Draw brace connecting both staves.
     if (showBrace) {
-      final braceX = leftMargin -
+      final braceX =
+          leftMargin -
           braceRenderer.getWidth(height: braceTotalHeight) -
           staffSpaceSize / 4;
       braceRenderer.paint(

@@ -1,25 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/pianoscope.dart';
 
-const _fontDir = 'assets/fonts';
-
-Future<void> _loadFonts() async {
-  final bravura = ByteData.sublistView(
-    await File('$_fontDir/Bravura.otf').readAsBytes(),
-  );
-  final petaluma = ByteData.sublistView(
-    await File('$_fontDir/Petaluma.otf').readAsBytes(),
-  );
-  final bravuraLoader = FontLoader('Bravura')..addFont(Future.value(bravura));
-  final petalumaLoader = FontLoader('Petaluma')
-    ..addFont(Future.value(petaluma));
-  await bravuraLoader.load();
-  await petalumaLoader.load();
-}
+import 'helper.dart';
 
 Future<void> _expectGolden(
   WidgetTester tester,
@@ -63,7 +46,7 @@ Note _note(int midi, {double beat = 0, Color? color}) {
 
 void main() {
   testWidgets('notation features render correctly', (tester) async {
-    await tester.runAsync(_loadFonts);
+    await tester.runAsync(loadFonts);
 
     // Chord: C4 + E4 + G4 on the treble staff at the same beat.
     await _expectGolden(
@@ -77,8 +60,18 @@ void main() {
       tester,
       'keysig_sharp',
       GrandStaffView(
-        notes: [_note(65)], // F#4 -> sharp is in the key, no accidental glyph
+        notes: [_note(66)], // F#4 -> sharp is in the key, no accidental glyph
         keySignature: KeySignature.gMajor,
+      ),
+    );
+
+    // Key signature: D major with a C# note in the key (no extra sharp).
+    await _expectGolden(
+      tester,
+      'keysig_in_key_csharp',
+      GrandStaffView(
+        notes: [_note(61)], // C#4 -> is in the key, no accidental glyph
+        keySignature: KeySignature.dMajor,
       ),
     );
 
@@ -89,6 +82,26 @@ void main() {
       GrandStaffView(
         notes: [_note(62)], // D4 natural, not in G major -> no accidental
         keySignature: KeySignature.gMajor,
+      ),
+    );
+
+    // Natural sign: C4 in D major (C# is in the key, so natural needs a sign).
+    await _expectGolden(
+      tester,
+      'keysig_natural',
+      GrandStaffView(
+        notes: [_note(60)], // C4 natural -> explicit natural glyph
+        keySignature: KeySignature.dMajor,
+      ),
+    );
+
+    // Flat key repurpose: F4 natural in B-flat major needs a natural sign.
+    await _expectGolden(
+      tester,
+      'keysig_natural_flat',
+      GrandStaffView(
+        notes: [_note(53)], // F4 natural
+        keySignature: KeySignature.bFlatMajor,
       ),
     );
 
