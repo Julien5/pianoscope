@@ -8,80 +8,30 @@ class KeySignature {
   /// Range: -7 (7 flats) to +7 (7 sharps)
   final int accidentals;
 
-  /// Whether this is a minor key (vs major)
-  final bool isMinor;
+  const KeySignature({required this.accidentals})
+    : assert(
+        accidentals >= -7 && accidentals <= 7,
+        'Accidentals must be between -7 and +7',
+      );
 
-  const KeySignature({
-    required this.accidentals,
-    this.isMinor = false,
-  }) : assert(accidentals >= -7 && accidentals <= 7,
-  'Accidentals must be between -7 and +7');
-
-  /// Common key signatures
+  /// Common major key signatures
+  // represent with sharps
   static const cMajor = KeySignature(accidentals: 0);
-  static const aMinor = KeySignature(accidentals: 0, isMinor: true);
-
   static const gMajor = KeySignature(accidentals: 1);
-  static const eMinor = KeySignature(accidentals: 1, isMinor: true);
-
   static const dMajor = KeySignature(accidentals: 2);
-  static const bMinor = KeySignature(accidentals: 2, isMinor: true);
-
   static const aMajor = KeySignature(accidentals: 3);
-  static const fSharpMinor = KeySignature(accidentals: 3, isMinor: true);
-
   static const eMajor = KeySignature(accidentals: 4);
-  static const cSharpMinor = KeySignature(accidentals: 4, isMinor: true);
-
   static const bMajor = KeySignature(accidentals: 5);
-  static const gSharpMinor = KeySignature(accidentals: 5, isMinor: true);
-
   static const fSharpMajor = KeySignature(accidentals: 6);
-  static const dSharpMinor = KeySignature(accidentals: 6, isMinor: true);
-
   static const cSharpMajor = KeySignature(accidentals: 7);
-  static const aSharpMinor = KeySignature(accidentals: 7, isMinor: true);
-
+  // represent with flats
   static const fMajor = KeySignature(accidentals: -1);
-  static const dMinor = KeySignature(accidentals: -1, isMinor: true);
-
   static const bFlatMajor = KeySignature(accidentals: -2);
-  static const gMinor = KeySignature(accidentals: -2, isMinor: true);
-
   static const eFlatMajor = KeySignature(accidentals: -3);
-  static const cMinor = KeySignature(accidentals: -3, isMinor: true);
-
   static const aFlatMajor = KeySignature(accidentals: -4);
-  static const fMinor = KeySignature(accidentals: -4, isMinor: true);
-
   static const dFlatMajor = KeySignature(accidentals: -5);
-  static const bFlatMinor = KeySignature(accidentals: -5, isMinor: true);
-
   static const gFlatMajor = KeySignature(accidentals: -6);
-  static const eFlatMinor = KeySignature(accidentals: -6, isMinor: true);
-
   static const cFlatMajor = KeySignature(accidentals: -7);
-  static const aFlatMinor = KeySignature(accidentals: -7, isMinor: true);
-
-
-  /// Get the name of this key
-  String get name {
-    const majorKeys = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'C♯'];
-    const minorKeys = ['A', 'E', 'B', 'F♯', 'C♯', 'G♯', 'D♯', 'A♯'];
-    const flatMajorKeys = ['F', 'B♭', 'E♭', 'A♭', 'D♭', 'G♭', 'C♭'];
-    const flatMinorKeys = ['D', 'G', 'C', 'F', 'B♭', 'E♭', 'A♭'];
-
-    if (accidentals >= 0) {
-      return isMinor
-          ? '${minorKeys[accidentals]} minor'
-          : '${majorKeys[accidentals]} major';
-    } else {
-      final index = (-accidentals) - 1;
-      return isMinor
-          ? '${flatMinorKeys[index]} minor'
-          : '${flatMajorKeys[index]} major';
-    }
-  }
 
   /// Whether this key uses sharps (true) or flats (false)
   bool get usesSharps => accidentals >= 0;
@@ -108,7 +58,6 @@ class KeySignature {
     // The key signature alters note-name positions (e.g. D major: F# and
     // C#), so compare the natural note name, not the altered pitch class.
 
-
     final naturalPitchClass =
         (pitch.midiNumber - pitch.accidental.semitoneOffset) % 12;
     final altered = getAlteredPitchClasses();
@@ -129,15 +78,13 @@ class KeySignature {
   }
 
   @override
-  String toString() => name;
+  String toString() => 'KeySignature(accidentals: $accidentals)';
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is KeySignature &&
-              accidentals == other.accidentals &&
-              isMinor == other.isMinor;
+      other is KeySignature && accidentals == other.accidentals;
 
   @override
-  int get hashCode => Object.hash(accidentals, isMinor);
+  int get hashCode => Object.hash(accidentals, 0);
 }

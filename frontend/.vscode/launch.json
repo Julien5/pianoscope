@@ -5,6 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "frontend (no simulation)",
+            "request": "launch",
+            "type": "dart",
+        },
+        {
             "name": "frontend (midi simulation)",
             "request": "launch",
             "type": "dart",
@@ -12,7 +17,6 @@
                 "SIMULATION": "3"
             }
         },
-
         {
             "name": "frontend (pure C4)",
             "request": "launch",
