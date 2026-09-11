@@ -6,8 +6,9 @@ import 'package:pianoscope/pianoscope.dart';
 import 'package:pianoscope/src/notation/rendering/note_renderer.dart';
 
 void main() {
-  testWidgets('natural sign is painted when key signature requires it',
-      (tester) async {
+  testWidgets('natural sign is painted when key signature requires it', (
+    tester,
+  ) async {
     const note = Note(
       pitch: Pitch(noteName: NoteName.C, octave: 4),
       duration: NoteDuration.quarter(),
@@ -46,15 +47,23 @@ void main() {
   });
 
   testWidgets('C natural in D major needs an explicit natural', (tester) async {
-    expect(KeySignature.dMajor.needsAccidental(
-      const Pitch(noteName: NoteName.C, octave: 4),
-    ), isTrue);
+    expect(
+      KeySignature.dMajor.needsAccidental(
+        const Pitch(noteName: NoteName.C, octave: 4),
+      ),
+      isTrue,
+    );
   });
 
-  testWidgets('C#4 in D major renders without an accidental glyph',
-      (tester) async {
+  testWidgets('C#4 in D major renders without an accidental glyph', (
+    tester,
+  ) async {
     const note = Note(
-      pitch: Pitch(noteName: NoteName.C, accidental: Accidental.sharp, octave: 4),
+      pitch: Pitch(
+        noteName: NoteName.C,
+        accidental: Accidental.sharp,
+        octave: 4,
+      ),
       duration: NoteDuration.quarter(),
       startBeat: 0,
     );
@@ -79,7 +88,11 @@ void main() {
       withoutAccidentalBounds = await _darkPixelBounds(withoutAccidental);
     });
 
-    expect(showAccidental, isFalse, reason: 'C#4 is in the D major key signature');
+    expect(
+      showAccidental,
+      isFalse,
+      reason: 'C#4 is in the D major key signature',
+    );
     expect(withLogicBounds, isNotNull);
     expect(withoutAccidentalBounds, isNotNull);
 
@@ -90,35 +103,81 @@ void main() {
     );
   });
 
-  testWidgets('C#4 in D major needs no accidental (it is in the key signature)', (tester) async {
-    expect(KeySignature.dMajor.needsAccidental(
-      const Pitch(noteName: NoteName.C, accidental: Accidental.sharp, octave: 4),
-    ), isFalse);
-  });
+  testWidgets(
+    'C#4 in D major needs no accidental (it is in the key signature)',
+    (tester) async {
+      expect(
+        KeySignature.dMajor.needsAccidental(
+          const Pitch(
+            noteName: NoteName.C,
+            accidental: Accidental.sharp,
+            octave: 4,
+          ),
+        ),
+        isFalse,
+      );
+    },
+  );
 
-  testWidgets('F#4 in G major needs no accidental (it is in the key signature)', (tester) async {
-    expect(KeySignature.gMajor.needsAccidental(
-      const Pitch(noteName: NoteName.F, accidental: Accidental.sharp, octave: 4),
-    ), isFalse);
-  });
+  testWidgets(
+    'F#4 in G major needs no accidental (it is in the key signature)',
+    (tester) async {
+      expect(
+        KeySignature.gMajor.needsAccidental(
+          const Pitch(
+            noteName: NoteName.F,
+            accidental: Accidental.sharp,
+            octave: 4,
+          ),
+        ),
+        isFalse,
+      );
+    },
+  );
 
   testWidgets('F natural in G major needs an explicit sharp', (tester) async {
-    expect(KeySignature.gMajor.needsAccidental(
-      const Pitch(noteName: NoteName.F, octave: 4),
-    ), isTrue);
+    expect(
+      KeySignature.gMajor.needsAccidental(
+        const Pitch(noteName: NoteName.F, octave: 4),
+      ),
+      isTrue,
+    );
   });
 
   testWidgets('B flat in F major needs no accidental', (tester) async {
-    expect(KeySignature.fMajor.needsAccidental(
-      const Pitch(noteName: NoteName.B, accidental: Accidental.flat, octave: 3),
-    ), isFalse);
+    expect(
+      KeySignature.fMajor.needsAccidental(
+        const Pitch(
+          noteName: NoteName.B,
+          accidental: Accidental.flat,
+          octave: 3,
+        ),
+      ),
+      isFalse,
+    );
   });
 
   testWidgets('B natural in F major needs an explicit natural', (tester) async {
-    expect(KeySignature.fMajor.needsAccidental(
-      const Pitch(noteName: NoteName.B, octave: 3),
-    ), isTrue);
+    expect(
+      KeySignature.fMajor.needsAccidental(
+        const Pitch(noteName: NoteName.B, octave: 3),
+      ),
+      isTrue,
+    );
   });
+
+  /*testWidgets('A-flat in A-flat major does not need anything', (tester) async {
+    expect(
+      KeySignature.aFlatMajor.needsAccidental(
+        const Pitch(
+          noteName: NoteName.A,
+          octave: 4,
+          accidental: Accidental.flat,
+        ),
+      ),
+      isFalse,
+    );
+  });*/
 }
 
 Future<ui.Image?> _renderNoteCanvas({
@@ -126,16 +185,10 @@ Future<ui.Image?> _renderNoteCanvas({
   required bool showAccidental,
 }) async {
   final recorder = ui.PictureRecorder();
-  final canvas = Canvas(
-    recorder,
-    Rect.fromLTWH(0, 0, 400, 200),
-  );
+  final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, 400, 200));
 
   // White background.
-  canvas.drawRect(
-    Rect.fromLTWH(0, 0, 400, 200),
-    Paint()..color = Colors.white,
-  );
+  canvas.drawRect(Rect.fromLTWH(0, 0, 400, 200), Paint()..color = Colors.white);
 
   final renderer = NoteRenderer(staffSpaceSize: 10);
   renderer.paintNote(
@@ -153,9 +206,9 @@ Future<ui.Image?> _renderNoteCanvas({
 
 Future<Rect?> _darkPixelBounds(ui.Image? image) async {
   if (image == null) return null;
-final bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!
-    .buffer
-    .asUint8List();
+  final bytes = (await image.toByteData(
+    format: ui.ImageByteFormat.rawRgba,
+  ))!.buffer.asUint8List();
   int? minX, maxX, minY, maxY;
   for (int y = 0; y < image.height; y++) {
     for (int x = 0; x < image.width; x++) {
@@ -173,6 +226,10 @@ final bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!
     }
   }
   if (minX == null) return null;
-  return Rect.fromLTRB(minX.toDouble(), minY!.toDouble(), maxX!.toDouble(),
-      maxY!.toDouble());
+  return Rect.fromLTRB(
+    minX.toDouble(),
+    minY!.toDouble(),
+    maxX!.toDouble(),
+    maxY!.toDouble(),
+  );
 }
