@@ -9,13 +9,7 @@ void main() {
     for (final note in <int?>[null, 40, 55, 60, 72]) {
       final notes = note == null
           ? const <Note>[]
-          : [
-              Note(
-                pitch: Pitch.fromMidiNumber(note),
-                duration: const NoteDuration.quarter(),
-                velocity: 90,
-              ),
-            ];
+          : [Note(pitch: Pitch.fromMidiNumber(note))];
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: GrandStaffView(notes: notes)),

@@ -3,7 +3,6 @@ export 'src/rust/frb_generated.dart';
 export 'src/screens/device_list_screen.dart';
 export 'src/widgets/grand_staff_view.dart';
 export 'src/notation/models/pitch.dart';
-export 'src/notation/models/duration.dart';
 export 'src/notation/models/note.dart';
 export 'src/notation/models/key_signature.dart';
 export 'src/notation/geometry/staff_position.dart';

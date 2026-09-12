@@ -20,12 +20,7 @@ Future<void> loadFonts() async {
 }
 
 Note note(int midi, {double beat = 0, Color? color}) {
-  return Note(
-    pitch: Pitch.fromMidiNumber(midi),
-    duration: const NoteDuration.quarter(),
-    velocity: 90,
-    color: color,
-  );
+  return Note(pitch: Pitch.fromMidiNumber(midi), color: color);
 }
 
 Future<void> expectGoldenFromView(

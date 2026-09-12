@@ -3,7 +3,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../geometry/staff_units.dart';
-import '../models/duration.dart';
 
 /// Renders noteheads (filled or hollow ovals)
 class NoteheadRenderer {
@@ -16,12 +15,7 @@ class NoteheadRenderer {
   });
 
   /// Paint a notehead at the given center position
-  void paint(
-      Canvas canvas,
-      Offset center, {
-        required bool filled,
-        Color? color,
-      }) {
+  void paint(Canvas canvas, Offset center, {Color? color}) {
     final width = StaffUnits.noteheadWidth.toPixels(staffSpaceSize);
     final height = StaffUnits.noteheadHeight.toPixels(staffSpaceSize);
 
@@ -41,28 +35,10 @@ class NoteheadRenderer {
 
     final paint = Paint()
       ..color = color ?? this.color
-      ..style = filled ? PaintingStyle.fill : PaintingStyle.stroke
-      ..strokeWidth = filled ? 0 : 1.5;
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 0;
 
     canvas.drawOval(rect, paint);
-
-    // For hollow noteheads, draw inner outline for better definition
-    if (!filled) {
-      final innerRect = Rect.fromCenter(
-        center: Offset.zero,
-        width: width - 2,
-        height: height - 2,
-      );
-      canvas.drawOval(innerRect, paint);
-    }
-
     canvas.restore();
-  }
-
-  /// Determine if a notehead should be filled based on duration
-  static bool shouldBeFilled(NoteDuration duration) {
-    // Quarter notes and shorter are filled (black)
-    // Half notes and longer are hollow (white)
-    return duration.type.isFilledNotehead;
   }
 }

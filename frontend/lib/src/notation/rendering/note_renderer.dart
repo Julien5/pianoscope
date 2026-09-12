@@ -18,21 +18,19 @@ class NoteRenderer {
   final StemRenderer _stemRenderer;
   final AccidentalRenderer _accidentalRenderer;
 
-  NoteRenderer({
-    required this.staffSpaceSize,
-    this.color = Colors.black,
-  })  : _noteheadRenderer = NoteheadRenderer(
-          staffSpaceSize: staffSpaceSize,
-          color: color,
-        ),
-        _stemRenderer = StemRenderer(
-          staffSpaceSize: staffSpaceSize,
-          color: color,
-        ),
-        _accidentalRenderer = AccidentalRenderer(
-          staffSpaceSize: staffSpaceSize,
-          color: color,
-        );
+  NoteRenderer({required this.staffSpaceSize, this.color = Colors.black})
+    : _noteheadRenderer = NoteheadRenderer(
+        staffSpaceSize: staffSpaceSize,
+        color: color,
+      ),
+      _stemRenderer = StemRenderer(
+        staffSpaceSize: staffSpaceSize,
+        color: color,
+      ),
+      _accidentalRenderer = AccidentalRenderer(
+        staffSpaceSize: staffSpaceSize,
+        color: color,
+      );
 
   /// Draw the notehead, optional accidental and ledger lines for a note whose
   /// center is at [noteCenter]. No stem is drawn.
@@ -64,12 +62,7 @@ class NoteRenderer {
     }
 
     // Quarter-note assumption: filled notehead.
-    _noteheadRenderer.paint(
-      canvas,
-      noteCenter,
-      filled: true,
-      color: note.color,
-    );
+    _noteheadRenderer.paint(canvas, noteCenter, color: note.color);
   }
 
   /// Paint a complete single note (notehead, accidental, ledger lines and

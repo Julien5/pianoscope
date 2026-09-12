@@ -19,13 +19,7 @@ Future<void> _capture(WidgetTester tester, String name, int? midi) async {
           child: GrandStaffView(
             notes: midi == null
                 ? const []
-                : [
-                    Note(
-                      pitch: Pitch.fromMidiNumber(midi),
-                      duration: const NoteDuration.quarter(),
-                      velocity: 90,
-                    ),
-                  ],
+                : [Note(pitch: Pitch.fromMidiNumber(midi))],
           ),
         ),
       ),

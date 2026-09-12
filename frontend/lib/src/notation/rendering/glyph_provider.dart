@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import '../models/pitch.dart';
-import '../models/duration.dart';
 import '../models/notation_style.dart';
 
 /// Provides SMuFL-compliant music glyphs from multiple notation fonts.
@@ -53,13 +52,7 @@ class GlyphProvider {
   /// Decide which font to use for a glyph
   static String _fontForGlyph(String codepoint) {
     // Always use Petaluma for accidentals when mixing
-    const petalumaAccidentals = {
-      sharp,
-      flat,
-      natural,
-      doubleSharp,
-      doubleFlat,
-    };
+    const petalumaAccidentals = {sharp, flat, natural, doubleSharp, doubleFlat};
 
     if (petalumaAccidentals.contains(codepoint)) {
       return petaluma;
@@ -76,19 +69,15 @@ class GlyphProvider {
 
   /// Get a TextPainter for a music symbol
   static TextPainter getGlyph(
-      String codepoint,
-      double size, {
-        Color color = Colors.black,
-      }) {
+    String codepoint,
+    double size, {
+    Color color = Colors.black,
+  }) {
     final font = _fontForGlyph(codepoint);
     return TextPainter(
       text: TextSpan(
         text: codepoint,
-        style: TextStyle(
-          fontFamily: font,
-          fontSize: size,
-          color: color,
-        ),
+        style: TextStyle(fontFamily: font, fontSize: size, color: color),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -107,43 +96,6 @@ class GlyphProvider {
         return sharp;
       case Accidental.doubleSharp:
         return doubleSharp;
-    }
-  }
-
-  static String getRestGlyph(DurationType type) {
-    switch (type) {
-      case DurationType.whole:
-      case DurationType.breve:
-      case DurationType.long:
-      case DurationType.maxima:
-        return wholeRest;
-      case DurationType.half:
-        return halfRest;
-      case DurationType.quarter:
-        return quarterRest;
-      case DurationType.eighth:
-        return eighthRest;
-      case DurationType.sixteenth:
-        return sixteenthRest;
-      case DurationType.thirtySecond:
-        return thirtySecondRest;
-      case DurationType.sixtyFourth:
-        return sixtyFourthRest;
-    }
-  }
-
-  static String getFlagGlyph(DurationType type, bool stemUp) {
-    switch (type) {
-      case DurationType.eighth:
-        return stemUp ? flag8thUp : flag8thDown;
-      case DurationType.sixteenth:
-        return stemUp ? flag16thUp : flag16thDown;
-      case DurationType.thirtySecond:
-        return stemUp ? flag32ndUp : flag32ndDown;
-      case DurationType.sixtyFourth:
-        return stemUp ? flag64thUp : flag64thDown;
-      default:
-        return '';
     }
   }
 

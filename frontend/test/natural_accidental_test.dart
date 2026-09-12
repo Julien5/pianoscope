@@ -9,10 +9,7 @@ void main() {
   testWidgets('natural sign is painted when key signature requires it', (
     tester,
   ) async {
-    const note = Note(
-      pitch: Pitch(noteName: NoteName.C, octave: 4),
-      duration: NoteDuration.quarter(),
-    );
+    const note = Note(pitch: Pitch(noteName: NoteName.C, octave: 4));
 
     late final bool withAccidentalPresent;
     late final bool withoutAccidentalPresent;
@@ -63,7 +60,6 @@ void main() {
         accidental: Accidental.sharp,
         octave: 4,
       ),
-      duration: NoteDuration.quarter(),
     );
 
     late final Rect? withLogicBounds;
@@ -206,14 +202,11 @@ void main() {
           Pitch.fromMidiNumber(70),
         );
         final fixed = await _renderNoteCanvas(
-          note: Note(pitch: fixedPitch, duration: const NoteDuration.whole()),
+          note: Note(pitch: fixedPitch),
           showAccidental: KeySignature.bFlatMajor.needsAccidental(fixedPitch),
         );
         final buggy = await _renderNoteCanvas(
-          note: Note(
-            pitch: Pitch.fromMidiNumber(70),
-            duration: const NoteDuration.whole(),
-          ),
+          note: Note(pitch: Pitch.fromMidiNumber(70)),
           showAccidental: true,
         );
         fixedBounds = await _darkPixelBounds(fixed);

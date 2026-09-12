@@ -10,7 +10,6 @@ import '../widgets/keyboard_widget.dart';
 import '../widgets/velocity_indicator.dart';
 import '../notation/models/note.dart';
 import '../notation/models/pitch.dart';
-import '../notation/models/duration.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -101,11 +100,8 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                         ? const []
                         : _activeEvents.values
                               .map(
-                                (e) => Note(
-                                  pitch: Pitch.fromMidiNumber(e.note),
-                                  duration: const NoteDuration.quarter(),
-                                  velocity: e.velocity.clamp(0, 127),
-                                ),
+                                (e) =>
+                                    Note(pitch: Pitch.fromMidiNumber(e.note)),
                               )
                               .toList(),
                   ),
