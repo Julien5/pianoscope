@@ -24,7 +24,6 @@ Future<void> _capture(WidgetTester tester, String name, int? midi) async {
                       pitch: Pitch.fromMidiNumber(midi),
                       duration: const NoteDuration.quarter(),
                       velocity: 90,
-                      startBeat: 0,
                     ),
                   ],
           ),

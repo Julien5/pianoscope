@@ -12,7 +12,6 @@ void main() {
     const note = Note(
       pitch: Pitch(noteName: NoteName.C, octave: 4),
       duration: NoteDuration.quarter(),
-      startBeat: 0,
     );
 
     late final bool withAccidentalPresent;
@@ -65,7 +64,6 @@ void main() {
         octave: 4,
       ),
       duration: NoteDuration.quarter(),
-      startBeat: 0,
     );
 
     late final Rect? withLogicBounds;
@@ -208,18 +206,13 @@ void main() {
           Pitch.fromMidiNumber(70),
         );
         final fixed = await _renderNoteCanvas(
-          note: Note(
-            pitch: fixedPitch,
-            duration: const NoteDuration.whole(),
-            startBeat: 0,
-          ),
+          note: Note(pitch: fixedPitch, duration: const NoteDuration.whole()),
           showAccidental: KeySignature.bFlatMajor.needsAccidental(fixedPitch),
         );
         final buggy = await _renderNoteCanvas(
           note: Note(
             pitch: Pitch.fromMidiNumber(70),
             duration: const NoteDuration.whole(),
-            startBeat: 0,
           ),
           showAccidental: true,
         );
@@ -289,7 +282,10 @@ Future<ui.Image?> _renderNoteCanvas({
   return image;
 }
 
-Future<Rect?> _darkPixelBounds(ui.Image? image, {double? maxXScan = 205.0}) async {
+Future<Rect?> _darkPixelBounds(
+  ui.Image? image, {
+  double? maxXScan = 205.0,
+}) async {
   if (image == null) return null;
   final bytes = (await image.toByteData(
     format: ui.ImageByteFormat.rawRgba,

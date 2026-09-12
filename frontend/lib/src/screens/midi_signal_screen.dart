@@ -105,7 +105,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                                   pitch: Pitch.fromMidiNumber(e.note),
                                   duration: const NoteDuration.quarter(),
                                   velocity: e.velocity.clamp(0, 127),
-                                  startBeat: 0,
                                 ),
                               )
                               .toList(),

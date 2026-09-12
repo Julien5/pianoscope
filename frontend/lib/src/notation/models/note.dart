@@ -19,9 +19,6 @@ class Note {
   /// Velocity (loudness) from 0-127 (MIDI convention)
   final int velocity;
 
-  /// The beat position where this note starts
-  final double startBeat;
-
   /// Optional per-note color override (e.g. for ghost/dimmed notes).
   /// When null, the renderer's default color is used.
   final Color? color;
@@ -31,12 +28,8 @@ class Note {
     required this.duration,
     this.forceShowAccidental,
     this.velocity = 64,
-    required this.startBeat,
     this.color,
   }) : assert(velocity >= 0 && velocity <= 127, 'Velocity must be 0-127');
-
-  /// The beat position where this note ends
-  double get endBeat => startBeat + duration.beats;
 
   /// Create a copy with modified properties
   Note copyWith({
@@ -44,7 +37,6 @@ class Note {
     NoteDuration? duration,
     bool? forceShowAccidental,
     int? velocity,
-    double? startBeat,
     Color? color,
   }) {
     return Note(
@@ -52,7 +44,6 @@ class Note {
       duration: duration ?? this.duration,
       forceShowAccidental: forceShowAccidental ?? this.forceShowAccidental,
       velocity: velocity ?? this.velocity,
-      startBeat: startBeat ?? this.startBeat,
       color: color ?? this.color,
     );
   }
@@ -60,25 +51,17 @@ class Note {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is Note &&
-              pitch == other.pitch &&
-              duration == other.duration &&
-              forceShowAccidental == other.forceShowAccidental &&
-              velocity == other.velocity &&
-              startBeat == other.startBeat &&
-              color == other.color;
+      other is Note &&
+          pitch == other.pitch &&
+          duration == other.duration &&
+          forceShowAccidental == other.forceShowAccidental &&
+          velocity == other.velocity &&
+          color == other.color;
 
   @override
-  int get hashCode => Object.hash(
-    pitch,
-    duration,
-    forceShowAccidental,
-    velocity,
-    startBeat,
-    color,
-  );
+  int get hashCode =>
+      Object.hash(pitch, duration, forceShowAccidental, velocity, color);
 
   @override
-  String toString() => 'Note($pitch, ${duration.type.name}, beat: $startBeat)';
+  String toString() => 'Note($pitch, ${duration.type.name})';
 }
-

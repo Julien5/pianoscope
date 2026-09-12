@@ -24,7 +24,6 @@ Note note(int midi, {double beat = 0, Color? color}) {
     pitch: Pitch.fromMidiNumber(midi),
     duration: const NoteDuration.quarter(),
     velocity: 90,
-    startBeat: beat,
     color: color,
   );
 }
