@@ -98,7 +98,7 @@ class GrandStaffLayout {
       size: Size(barlineThickness, staffSpan),
     );
 
-    final clefX = startBarlineX + barlineThickness + params.barlineToClefSpace;
+    final clefX = startBarlineBox.right  + params.barlineToClefSpace;
     final upperClefWidth = ClefRenderer.clefWidth(ClefType.treble, s);
     final lowerClefWidth = ClefRenderer.clefWidth(ClefType.bass, s);
     final keySigWidth = KeySignatureRenderer.keySignatureWidth(

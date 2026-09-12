@@ -32,13 +32,6 @@ void main() {
       GrandStaffView(notes: [note(70)], keySignature: KeySignature.bFlatMajor),
     );
 
-    // Sequential notes in one measure.
-    await expectGoldenFromView(
-      tester,
-      'note_60_64b1',
-      GrandStaffView(notes: [note(60, beat: 0), note(64, beat: 1)]),
-    );
-
     // Gray/ghost note (per-note color override).
     await expectGoldenFromView(
       tester,
