@@ -1,23 +1,28 @@
 // lib/src/notation/rendering/brace_renderer.dart
 
 import 'package:flutter/material.dart';
+import '../geometry/box.dart';
 
-/// Renders a brace connecting two staves (typically for piano)
+/// Renders a brace connecting two staves (typically for piano).
+///
+/// The brace is normalized to a unit height (`y in [0,1]`, `x in [0, ~0.078]`)
+/// and scaled to the box height, so the box width it needs can be derived from
+/// [widthRatio].
 class BraceRenderer {
-  final double staffSpaceSize;
+  final Box box;
   final Color color;
 
   const BraceRenderer({
-    required this.staffSpaceSize,
+    required this.box,
     this.color = Colors.black,
   });
 
   /// Brace width as a fraction of its height, from `frontend/grand-staff.svg`.
-  static const double _widthRatio = 0.07760;
+  static const double widthRatio = 0.07760;
 
-  /// Draws the extracted grand-staff brace shape. The path is normalized to a
-  /// unit height (y in [0,1], x in [0, ~0.078]) with its origin at the top-left
-  /// corner of the brace, so `canvas.scale(totalHeight)` sizes it exactly.
+  /// Draws the extracted grand-staff brace shape with its origin at the
+  /// top-left corner of the brace, so `canvas.scale(box.height)` sizes it
+  /// exactly to the box.
   static final Path _bracePath = Path()
     ..moveTo(0.07022, 0.00007)
     ..cubicTo(0.06720, 0.00025, 0.06399, 0.00345, 0.05853, 0.01130)
@@ -49,24 +54,11 @@ class BraceRenderer {
     ..cubicTo(0.07294, 0.00056, 0.07160, 0.00000, 0.07022, 0.00008)
     ..close();
 
-  /// Paint a brace connecting two staves
-  ///
-  /// [canvas] - Canvas to draw on
-  /// [x] - Horizontal position of the brace (left tip)
-  /// [topStaffY] - Y position of the top staff
-  /// [bottomStaffY] - Y position of the bottom staff (bottom line)
-  /// [staffHeight] - Height of a single staff
-  void paint(
-    Canvas canvas,
-    double x,
-    double topStaffY,
-    double bottomStaffY,
-    double staffHeight,
-  ) {
-    final totalHeight = (bottomStaffY + staffHeight) - topStaffY;
+  /// Paint the brace into its box.
+  void paint(Canvas canvas) {
     canvas.save();
-    canvas.translate(x, topStaffY);
-    canvas.scale(totalHeight);
+    canvas.translate(box.left, box.top);
+    canvas.scale(box.height);
     canvas.drawPath(
       _bracePath,
       Paint()
@@ -76,9 +68,9 @@ class BraceRenderer {
     canvas.restore();
   }
 
-  /// Calculate the width the brace occupies for a given height (teaches to the
-  /// grand staff spanning `height` pixels, preserving the brace aspect ratio).
+  /// Width the brace occupies for a given height, preserving the aspect
+  /// ratio of the extracted shape.
   double getWidth({required double height}) {
-    return height * _widthRatio;
+    return height * widthRatio;
   }
 }

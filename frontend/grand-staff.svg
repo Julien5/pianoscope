@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="460" viewBox="0 0 640 460" font-family="'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <!-- arrowhead pointing along +x (forward) -->
+    <marker id="arrowF" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
+      <path d="M0,1 L8,5 L0,9 Z" fill="#1565c0"/>
+    </marker>
+    <!-- arrowhead pointing along -x (backward, for the line start) -->
+    <marker id="arrowB" markerWidth="10" markerHeight="10" refX="4" refY="5" orient="auto">
+      <path d="M8,1 L0,5 L8,9 Z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="640" height="460" fill="#ffffff"/>
+
+  <!-- ===== title ===== -->
+  <text x="90" y="40" font-size="16" font-weight="bold" fill="#111111">GrandStaffPainter — parameter layout</text>
+  <text x="90" y="51" font-size="10" fill="#555555">treble and bass staves; dimensions in logical pixels, defaults in parentheses</text>
+
+  <!-- ===== widget canvas bounds ===== -->
+  <rect x="90" y="60" width="400" height="260" fill="none" stroke="#bbbbbb" stroke-width="1.2" stroke-dasharray="4 4"/>
+  <text x="100" y="314" font-size="8" fill="#999999">canvas = widget bounds: width 400 × height 260 (defaults)</text>
+
+  <!-- ===== grand staff ===== -->
+  <!-- upper staff lines -->
+  <g stroke="#333333" stroke-width="1.5">
+    <line x1="110" y1="90"  x2="470" y2="90"/>
+    <line x1="110" y1="100" x2="470" y2="100"/>
+    <line x1="110" y1="110" x2="470" y2="110"/>
+    <line x1="110" y1="120" x2="470" y2="120"/>
+    <line x1="110" y1="130" x2="470" y2="130"/>
+    <!-- lower staff lines -->
+    <line x1="110" y1="190" x2="470" y2="190"/>
+    <line x1="110" y1="200" x2="470" y2="200"/>
+    <line x1="110" y1="210" x2="470" y2="210"/>
+    <line x1="110" y1="220" x2="470" y2="220"/>
+    <line x1="110" y1="230" x2="470" y2="230"/>
+  </g>
+
+  <!-- brace (showBrace) -->
+  <path d="M 99 90
+           C 91 90, 88 95, 88 101
+           C 88 109, 94 112, 100 114
+           L 100 156
+           L 100 164
+           L 100 206
+           C 94 208, 88 211, 88 219
+           C 88 225, 91 230, 99 230
+           C 107 230, 110 225, 110 219
+           C 110 211, 104 208, 98 206
+           L 98 164
+           L 98 156
+           L 98 114
+           C 104 112, 110 109, 110 101
+           C 110 95, 107 90, 99 90
+           Z"
+       fill="none" stroke="#111111" stroke-width="2.2" stroke-linejoin="round"/>
+  <text x="100" y="246" font-size="7" fill="#555555" text-anchor="middle">brace (showBrace)</text>
+
+  <!-- start barline (at leftMargin) -->
+  <line x1="110" y1="90" x2="110" y2="230" stroke="#111111" stroke-width="2.6"/>
+  <!-- final barline (at lineWidth = width - rightMargin) -->
+  <line x1="470" y1="90" x2="470" y2="230" stroke="#111111" stroke-width="2"/>
+
+  <!-- clefs -->
+  <text x="120" y="110" font-size="42" fill="#222222" text-anchor="middle" dominant-baseline="central" font-family="'Noto Music','Segoe UI Symbol',sans-serif">&#x1D11E;</text>
+  <text x="120" y="212" font-size="36" fill="#222222" text-anchor="middle" dominant-baseline="central" font-family="'Noto Music','Segoe UI Symbol',sans-serif">&#x1D122;</text>
+  <text x="100" y="86"  font-size="9" font-style="italic" fill="#555555" text-anchor="middle">Treble</text>
+  <text x="125" y="184" font-size="9" font-style="italic" fill="#555555">Bass</text>
+
+  <!-- key signature: 2 sharps (F#, C#) after the clef -->
+  <g fill="#222222" font-size="13" text-anchor="middle" dominant-baseline="central" font-family="'Noto Music','Segoe UI Symbol',sans-serif">
+    <text x="165" y="90">&#x266F;</text>
+    <text x="177" y="105">&#x266F;</text>
+    <text x="165" y="200">&#x266F;</text>
+    <text x="177" y="215">&#x266F;</text>
+  </g>
+
+  <!-- sample notes in the content area -->
+  <g fill="#222222">
+    <ellipse cx="259" cy="110" rx="6" ry="4.5"/>
+    <line x1="265" y1="80" x2="265" y2="110" stroke="#222222" stroke-width="2"/>
+    <ellipse cx="319" cy="115" rx="6" ry="4.5"/>
+    <line x1="325" y1="85" x2="325" y2="115" stroke="#222222" stroke-width="2"/>
+  </g>
+
+  <!-- ===== dimension annotations ===== -->
+  <g stroke="#1565c0" stroke-width="1.4" fill="none" marker-start="url(#arrowB)" marker-end="url(#arrowF)">
+    <line x1="90"  y1="70"  x2="110" y2="70"/>   <!-- leftMargin -->
+    <line x1="470" y1="70"  x2="490" y2="70"/>   <!-- rightMargin -->
+    <line x1="84"  y1="60"  x2="84"  y2="90"/>   <!-- topMargin -->
+    <line x1="478" y1="90"  x2="478" y2="100"/>  <!-- staffSpaceSize -->
+    <line x1="478" y1="130" x2="478" y2="190"/>  <!-- grandStaffGap -->
+    <line x1="110" y1="152" x2="120" y2="152"/>  <!-- barlineToClefSpace -->
+    <line x1="199" y1="136" x2="259" y2="136"/>  <!-- leadingSpace -->
+    <line x1="259" y1="166" x2="319" y2="166"/>  <!-- note spacing -->
+  </g>
+
+  <!-- extension ticks (connect gap arrows to the staff lines) -->
+  <g stroke="#90caf9" stroke-width="1">
+    <line x1="84"  y1="60"  x2="90"  y2="60"/>
+    <line x1="470" y1="90"  x2="478" y2="90"/>
+    <line x1="470" y1="100" x2="478" y2="100"/>
+    <line x1="470" y1="130" x2="478" y2="130"/>
+    <line x1="470" y1="190" x2="478" y2="190"/>
+  </g>
+
+  <!-- dimension labels -->
+  <g fill="#0d47a1" font-size="10">
+    <text x="100" y="62"  text-anchor="middle">leftMargin = 20</text>
+    <text x="480" y="62"  text-anchor="middle">rightMargin = 20</text>
+    <text x="92"  y="74">topMargin = 30</text>
+    <text x="486" y="99"  font-size="9">staffSpaceSize = 10</text>
+    <text x="486" y="162" font-size="9">grandStaffGap = 60</text>
+    <text x="122" y="158" font-size="8">barlineToClefSpace = 10</text>
+    <text x="229" y="144" font-size="9" text-anchor="middle">leadingSpace = 60</text>
+    <text x="289" y="178" font-size="8" text-anchor="middle">note spacing (baseSpacing 40, min 20, max 120)</text>
+  </g>
+
+  <!-- ===== legend ===== -->
+  <text x="100" y="345" font-size="11" font-weight="bold" fill="#111111">Parameters (defaults)</text>
+  <g font-size="9" fill="#333333">
+    <text x="100" y="362">staffSpaceSize = 10</text>
+    <text x="100" y="377">grandStaffGap = 60</text>
+    <text x="100" y="392">leftMargin = 20</text>
+    <text x="100" y="407">rightMargin = 20</text>
+    <text x="100" y="422">topMargin = 30</text>
+    <text x="100" y="437">leadingSpace = 60</text>
+
+    <text x="330" y="362">barlineToClefSpace = 10</text>
+    <text x="330" y="377">measureSpacing = 40 (not used in paint)</text>
+    <text x="330" y="392">baseSpacing / minSpacing / maxSpacing = 40 / 20 / 120</text>
+    <text x="330" y="407">splitPoint = 60 (MIDI: treble vs bass)</text>
+    <text x="330" y="422">showBrace = true</text>
+    <text x="330" y="437">expandWidth = true</text>
+  </g>
+</svg>

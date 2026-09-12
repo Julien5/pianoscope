@@ -1,70 +1,74 @@
-// lib/src/rendering/staff_renderer.dart
+// lib/src/notation/rendering/staff_renderer.dart
 
 import 'package:flutter/material.dart';
+import '../models/key_signature.dart';
+import '../models/note.dart';
+import '../grand_staff_layout.dart';
 import '../geometry/staff_position.dart';
-import '../geometry/staff_units.dart';
+import 'lines_renderer.dart';
+import 'clef_renderer.dart';
+import 'key_signature_renderer.dart';
+import 'notes_renderer.dart';
 
-/// Renders a musical staff (5 horizontal lines)
+/// Paints one staff of the grand staff: staff lines, clef, key signature and
+/// notes (a single chord), each in its own box from [layout].
 class StaffRenderer {
+  final StaffLayout layout;
+  final ClefType clef;
+  final List<Note> notes;
+  final KeySignature keySignature;
   final double staffSpaceSize;
-  final Color lineColor;
-  final int lineCount;
+  final Color color;
 
   const StaffRenderer({
-    this.staffSpaceSize = 10.0,
-    this.lineColor = Colors.black,
-    this.lineCount = 5,
+    required this.layout,
+    required this.clef,
+    required this.notes,
+    required this.keySignature,
+    required this.staffSpaceSize,
+    this.color = Colors.black,
   });
 
-  /// Total height of the staff in pixels
-  double get height => staffSpaceSize * (lineCount - 1);
+  /// Paint the complete staff into its boxes.
+  void paintStaff(Canvas canvas) {
+    LinesRenderer(
+      box: layout.box,
+      staffSpaceSize: staffSpaceSize,
+      color: color,
+    ).paint(canvas);
 
-  /// Paint the staff lines
-  void paint(Canvas canvas, Offset topLeft, double width) {
-    final paint = Paint()
-      ..color = lineColor
-      ..strokeWidth = StaffUnits.staffLineThickness.toPixels(staffSpaceSize)
-      ..style = PaintingStyle.stroke;
+    ClefRenderer(
+      box: layout.clefBox,
+      clefType: clef,
+      staffSpaceSize: staffSpaceSize,
+      color: color,
+    ).paint(canvas);
 
-    for (int i = 0; i < lineCount; i++) {
-      final y = topLeft.dy + (i * staffSpaceSize);
-      canvas.drawLine(
-        Offset(topLeft.dx, y),
-        Offset(topLeft.dx + width, y),
-        paint,
-      );
+    final keySignatureBox = layout.keySignatureBox;
+    if (keySignatureBox != null) {
+      KeySignatureRenderer(
+        box: keySignatureBox,
+        keySignature: keySignature,
+        clefType: clef,
+        staffSpaceSize: staffSpaceSize,
+        color: color,
+      ).paint(canvas);
     }
-  }
 
-  /// Convert a staff position to Y coordinate (pixels from top of staff)
-  double positionToY(StaffPosition position) {
-    // Position 0 is bottom line, position 8 is top line
-    // Invert so higher positions are higher on screen
-    final invertedPosition = 8.0 - position.value;
-    return (invertedPosition * staffSpaceSize) / 2;
-  }
-
-  /// Paint ledger lines for a note at the given position
-  void paintLedgerLines(Canvas canvas, Offset noteCenter, StaffPosition position) {
-    final ledgerPositions = position.getLedgerLinePositions();
-    if (ledgerPositions.isEmpty) return;
-
-    final paint = Paint()
-      ..color = lineColor
-      ..strokeWidth = StaffUnits.ledgerLineThickness.toPixels(staffSpaceSize)
-      ..style = PaintingStyle.stroke;
-
-    final noteheadWidth = StaffUnits.noteheadWidth.toPixels(staffSpaceSize);
-    final extension = StaffUnits.ledgerLineExtension.toPixels(staffSpaceSize);
-    final lineWidth = noteheadWidth + (2 * extension);
-
-    for (final ledgerPos in ledgerPositions) {
-      final y = positionToY(StaffPosition(ledgerPos.toDouble())) + noteCenter.dy - positionToY(position);
-      canvas.drawLine(
-        Offset(noteCenter.dx - lineWidth / 2, y),
-        Offset(noteCenter.dx + lineWidth / 2, y),
-        paint,
-      );
+    if (notes.isNotEmpty) {
+      // Spell each note enharmonically for this key signature so notehead
+      // position and accidentals are correct (e.g. 70 -> Bb in Bb major).
+      final spelled = notes
+          .map((n) => n.copyWith(pitch: keySignature.spell(n.pitch)))
+          .toList();
+      NotesRenderer(
+        box: layout.notesBox,
+        notes: spelled,
+        keySignature: keySignature,
+        clef: clef,
+        staffSpaceSize: staffSpaceSize,
+        color: color,
+      ).paint(canvas);
     }
   }
 }

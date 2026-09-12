@@ -289,14 +289,15 @@ Future<ui.Image?> _renderNoteCanvas({
   return image;
 }
 
-Future<Rect?> _darkPixelBounds(ui.Image? image) async {
+Future<Rect?> _darkPixelBounds(ui.Image? image, {double? maxXScan = 205.0}) async {
   if (image == null) return null;
   final bytes = (await image.toByteData(
     format: ui.ImageByteFormat.rawRgba,
   ))!.buffer.asUint8List();
-  int? minX, maxX, minY, maxY;
+  int? minX, maxXPos, minY, maxY;
+  final xLimit = (maxXScan ?? image.width.toDouble()).round();
   for (int y = 0; y < image.height; y++) {
-    for (int x = 0; x < image.width; x++) {
+    for (int x = 0; x < xLimit; x++) {
       final i = (y * image.width + x) * 4;
       final r = bytes[i];
       final g = bytes[i + 1];
@@ -304,7 +305,7 @@ Future<Rect?> _darkPixelBounds(ui.Image? image) async {
       final a = bytes[i + 3];
       if (a > 0 && r < 200 && g < 200 && b < 200) {
         if (minX == null || x < minX) minX = x;
-        if (maxX == null || x > maxX) maxX = x;
+        if (maxXPos == null || x > maxXPos) maxXPos = x;
         if (minY == null || y < minY) minY = y;
         if (maxY == null || y > maxY) maxY = y;
       }
@@ -314,7 +315,7 @@ Future<Rect?> _darkPixelBounds(ui.Image? image) async {
   return Rect.fromLTRB(
     minX.toDouble(),
     minY!.toDouble(),
-    maxX!.toDouble(),
+    maxXPos!.toDouble(),
     maxY!.toDouble(),
   );
 }
