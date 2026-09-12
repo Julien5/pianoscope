@@ -56,7 +56,7 @@ class GrandStaffLayout {
   /// Vertical padding above the upper staff and below the lower staff, as a
   /// multiple of [GrandStaffParameters.staffSpaceSize]: room for the treble
   /// clef glyph and for ledger lines.
-  static const double _verticalPaddingStaves = 3;
+  static const double kVerticalPadding = 3;
 
   /// Height of a single staff (5 lines = 4 spaces).
   static double staffHeight(double staffSpaceSize) => staffSpaceSize * 4;
@@ -65,7 +65,7 @@ class GrandStaffLayout {
   /// available width.
   static double contentHeightFor(GrandStaffParameters params) {
     final h = staffHeight(params.staffSpaceSize);
-    final pad = _verticalPaddingStaves * params.staffSpaceSize;
+    final pad = kVerticalPadding * params.staffSpaceSize;
     return pad + h + params.staffGap + h + pad;
   }
 
@@ -77,7 +77,7 @@ class GrandStaffLayout {
   }) {
     final s = params.staffSpaceSize;
     final h = staffHeight(s);
-    final pad = _verticalPaddingStaves * s;
+    final pad = kVerticalPadding * s;
 
     final upperTop = pad;
     final lowerTop = pad + h + params.staffGap;
