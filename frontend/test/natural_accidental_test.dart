@@ -266,7 +266,7 @@ Future<ui.Image?> _renderNoteCanvas({
   renderer.paintNote(
     canvas,
     note: note,
-    staffTopLeft: StaffOffset(StaffUnits(0), StaffUnits(100)),
+    staffTopLeft: StaffOffset(StaffUnits(0), StaffUnits(10)),
     xPosition: StaffUnits(20),
     clef: ClefType.treble,
     showAccidental: showAccidental,

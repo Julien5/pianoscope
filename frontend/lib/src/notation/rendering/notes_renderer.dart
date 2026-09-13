@@ -71,7 +71,7 @@ class NotesRenderer {
         position: position,
         showAccidental: showAccidental,
         // Stagger accidentals vertically in tight chords to avoid overlap.
-        accidentalX: StaffUnits(i as double) * (-0.5),
+        accidentalX: StaffUnits(i.toDouble()) * (-0.5),
       );
     }
 

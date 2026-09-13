@@ -39,7 +39,7 @@ class KeySignatureRenderer {
       final glyphSize = GlyphProvider.getGlyphSize(glyphCode, size);
 
       final y = box.top + (position / 2) - (glyphSize.height / 2);
-      final accidentalX = box.left + (spacing * (i as double));
+      final accidentalX = box.left + (spacing * i.toDouble());
 
       textPainter.paint(canvas, Offset(accidentalX.value, y.value));
     }

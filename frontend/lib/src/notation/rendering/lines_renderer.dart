@@ -20,7 +20,7 @@ class LinesRenderer {
       ..style = PaintingStyle.stroke;
 
     for (int i = 0; i < 5; i++) {
-      final y = box.top + StaffUnits.staffLineSpace * (i as double);
+      final y = box.top + StaffUnits.staffLineSpace * i.toDouble();
       canvas.drawLine(
         Offset(box.left.value, y.value),
         Offset(box.right.value, y.value),
