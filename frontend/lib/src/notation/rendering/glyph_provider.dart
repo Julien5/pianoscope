@@ -103,4 +103,9 @@ class GlyphProvider {
   static void setNotationStyle(NotationStyle style) {
     currentStyle = style;
   }
+
+  static double glyphHeight(String codepoint, double size) {
+    const ref = 100.0;
+    return getGlyph(codepoint, ref).height * (size / ref);
+  }
 }

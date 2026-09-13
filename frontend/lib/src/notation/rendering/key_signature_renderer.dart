@@ -32,8 +32,11 @@ class KeySignatureRenderer {
     final size = 2.5;
     final spacing = 1.2;
 
+    final workaroundScalingShift =
+        -GlyphProvider.glyphHeight(glyphCode, size) / 4;
+
     for (int i = 0; i < positions.length; i++) {
-      final position = positions[i];
+      final position = positions[i] + workaroundScalingShift;
       final textPainter = GlyphProvider.getGlyph(glyphCode, size, color: color);
 
       final y = box.top + (position / 2) - textPainter.height / 2;
