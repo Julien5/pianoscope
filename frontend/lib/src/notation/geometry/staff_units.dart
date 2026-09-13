@@ -12,11 +12,7 @@ class StaffUnits {
   static const double kUnit = 10;
 
   const StaffUnits(double v) : value = kUnit * v; // public: from spaces
-  static StaffUnits fromUnits(double u) {
-    StaffUnits ret = StaffUnits(u / kUnit);
-    assert(ret.value == u);
-    return ret;
-  } // private: from units
+  StaffUnits.fromUnits(double units) : value = units; // private: from units
 
   // Line space
   static const staffLineSpace = StaffUnits(1.0);
@@ -47,10 +43,6 @@ class StaffUnits {
   static const thickBarlineThickness = StaffUnits(0.5);
   static const beamThickness = StaffUnits(0.5);
 
-  // Clef sizes
-  static const trebleClefHeight = StaffUnits(7.0);
-  static const bassClefHeight = StaffUnits(4.0);
-
   // Dots (for dotted notes)
   static const dotRadius = StaffUnits(0.2);
   static const dotSpacing = StaffUnits(0.7); // Space between note and dot
@@ -74,6 +66,8 @@ class StaffUnits {
 
   bool operator >=(StaffUnits other) => value >= other.value;
   bool operator >(StaffUnits other) => value > other.value;
+  bool operator <=(StaffUnits other) => value <= other.value;
+  bool operator <(StaffUnits other) => value < other.value;
 
   @override
   int get hashCode => value.hashCode;
