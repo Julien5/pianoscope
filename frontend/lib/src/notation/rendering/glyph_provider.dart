@@ -87,13 +87,13 @@ class GlyphProvider {
 
   static StaffUnits getGlyphWidth(String codepoint, StaffUnits size) {
     final ret = getGlyphPainter(codepoint, size);
-    return StaffUnits(ret.width / StaffUnits.kUnit);
+    return StaffUnits.fromUnits(ret.width);
   }
 
   static StaffSize getGlyphSize(String codepoint, StaffUnits size) {
     final ret = getGlyphPainter(codepoint, size);
-    final w = StaffUnits(ret.width / StaffUnits.kUnit);
-    final h = StaffUnits(ret.height / StaffUnits.kUnit);
+    final w = StaffUnits.fromUnits(ret.width);
+    final h = StaffUnits.fromUnits(ret.height);
     return StaffSize(w, h);
   }
 
