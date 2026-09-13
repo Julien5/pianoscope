@@ -124,9 +124,8 @@ class GrandStaffLayout {
     );
 
     final linesLeft = startBarlineX;
-    final linesWidth = finalBarlineX - startBarlineX >= StaffUnits(0)
-        ? finalBarlineX - startBarlineX
-        : StaffUnits(0.0);
+    final linesWidth = finalBarlineX - startBarlineX;
+    assert(linesWidth >= StaffUnits(0));
 
     return GrandStaffLayout(
       braceBox: braceBox,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../pianoscope.dart';
-import '../notation/grand_staff_layout.dart';
 import '../notation/grand_staff_parameters.dart';
 import '../notation/grand_staff_painter.dart';
 
