@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/pianoscope.dart';
 
@@ -30,13 +29,6 @@ void main() {
       tester,
       'keysig_Bb_note_70',
       GrandStaffView(notes: [note(70)], keySignature: KeySignature.bFlatMajor),
-    );
-
-    // Gray/ghost note (per-note color override).
-    await expectGoldenFromView(
-      tester,
-      'note_60_gray',
-      GrandStaffView(notes: [note(60, color: Colors.black38)]),
     );
   });
 }

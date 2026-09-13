@@ -2,6 +2,8 @@
 
 import 'dart:ui' show Offset, Size;
 
+import 'package:flutter/rendering.dart';
+
 /// An axis-aligned rectangle in canvas coordinates, the building block of
 /// the notation layout: every element (brace, barline, staff, ...) owns one.
 class Box {

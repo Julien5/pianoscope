@@ -35,14 +35,8 @@ class NotesRenderer {
   void paint(Canvas canvas) {
     if (notes.isEmpty) return;
 
-    final noteRenderer = NoteRenderer(
-      staffSpaceSize: staffSpaceSize,
-      color: color,
-    );
-    final stemRenderer = StemRenderer(
-      staffSpaceSize: staffSpaceSize,
-      color: color,
-    );
+    final noteRenderer = NoteRenderer(staffSpaceSize: staffSpaceSize);
+    final stemRenderer = StemRenderer(staffSpaceSize: staffSpaceSize);
 
     final sorted = List<Note>.from(notes)
       ..sort((a, b) => a.pitch.midiNumber.compareTo(b.pitch.midiNumber));

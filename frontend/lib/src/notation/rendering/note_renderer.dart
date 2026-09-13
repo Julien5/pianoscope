@@ -13,24 +13,14 @@ import 'accidental_renderer.dart';
 /// so flags, dots and beams are not drawn.
 class NoteRenderer {
   final double staffSpaceSize;
-  final Color color;
   final NoteheadRenderer _noteheadRenderer;
   final StemRenderer _stemRenderer;
   final AccidentalRenderer _accidentalRenderer;
 
-  NoteRenderer({required this.staffSpaceSize, this.color = Colors.black})
-    : _noteheadRenderer = NoteheadRenderer(
-        staffSpaceSize: staffSpaceSize,
-        color: color,
-      ),
-      _stemRenderer = StemRenderer(
-        staffSpaceSize: staffSpaceSize,
-        color: color,
-      ),
-      _accidentalRenderer = AccidentalRenderer(
-        staffSpaceSize: staffSpaceSize,
-        color: color,
-      );
+  NoteRenderer({required this.staffSpaceSize})
+    : _noteheadRenderer = NoteheadRenderer(staffSpaceSize: staffSpaceSize),
+      _stemRenderer = StemRenderer(staffSpaceSize: staffSpaceSize),
+      _accidentalRenderer = AccidentalRenderer(staffSpaceSize: staffSpaceSize);
 
   /// Draw the notehead, optional accidental and ledger lines for a note whose
   /// center is at [noteCenter]. No stem is drawn.
@@ -48,7 +38,6 @@ class NoteRenderer {
       noteCenter,
       position,
       staffSpaceSize,
-      color: note.color ?? color,
     );
 
     // Draw accidental if needed.

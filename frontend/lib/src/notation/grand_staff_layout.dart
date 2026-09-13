@@ -98,13 +98,10 @@ class GrandStaffLayout {
       size: Size(barlineThickness, staffSpan),
     );
 
-    final clefX = startBarlineBox.right  + params.barlineToClefSpace;
+    final clefX = startBarlineBox.right + params.barlineToClefSpace;
     final upperClefWidth = ClefRenderer.clefWidth(ClefType.treble, s);
     final lowerClefWidth = ClefRenderer.clefWidth(ClefType.bass, s);
-    final keySigWidth = KeySignatureRenderer.keySignatureWidth(
-      keySignature,
-      s,
-    );
+    final keySigWidth = KeySignatureRenderer.keySignatureWidth(keySignature, s);
     final hasKeySig = keySignature.accidentals != 0;
 
     // Notes must align across staves: right-align the clef/key-signature
@@ -121,7 +118,8 @@ class GrandStaffLayout {
       keySigWidth: keySigWidth,
       params: params,
     );
-    final notesLeft = clefX + (upperPrefix > lowerPrefix ? upperPrefix : lowerPrefix);
+    final notesLeft =
+        clefX + (upperPrefix > lowerPrefix ? upperPrefix : lowerPrefix);
 
     final finalBarlineX = size.width - barlineThickness;
     final finalBarlineBox = Box(
@@ -214,14 +212,8 @@ class GrandStaffLayout {
         : 0.0;
 
     return StaffLayout(
-      box: Box(
-        topLeft: Offset(linesLeft, staffTop),
-        size: Size(linesWidth, h),
-      ),
-      clefBox: Box(
-        topLeft: Offset(clefX, staffTop),
-        size: Size(clefWidth, h),
-      ),
+      box: Box(topLeft: Offset(linesLeft, staffTop), size: Size(linesWidth, h)),
+      clefBox: Box(topLeft: Offset(clefX, staffTop), size: Size(clefWidth, h)),
       keySignatureBox: keySignatureBox,
       notesBox: Box(
         topLeft: Offset(notesLeft, staffTop),
