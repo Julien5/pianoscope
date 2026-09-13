@@ -34,8 +34,8 @@ class BarlineRenderer {
       ..style = PaintingStyle.stroke;
 
     canvas.drawLine(
-      Offset(box.centerX, box.top),
-      Offset(box.centerX, box.bottom),
+      Offset(box.centerX.value, box.top.value),
+      Offset(box.centerX.value, box.bottom.value),
       paint,
     );
   }

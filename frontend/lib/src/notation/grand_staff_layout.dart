@@ -1,6 +1,6 @@
 // lib/src/notation/grand_staff_layout.dart
 
-import 'dart:ui' show Offset, Size;
+import 'dart:ui' show Size;
 
 import 'grand_staff_parameters.dart';
 import 'models/key_signature.dart';
@@ -42,7 +42,7 @@ class GrandStaffLayout {
   final Box finalBarlineBox;
   final StaffLayout upperStaff;
   final StaffLayout lowerStaff;
-  final double contentHeight;
+  final StaffUnits contentHeight;
 
   const GrandStaffLayout({
     required this.braceBox,
@@ -54,14 +54,14 @@ class GrandStaffLayout {
   });
 
   /// Vertical padding above the upper staff and below the lower staff.
-  static const double kVerticalPadding = 3.0 * StaffUnits.kUnit;
+  static const StaffUnits kVerticalPadding = StaffUnits(3.0);
 
   /// Height of a single staff (5 lines = 4 spaces).
-  static double staffHeight() => 4 * StaffUnits.kUnit;
+  static StaffUnits staffHeight() => StaffUnits(4);
 
   /// Overall content height for a given set of parameters, independent of the
   /// available width.
-  static double contentHeightFor(GrandStaffParameters params) {
+  static StaffUnits contentHeightFor(GrandStaffParameters params) {
     final h = staffHeight();
     final pad = kVerticalPadding;
     return pad + h + params.staffGap + h + pad;
@@ -70,7 +70,7 @@ class GrandStaffLayout {
   /// Compute the full layout for the available [size].
   factory GrandStaffLayout.fromParameters({
     required GrandStaffParameters params,
-    required Size size,
+    required StaffSize size,
     required KeySignature keySignature,
   }) {
     final h = staffHeight();
@@ -82,17 +82,16 @@ class GrandStaffLayout {
     // Vertical extent shared by brace and barlines: both staves + the gap.
     final staffSpan = h + params.staffGap + h;
     final braceWidth = staffSpan * BraceRenderer.widthRatio;
-    final barlineThickness = StaffUnits.barlineThickness.value;
-
+    final barlineThickness = StaffUnits.barlineThickness;
     final braceBox = Box(
-      topLeft: Offset(0, pad),
-      size: Size(braceWidth, staffSpan),
+      topLeft: StaffOffset(StaffUnits(0), pad),
+      size: StaffSize(braceWidth, staffSpan),
     );
 
     final startBarlineX = braceBox.right + params.braceToBarlineSpace;
     final startBarlineBox = Box(
-      topLeft: Offset(startBarlineX, pad),
-      size: Size(barlineThickness, staffSpan),
+      topLeft: StaffOffset(startBarlineX, pad),
+      size: StaffSize(barlineThickness, staffSpan),
     );
 
     final clefX = startBarlineBox.right + params.barlineToClefSpace;
@@ -120,14 +119,14 @@ class GrandStaffLayout {
 
     final finalBarlineX = size.width - barlineThickness;
     final finalBarlineBox = Box(
-      topLeft: Offset(finalBarlineX, pad),
-      size: Size(barlineThickness, staffSpan),
+      topLeft: StaffOffset(finalBarlineX, pad),
+      size: StaffSize(barlineThickness, staffSpan),
     );
 
     final linesLeft = startBarlineX;
-    final linesWidth = finalBarlineX - startBarlineX >= 0
+    final linesWidth = finalBarlineX - startBarlineX >= StaffUnits(0)
         ? finalBarlineX - startBarlineX
-        : 0.0;
+        : StaffUnits(0.0);
 
     return GrandStaffLayout(
       braceBox: braceBox,
@@ -165,10 +164,10 @@ class GrandStaffLayout {
 
   /// Horizontal space consumed after the clef (clef-to-keysig gap, key
   /// signature and keysig-to-notes gap) before the notes start.
-  static double _afterPrefix({
-    required double clefWidth,
+  static StaffUnits _afterPrefix({
+    required StaffUnits clefWidth,
     required bool hasKeySig,
-    required double keySigWidth,
+    required StaffUnits keySigWidth,
     required GrandStaffParameters params,
   }) {
     if (hasKeySig) {
@@ -181,40 +180,46 @@ class GrandStaffLayout {
   }
 
   static StaffLayout _staffLayout({
-    required double clefWidth,
-    required double staffTop,
-    required double clefX,
-    required double notesRight,
-    required double h,
+    required StaffUnits clefWidth,
+    required StaffUnits staffTop,
+    required StaffUnits clefX,
+    required StaffUnits notesRight,
+    required StaffUnits h,
     required bool hasKeySig,
-    required double keySigWidth,
-    required double notesLeft,
-    required double linesLeft,
-    required double linesWidth,
+    required StaffUnits keySigWidth,
+    required StaffUnits notesLeft,
+    required StaffUnits linesLeft,
+    required StaffUnits linesWidth,
     required GrandStaffParameters params,
   }) {
     Box? keySignatureBox;
     if (hasKeySig) {
       keySignatureBox = Box(
-        topLeft: Offset(
+        topLeft: StaffOffset(
           clefX + clefWidth + params.clefToKeySignatureSpace,
           staffTop,
         ),
-        size: Size(keySigWidth, h),
+        size: StaffSize(keySigWidth, h),
       );
     }
 
-    final notesWidth = notesRight - notesLeft >= 0
+    final notesWidth = notesRight - notesLeft >= StaffUnits(0)
         ? notesRight - notesLeft
-        : 0.0;
+        : StaffUnits(0);
 
     return StaffLayout(
-      box: Box(topLeft: Offset(linesLeft, staffTop), size: Size(linesWidth, h)),
-      clefBox: Box(topLeft: Offset(clefX, staffTop), size: Size(clefWidth, h)),
+      box: Box(
+        topLeft: StaffOffset(linesLeft, staffTop),
+        size: StaffSize(linesWidth, h),
+      ),
+      clefBox: Box(
+        topLeft: StaffOffset(clefX, staffTop),
+        size: StaffSize(clefWidth, h),
+      ),
       keySignatureBox: keySignatureBox,
       notesBox: Box(
-        topLeft: Offset(notesLeft, staffTop),
-        size: Size(notesWidth, h),
+        topLeft: StaffOffset(notesLeft, staffTop),
+        size: StaffSize(notesWidth, h),
       ),
     );
   }

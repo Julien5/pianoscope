@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/pianoscope.dart';
+import 'package:pianoscope/src/notation/geometry/box.dart';
 import 'package:pianoscope/src/notation/rendering/note_renderer.dart';
 
 void main() {
@@ -265,8 +266,8 @@ Future<ui.Image?> _renderNoteCanvas({
   renderer.paintNote(
     canvas,
     note: note,
-    staffTopLeft: const Offset(0, 100),
-    xPosition: 200,
+    staffTopLeft: StaffOffset(StaffUnits(0), StaffUnits(100)),
+    xPosition: StaffUnits(20),
     clef: ClefType.treble,
     showAccidental: showAccidental,
   );

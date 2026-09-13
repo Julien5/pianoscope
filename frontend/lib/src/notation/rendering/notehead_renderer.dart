@@ -2,6 +2,7 @@
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../geometry/box.dart';
 import '../geometry/staff_units.dart';
 
 /// Renders noteheads (filled or hollow ovals)
@@ -11,13 +12,13 @@ class NoteheadRenderer {
   const NoteheadRenderer({this.color = Colors.black});
 
   /// Paint a notehead at the given center position
-  void paint(Canvas canvas, Offset center, {Color? color}) {
+  void paint(Canvas canvas, StaffOffset center, {Color? color}) {
     final width = StaffUnits.noteheadWidth.value;
     final height = StaffUnits.noteheadHeight.value;
 
     // Save canvas state for rotation
     canvas.save();
-    canvas.translate(center.dx, center.dy);
+    canvas.translate(center.dx.value, center.dy.value);
 
     // Rotate notehead slightly for traditional appearance (-20 degrees)
     canvas.rotate(-20 * math.pi / 180);

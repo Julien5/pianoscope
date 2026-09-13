@@ -1,6 +1,7 @@
 // lib/src/notation/rendering/stem_renderer.dart
 
 import 'package:flutter/material.dart';
+import '../geometry/box.dart';
 import '../geometry/staff_position.dart';
 import '../geometry/staff_units.dart';
 
@@ -18,44 +19,44 @@ class StemRenderer {
   const StemRenderer({this.color = Colors.black});
 
   /// Paint a stem from the notehead and return the stem end position
-  Offset paint(
+  StaffOffset paint(
     Canvas canvas,
-    Offset noteheadCenter, {
+    StaffOffset noteheadCenter, {
     required StemDirection direction,
     Color? color,
   }) {
     if (direction == StemDirection.none) return noteheadCenter;
 
-    final thickness = StaffUnits.stemThickness.value;
-    final length = StaffUnits.stemLength.value;
-    final noteheadWidth = StaffUnits.noteheadWidth.value;
+    final thickness = StaffUnits.stemThickness;
+    final length = StaffUnits.stemLength;
+    final noteheadWidth = StaffUnits.noteheadWidth;
 
     final paint = Paint()
       ..color = color ?? this.color
-      ..strokeWidth = thickness
+      ..strokeWidth = thickness.value
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    Offset stemStart;
-    Offset stemEnd;
+    StaffOffset stemStart;
+    StaffOffset stemEnd;
 
     if (direction == StemDirection.up) {
       // Stem attaches to right side of notehead, goes up
-      stemStart = Offset(
-        noteheadCenter.dx + noteheadWidth / 2,
+      stemStart = StaffOffset(
+        noteheadCenter.dx + noteheadWidth * (0.5),
         noteheadCenter.dy,
       );
-      stemEnd = Offset(stemStart.dx, stemStart.dy - length);
+      stemEnd = StaffOffset(stemStart.dx, stemStart.dy - length);
     } else {
       // Stem attaches to left side of notehead, goes down
-      stemStart = Offset(
+      stemStart = StaffOffset(
         noteheadCenter.dx - noteheadWidth / 2,
         noteheadCenter.dy,
       );
-      stemEnd = Offset(stemStart.dx, stemStart.dy + length);
+      stemEnd = StaffOffset(stemStart.dx, stemStart.dy + length);
     }
 
-    canvas.drawLine(stemStart, stemEnd, paint);
+    canvas.drawLine(stemStart.value(), stemEnd.value(), paint);
 
     return stemEnd; // Return stem end for flag attachment
   }

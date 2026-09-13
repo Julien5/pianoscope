@@ -1,7 +1,6 @@
-import 'dart:ui' show Size;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/pianoscope.dart';
+import 'package:pianoscope/src/notation/geometry/box.dart';
 import 'package:pianoscope/src/notation/grand_staff_parameters.dart';
 import 'package:pianoscope/src/notation/grand_staff_layout.dart';
 import 'package:pianoscope/src/notation/rendering/key_signature_renderer.dart';
@@ -10,7 +9,7 @@ import 'package:pianoscope/src/notation/rendering/clef_renderer.dart';
 void main() {
   group('GrandStaffLayout', () {
     const params = GrandStaffParameters();
-    const size = Size(800, 600);
+    final size = StaffSize(StaffUnits(80.0), StaffUnits(60));
 
     test('content height derives from staffSpaceSize and staffGap', () {
       expect(
@@ -19,7 +18,7 @@ void main() {
       );
       expect(
         GrandStaffLayout.contentHeightFor(
-          const GrandStaffParameters(staffGap: 80),
+          const GrandStaffParameters(staffGap: StaffUnits(8)),
         ),
         // 2 * padding(30) + 2 * staffHeight(40) + gap
         2 * 30 + 2 * 40 + 80, // 220
@@ -140,7 +139,7 @@ void main() {
     test('the notes box fills the remaining width', () {
       final layout = GrandStaffLayout.fromParameters(
         params: params,
-        size: const Size(400, 200),
+        size: StaffSize(StaffUnits(40), StaffUnits(20)),
         keySignature: KeySignature.cMajor,
       );
 

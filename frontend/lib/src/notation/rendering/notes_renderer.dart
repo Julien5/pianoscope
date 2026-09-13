@@ -59,7 +59,7 @@ class NotesRenderer {
         seenPitchClasses.add(pitchClass);
       }
 
-      final noteCenter = Offset(
+      final noteCenter = StaffOffset(
         box.left,
         StaffGeometry.positionToY(position, box.top),
       );
@@ -71,7 +71,7 @@ class NotesRenderer {
         position: position,
         showAccidental: showAccidental,
         // Stagger accidentals vertically in tight chords to avoid overlap.
-        accidentalX: -i * (StaffUnits.kUnit / 2),
+        accidentalX: StaffUnits(i as double) * (-0.5),
       );
     }
 
@@ -80,7 +80,7 @@ class NotesRenderer {
         ? sorted.last
         : sorted.first;
     final extremePosition = StaffPosition.forPitch(extremeNote.pitch, clef);
-    final extremeCenter = Offset(
+    final extremeCenter = StaffOffset(
       box.left,
       StaffGeometry.positionToY(extremePosition, box.top),
     );

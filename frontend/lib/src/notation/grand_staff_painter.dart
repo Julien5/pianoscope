@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 // ignore: unused_import
+import 'geometry/box.dart';
 import 'geometry/staff_units.dart';
 import 'grand_staff_parameters.dart';
 import 'grand_staff_layout.dart';
@@ -44,7 +45,10 @@ class GrandStaffPainter extends CustomPainter {
 
     final layout = GrandStaffLayout.fromParameters(
       params: params,
-      size: Size(size.width / scale, size.height / scale),
+      size: StaffSize(
+        StaffUnits(size.width / StaffUnits.kUnit),
+        StaffUnits(size.height / StaffUnits.kUnit),
+      ),
       keySignature: keySignature,
     );
 

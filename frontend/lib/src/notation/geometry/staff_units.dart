@@ -64,6 +64,9 @@ class StaffUnits {
   bool operator ==(Object other) =>
       identical(this, other) || other is StaffUnits && value == other.value;
 
+  bool operator >=(StaffUnits other) => value >= other.value;
+  bool operator >(StaffUnits other) => value > other.value;
+
   @override
   int get hashCode => value.hashCode;
 

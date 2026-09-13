@@ -2,6 +2,8 @@
 
 import 'package:flutter/foundation.dart' show immutable;
 
+import '../../pianoscope.dart';
+
 /// User-set parameters of the grand staff rendering.
 ///
 /// Horizontal layout (left to right):
@@ -19,27 +21,27 @@ import 'package:flutter/foundation.dart' show immutable;
 class GrandStaffParameters {
   /// Vertical distance between the bottom line of the upper staff and the
   /// top line of the lower staff.
-  final double staffGap;
+  final StaffUnits staffGap;
 
   /// Horizontal gap between the right edge of the brace and the start barline.
-  final double braceToBarlineSpace;
+  final StaffUnits braceToBarlineSpace;
 
   /// Horizontal gap between the start barline and the clef.
-  final double barlineToClefSpace;
+  final StaffUnits barlineToClefSpace;
 
   /// Horizontal gap between the clef and the key signature.
-  final double clefToKeySignatureSpace;
+  final StaffUnits clefToKeySignatureSpace;
 
   /// Horizontal gap between the key signature (or the clef, when there is no
   /// key signature) and the notes.
-  final double keySignatureToNotesSpace;
+  final StaffUnits keySignatureToNotesSpace;
 
   const GrandStaffParameters({
-    this.staffGap = 60,
-    this.braceToBarlineSpace = 2.5,
-    this.barlineToClefSpace = 10,
-    this.clefToKeySignatureSpace = 10,
-    this.keySignatureToNotesSpace = 60,
+    this.staffGap = const StaffUnits(6),
+    this.braceToBarlineSpace = const StaffUnits(2.5),
+    this.barlineToClefSpace = const StaffUnits(10),
+    this.clefToKeySignatureSpace = const StaffUnits(10),
+    this.keySignatureToNotesSpace = const StaffUnits(60),
   });
 
   static const GrandStaffParameters defaults = GrandStaffParameters();

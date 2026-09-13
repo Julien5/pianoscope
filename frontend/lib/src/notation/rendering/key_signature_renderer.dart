@@ -30,25 +30,23 @@ class KeySignatureRenderer {
         ? GlyphProvider.sharp
         : GlyphProvider.flat;
 
-    final double size = 2.5 * StaffUnits.kUnit;
-    final double spacing = 1.2 * StaffUnits.kUnit;
+    final size = StaffUnits(2.5);
+    final spacing = StaffUnits(1.2);
 
     for (int i = 0; i < positions.length; i++) {
       final position = positions[i];
-      final textPainter = GlyphProvider.getGlyph(glyphCode, size, color: color);
+      final textPainter = GlyphProvider.getGlyphPainter(glyphCode, size);
+      final glyphSize = GlyphProvider.getGlyphSize(glyphCode, size);
 
-      final y =
-          box.top +
-          (position * StaffUnits.kUnit / 2) -
-          (textPainter.height / 2);
-      final accidentalX = box.left + (i * spacing);
+      final y = box.top + (position / 2) - (glyphSize.height / 2);
+      final accidentalX = box.left + (spacing * (i as double));
 
-      textPainter.paint(canvas, Offset(accidentalX, y));
+      textPainter.paint(canvas, Offset(accidentalX.value, y.value));
     }
   }
 
   /// Get staff positions for accidentals based on clef and key signature.
-  List<double> _getAccidentalPositions(
+  List<StaffUnits> _getAccidentalPositions(
     KeySignature keySignature,
     ClefType clefType,
   ) {
@@ -62,48 +60,48 @@ class KeySignatureRenderer {
   }
 
   /// Get positions for sharps in order: F C G D A E B
-  List<double> _getSharpPositions(ClefType clefType, int count) {
+  List<StaffUnits> _getSharpPositions(ClefType clefType, int count) {
     switch (clefType) {
       case ClefType.treble:
         const positions = [0.0, 3.0, -1.0, 2.0, 5.0, 1.0, 4.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
       case ClefType.bass:
         const positions = [2.0, 5.0, 1.0, 4.0, 7.0, 3.0, 6.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
       case ClefType.alto:
         const positions = [1.0, 5.0, 0.0, 4.0, 7.0, 2.0, 6.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
       case ClefType.tenor:
         const positions = [6.0, 2.0, 5.0, 1.0, 4.0, 0.0, 3.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
     }
   }
 
   /// Get positions for flats in order: B E A D G C F
-  List<double> _getFlatPositions(ClefType clefType, int count) {
+  List<StaffUnits> _getFlatPositions(ClefType clefType, int count) {
     switch (clefType) {
       case ClefType.treble:
         const positions = [4.0, 1.0, 5.0, 2.0, 6.0, 3.0, 7.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
       case ClefType.bass:
         const positions = [6.0, 3.0, 7.0, 4.0, 8.0, 5.0, 9.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
       case ClefType.alto:
         const positions = [5.0, 2.0, 6.0, 3.0, 7.0, 4.0, 8.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
       case ClefType.tenor:
         const positions = [3.0, 0.0, 4.0, 1.0, 5.0, 2.0, 6.0];
-        return positions.take(count).toList();
+        return positions.map((x) => StaffUnits(x)).take(count).toList();
     }
   }
 
   /// Width occupied by the key signature at the given staff spacing.
   /// Used by the layout engine; 0 when there is no key signature.
-  static double keySignatureWidth(KeySignature keySignature) {
-    if (keySignature.accidentals == 0) return 0;
+  static StaffUnits keySignatureWidth(KeySignature keySignature) {
+    if (keySignature.accidentals == 0) return StaffUnits(0);
 
     final count = keySignature.accidentals.abs();
     final spacing = 1.2;
-    return ((count * spacing) + 1) * StaffUnits.kUnit;
+    return StaffUnits((count * spacing) + 1);
   }
 }

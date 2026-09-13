@@ -28,9 +28,8 @@ class GrandStaffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = StaffUnits.kUnit / 10;
     return SizedBox(
-      height: GrandStaffLayout.contentHeightFor(params) * scale,
+      height: GrandStaffLayout.contentHeightFor(params).value,
       width: double.infinity,
       child: CustomPaint(
         painter: GrandStaffPainter(

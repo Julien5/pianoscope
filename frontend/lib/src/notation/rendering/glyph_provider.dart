@@ -1,6 +1,7 @@
 // lib/src/notation/rendering/glyph_provider.dart
 
 import 'package:flutter/material.dart';
+import '../geometry/box.dart';
 import '../geometry/staff_units.dart';
 import '../models/pitch.dart';
 import '../models/notation_style.dart';
@@ -69,19 +70,31 @@ class GlyphProvider {
   }
 
   /// Get a TextPainter for a music symbol
-  static TextPainter getGlyph(
-    String codepoint,
-    double size, {
-    Color color = Colors.black,
-  }) {
+  static TextPainter getGlyphPainter(String codepoint, StaffUnits size) {
     final font = _fontForGlyph(codepoint);
     return TextPainter(
       text: TextSpan(
         text: codepoint,
-        style: TextStyle(fontFamily: font, fontSize: size, color: color),
+        style: TextStyle(
+          fontFamily: font,
+          fontSize: size.value,
+          color: Colors.black,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
+  }
+
+  static StaffUnits getGlyphWidth(String codepoint, StaffUnits size) {
+    final ret = getGlyphPainter(codepoint, size);
+    return StaffUnits(ret.width / StaffUnits.kUnit);
+  }
+
+  static StaffSize getGlyphSize(String codepoint, StaffUnits size) {
+    final ret = getGlyphPainter(codepoint, size);
+    final w = StaffUnits(ret.width / StaffUnits.kUnit);
+    final h = StaffUnits(ret.width / StaffUnits.kUnit);
+    return StaffSize(w, h);
   }
 
   /// Utility getters for accidentals, rests, flags
@@ -105,8 +118,7 @@ class GlyphProvider {
     currentStyle = style;
   }
 
-  static double glyphHeight(String codepoint, double size) {
-    const ref = 100.0;
-    return getGlyph(codepoint, ref).height * (size / ref);
+  static StaffUnits glyphHeight(String codepoint, StaffUnits size) {
+    return getGlyphSize(codepoint, size).height;
   }
 }

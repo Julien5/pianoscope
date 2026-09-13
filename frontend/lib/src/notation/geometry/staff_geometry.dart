@@ -2,6 +2,7 @@
 
 import 'dart:ui' show Canvas, Color, Offset, Paint, PaintingStyle;
 
+import 'box.dart';
 import 'staff_position.dart';
 import 'staff_units.dart';
 
@@ -10,16 +11,16 @@ import 'staff_units.dart';
 class StaffGeometry {
   /// Pixels (relative to a staff top line) of the given [position];
   /// position 0 is the bottom line, position 8 the top line.
-  static double positionToY(StaffPosition position, double staffTop) {
+  static StaffUnits positionToY(StaffPosition position, StaffUnits staffTop) {
     final inverted = 8.0 - position.value;
-    return staffTop + (inverted / 2) * StaffUnits.kUnit;
+    return staffTop + StaffUnits(inverted / 2);
   }
 
   /// Paints the ledger lines required by [position], centered on
   /// [noteCenter], using the standard engraving line length.
   static void paintLedgerLines(
     Canvas canvas,
-    Offset noteCenter,
+    StaffOffset noteCenter,
     StaffPosition position,
   ) {
     Color color = const Color(0xFF000000);
@@ -31,16 +32,15 @@ class StaffGeometry {
       ..strokeWidth = StaffUnits.ledgerLineThickness.value
       ..style = PaintingStyle.stroke;
 
-    final noteheadWidth = StaffUnits.noteheadWidth.value;
-    final extension = StaffUnits.ledgerLineExtension.value;
-    final lineWidth = noteheadWidth + (2 * extension);
+    final noteheadWidth = StaffUnits.noteheadWidth;
+    final extension = StaffUnits.ledgerLineExtension;
+    final lineWidth = noteheadWidth + (extension * 2);
 
     for (final ledgerPos in ledgerPositions) {
-      final y =
-          noteCenter.dy + (position.value - ledgerPos) * StaffUnits.kUnit / 2;
+      final y = noteCenter.dy + StaffUnits(position.value - ledgerPos) / 2;
       canvas.drawLine(
-        Offset(noteCenter.dx - lineWidth / 2, y),
-        Offset(noteCenter.dx + lineWidth / 2, y),
+        Offset(noteCenter.dx.value - lineWidth.value / 2, y.value),
+        Offset(noteCenter.dx.value + lineWidth.value / 2, y.value),
         paint,
       );
     }

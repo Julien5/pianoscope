@@ -53,8 +53,8 @@ class BraceRenderer {
   /// Paint the brace into its box.
   void paint(Canvas canvas) {
     canvas.save();
-    canvas.translate(box.left, box.top);
-    canvas.scale(box.height);
+    canvas.translate(box.left.value, box.top.value);
+    canvas.scale(box.height.value);
     canvas.drawPath(
       _bracePath,
       Paint()

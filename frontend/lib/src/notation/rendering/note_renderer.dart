@@ -1,6 +1,8 @@
 // lib/src/notation/rendering/note_renderer.dart
 
 import 'package:flutter/material.dart';
+import '../geometry/box.dart';
+import '../geometry/staff_units.dart';
 import '../models/note.dart';
 import '../geometry/staff_position.dart';
 import '../geometry/staff_geometry.dart';
@@ -25,11 +27,11 @@ class NoteRenderer {
   /// center is at [noteCenter]. No stem is drawn.
   void paintSymbols(
     Canvas canvas, {
-    required Offset noteCenter,
+    required StaffOffset noteCenter,
     required Note note,
     required StaffPosition position,
     required bool showAccidental,
-    double accidentalX = 0,
+    StaffUnits accidentalX = const StaffUnits(0.0),
   }) {
     // Draw ledger lines if needed.
     StaffGeometry.paintLedgerLines(canvas, noteCenter, position);
@@ -38,7 +40,7 @@ class NoteRenderer {
     if (showAccidental) {
       _accidentalRenderer.paint(
         canvas,
-        Offset(noteCenter.dx + accidentalX, noteCenter.dy),
+        StaffOffset(noteCenter.dx + accidentalX, noteCenter.dy),
         note.pitch.accidental,
         color: note.color,
       );
@@ -54,13 +56,13 @@ class NoteRenderer {
   void paintNote(
     Canvas canvas, {
     required Note note,
-    required Offset staffTopLeft,
-    required double xPosition,
+    required StaffOffset staffTopLeft,
+    required StaffUnits xPosition,
     required ClefType clef,
     required bool showAccidental,
   }) {
     final position = StaffPosition.forPitch(note.pitch, clef);
-    final noteCenter = Offset(
+    final noteCenter = StaffOffset(
       xPosition,
       StaffGeometry.positionToY(position, staffTopLeft.dy),
     );

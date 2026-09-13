@@ -26,32 +26,32 @@ class ClefRenderer {
         _drawGlyph(
           canvas,
           GlyphProvider.trebleClef,
-          4.5 * StaffUnits.kUnit,
-          -6.25 * StaffUnits.kUnit,
+          StaffUnits(4.5),
+          StaffUnits(-6.25),
         );
         break;
       case ClefType.bass:
         _drawGlyph(
           canvas,
           GlyphProvider.bassClef,
-          4.0 * StaffUnits.kUnit,
-          -7.0 * StaffUnits.kUnit,
+          StaffUnits(4.0),
+          StaffUnits(-7.0),
         );
         break;
       case ClefType.alto:
         _drawGlyph(
           canvas,
           GlyphProvider.altoClef,
-          4.0 * StaffUnits.kUnit,
-          -6.1 * StaffUnits.kUnit,
+          StaffUnits(4.0),
+          StaffUnits(-6.1),
         );
         break;
       case ClefType.tenor:
         _drawGlyph(
           canvas,
           GlyphProvider.tenorClef,
-          4.0 * StaffUnits.kUnit,
-          -7.1 * StaffUnits.kUnit,
+          StaffUnits(4.0),
+          StaffUnits(-7.1),
         );
         break;
     }
@@ -60,25 +60,24 @@ class ClefRenderer {
   void _drawGlyph(
     Canvas canvas,
     String glyphCode,
-    double size,
-    double yOffset,
+    StaffUnits size,
+    StaffUnits yOffset,
   ) {
-    final glyph = GlyphProvider.getGlyph(glyphCode, size, color: color);
-    glyph.paint(canvas, Offset(box.left, box.top + yOffset));
+    final glyph = GlyphProvider.getGlyphPainter(glyphCode, size);
+    glyph.paint(canvas, Offset(box.left.value, box.top.value + yOffset.value));
   }
 
   /// Width occupied by a clef of the given [type] at the given staff spacing,
   /// matching the glyph size actually drawn. Used by the layout engine.
-  static double clefWidth(ClefType type) {
-    final double size = type == ClefType.treble
-        ? 4.5 * StaffUnits.kUnit
-        : 4.0 * StaffUnits.kUnit;
+  static StaffUnits clefWidth(ClefType type) {
+    final StaffUnits size = type == ClefType.treble
+        ? StaffUnits(4.5)
+        : StaffUnits(4.0);
     final glyphCode = type == ClefType.treble
         ? GlyphProvider.trebleClef
         : (type == ClefType.bass
               ? GlyphProvider.bassClef
               : GlyphProvider.altoClef);
-    final glyph = GlyphProvider.getGlyph(glyphCode, size);
-    return glyph.width;
+    return GlyphProvider.getGlyphWidth(glyphCode, size);
   }
 }
