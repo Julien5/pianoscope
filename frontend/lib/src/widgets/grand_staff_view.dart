@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../notation/grand_staff_parameters.dart';
 import '../notation/grand_staff_layout.dart';
+import '../notation/grand_staff_parameters.dart';
 import '../notation/models/key_signature.dart';
 import '../notation/models/note.dart';
 import '../notation/grand_staff_painter.dart';
@@ -29,10 +29,8 @@ class GrandStaffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = GrandStaffLayout.contentHeightFor(params);
-
     return SizedBox(
-      height: height * params.staffSpaceSize,
+      height: GrandStaffLayout.contentHeightFor(params),
       width: double.infinity,
       child: CustomPaint(
         painter: GrandStaffPainter(

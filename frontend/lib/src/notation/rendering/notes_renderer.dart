@@ -70,7 +70,7 @@ class NotesRenderer {
         position: position,
         showAccidental: showAccidental,
         // Stagger accidentals vertically in tight chords to avoid overlap.
-        accidentalX: -(i * 0.5),
+        accidentalX: -i * 5,
       );
     }
 

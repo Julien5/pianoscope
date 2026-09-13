@@ -40,11 +40,11 @@ class GrandStaffParameters {
 
   const GrandStaffParameters({
     this.staffSpaceSize = 10,
-    this.staffGap = 6,
-    this.braceToBarlineSpace = 0.25,
-    this.barlineToClefSpace = 1,
-    this.clefToKeySignatureSpace = 1,
-    this.keySignatureToNotesSpace = 6,
+    this.staffGap = 60,
+    this.braceToBarlineSpace = 2.5,
+    this.barlineToClefSpace = 10,
+    this.clefToKeySignatureSpace = 10,
+    this.keySignatureToNotesSpace = 60,
   });
 
   static const GrandStaffParameters defaults = GrandStaffParameters();

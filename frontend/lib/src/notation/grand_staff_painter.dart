@@ -35,13 +35,13 @@ class GrandStaffPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final s = params.staffSpaceSize;
+    double scale = 1;
     canvas.save();
-    canvas.scale(s);
+    canvas.scale(scale);
 
     final layout = GrandStaffLayout.fromParameters(
       params: params,
-      size: Size(size.width / s, size.height / s),
+      size: Size(size.width / scale, size.height / scale),
       keySignature: keySignature,
     );
 

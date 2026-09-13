@@ -29,14 +29,11 @@ class KeySignatureRenderer {
         ? GlyphProvider.sharp
         : GlyphProvider.flat;
 
-    final size = 2.5;
-    final spacing = 1.2;
-
-    final workaroundScalingShift =
-        -GlyphProvider.glyphHeight(glyphCode, size) / 4;
+    final double size = 25;
+    final double spacing = 12;
 
     for (int i = 0; i < positions.length; i++) {
-      final position = positions[i] + workaroundScalingShift;
+      final position = positions[i];
       final textPainter = GlyphProvider.getGlyph(glyphCode, size, color: color);
 
       final y = box.top + (position / 2) - textPainter.height / 2;
@@ -64,16 +61,16 @@ class KeySignatureRenderer {
   List<double> _getSharpPositions(ClefType clefType, int count) {
     switch (clefType) {
       case ClefType.treble:
-        const positions = [0.0, 3.0, -1.0, 2.0, 5.0, 1.0, 4.0];
+        const positions = [0.0, 30.0, -10.0, 20.0, 50.0, 10.0, 40.0];
         return positions.take(count).toList();
       case ClefType.bass:
-        const positions = [2.0, 5.0, 1.0, 4.0, 7.0, 3.0, 6.0];
+        const positions = [20.0, 50.0, 10.0, 40.0, 70.0, 30.0, 60.0];
         return positions.take(count).toList();
       case ClefType.alto:
-        const positions = [1.0, 5.0, 0.0, 4.0, 7.0, 2.0, 6.0];
+        const positions = [10.0, 50.0, 0.0, 40.0, 70.0, 20.0, 60.0];
         return positions.take(count).toList();
       case ClefType.tenor:
-        const positions = [6.0, 2.0, 5.0, 1.0, 4.0, 0.0, 3.0];
+        const positions = [60.0, 20.0, 50.0, 10.0, 40.0, 0.0, 30.0];
         return positions.take(count).toList();
     }
   }
@@ -82,16 +79,16 @@ class KeySignatureRenderer {
   List<double> _getFlatPositions(ClefType clefType, int count) {
     switch (clefType) {
       case ClefType.treble:
-        const positions = [4.0, 1.0, 5.0, 2.0, 6.0, 3.0, 7.0];
+        const positions = [40.0, 10.0, 50.0, 20.0, 60.0, 30.0, 70.0];
         return positions.take(count).toList();
       case ClefType.bass:
-        const positions = [6.0, 3.0, 7.0, 4.0, 8.0, 5.0, 9.0];
+        const positions = [60.0, 30.0, 70.0, 40.0, 80.0, 50.0, 90.0];
         return positions.take(count).toList();
       case ClefType.alto:
-        const positions = [5.0, 2.0, 6.0, 3.0, 7.0, 4.0, 8.0];
+        const positions = [50.0, 20.0, 60.0, 30.0, 70.0, 40.0, 80.0];
         return positions.take(count).toList();
       case ClefType.tenor:
-        const positions = [3.0, 0.0, 4.0, 1.0, 5.0, 2.0, 6.0];
+        const positions = [30.0, 0.0, 40.0, 10.0, 50.0, 20.0, 60.0];
         return positions.take(count).toList();
     }
   }
@@ -102,7 +99,7 @@ class KeySignatureRenderer {
     if (keySignature.accidentals == 0) return 0;
 
     final count = keySignature.accidentals.abs();
-    final spacing = 1.2;
-    return (count * spacing) + 1;
+    final spacing = 12;
+    return (count * spacing) + 10;
   }
 }

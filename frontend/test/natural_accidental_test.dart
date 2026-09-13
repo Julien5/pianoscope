@@ -258,7 +258,6 @@ Future<ui.Image?> _renderNoteCanvas({
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, 400, 200));
   canvas.save();
-  canvas.scale(10);
   // White background.
   canvas.drawRect(Rect.fromLTWH(0, 0, 400, 200), Paint()..color = Colors.white);
 
@@ -271,7 +270,6 @@ Future<ui.Image?> _renderNoteCanvas({
     clef: ClefType.treble,
     showAccidental: showAccidental,
   );
-  canvas.restore();
   final image = await recorder.endRecording().toImage(400, 200);
   return image;
 }

@@ -22,16 +22,16 @@ class ClefRenderer {
   void paint(Canvas canvas) {
     switch (clefType) {
       case ClefType.treble:
-        _drawGlyph(canvas, GlyphProvider.trebleClef, 4.5, -6.25);
+        _drawGlyph(canvas, GlyphProvider.trebleClef, 45, -62.5);
         break;
       case ClefType.bass:
-        _drawGlyph(canvas, GlyphProvider.bassClef, 4.0, -7);
+        _drawGlyph(canvas, GlyphProvider.bassClef, 40, -70);
         break;
       case ClefType.alto:
-        _drawGlyph(canvas, GlyphProvider.altoClef, 4.0, -6.1);
+        _drawGlyph(canvas, GlyphProvider.altoClef, 40, -61);
         break;
       case ClefType.tenor:
-        _drawGlyph(canvas, GlyphProvider.tenorClef, 4.0, -7.1);
+        _drawGlyph(canvas, GlyphProvider.tenorClef, 40, -71);
         break;
     }
   }
@@ -49,7 +49,7 @@ class ClefRenderer {
   /// Width occupied by a clef of the given [type] at the given staff spacing,
   /// matching the glyph size actually drawn. Used by the layout engine.
   static double clefWidth(ClefType type) {
-    final size = type == ClefType.treble ? 4.5 : 4.0;
+    final double size = type == ClefType.treble ? 45 : 40;
     final glyphCode = type == ClefType.treble
         ? GlyphProvider.trebleClef
         : (type == ClefType.bass
