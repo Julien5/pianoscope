@@ -35,6 +35,7 @@ class GrandStaffPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    //double scale = params.staffSpaceSize / 10.0
     double scale = 1;
     canvas.save();
     canvas.scale(scale);

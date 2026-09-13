@@ -21,8 +21,8 @@ void main() {
         GrandStaffLayout.contentHeightFor(
           const GrandStaffParameters(staffSpaceSize: 12, staffGap: 80),
         ),
-        // 2 * padding(3*s) + 2 * staffHeight(4*s) + gap
-        2 * 3 * 12 + 2 * 4 * 12 + 80,
+        // 2 * padding(30) + 2 * staffHeight(40) + gap
+        2 * 30 + 2 * 40 + 80, // 220
       );
     });
 
