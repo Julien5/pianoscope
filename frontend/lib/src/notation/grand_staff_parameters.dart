@@ -17,10 +17,6 @@ import 'package:flutter/foundation.dart' show immutable;
 /// margin is the responsibility of the parent widget.
 @immutable
 class GrandStaffParameters {
-  /// Distance between two adjacent staff lines; the unit of every derived
-  /// measurement (noteheads, stems, clefs, ...).
-  final double staffSpaceSize;
-
   /// Vertical distance between the bottom line of the upper staff and the
   /// top line of the lower staff.
   final double staffGap;
@@ -39,7 +35,6 @@ class GrandStaffParameters {
   final double keySignatureToNotesSpace;
 
   const GrandStaffParameters({
-    this.staffSpaceSize = 10,
     this.staffGap = 60,
     this.braceToBarlineSpace = 2.5,
     this.barlineToClefSpace = 10,
@@ -53,7 +48,6 @@ class GrandStaffParameters {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is GrandStaffParameters &&
-          staffSpaceSize == other.staffSpaceSize &&
           staffGap == other.staffGap &&
           braceToBarlineSpace == other.braceToBarlineSpace &&
           barlineToClefSpace == other.barlineToClefSpace &&
@@ -62,7 +56,6 @@ class GrandStaffParameters {
 
   @override
   int get hashCode => Object.hash(
-    staffSpaceSize,
     staffGap,
     braceToBarlineSpace,
     barlineToClefSpace,
@@ -72,7 +65,7 @@ class GrandStaffParameters {
 
   @override
   String toString() =>
-      'GrandStaffParameters(staffSpaceSize: $staffSpaceSize, '
+      'GrandStaffParameters('
       'staffGap: $staffGap, braceToBarlineSpace: $braceToBarlineSpace, '
       'barlineToClefSpace: $barlineToClefSpace, '
       'clefToKeySignatureSpace: $clefToKeySignatureSpace, '

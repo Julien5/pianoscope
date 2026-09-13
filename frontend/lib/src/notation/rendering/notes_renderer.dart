@@ -1,6 +1,7 @@
 // lib/src/notation/rendering/notes_renderer.dart
 
 import 'package:flutter/material.dart';
+import '../geometry/staff_units.dart';
 import '../models/key_signature.dart';
 import '../models/note.dart';
 import '../geometry/box.dart';
@@ -70,7 +71,7 @@ class NotesRenderer {
         position: position,
         showAccidental: showAccidental,
         // Stagger accidentals vertically in tight chords to avoid overlap.
-        accidentalX: -i * 5,
+        accidentalX: -i * (StaffUnits.kUnit / 2),
       );
     }
 

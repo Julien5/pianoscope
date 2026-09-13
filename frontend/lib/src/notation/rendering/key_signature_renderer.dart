@@ -1,6 +1,7 @@
 // lib/src/notation/rendering/key_signature_renderer.dart
 
 import 'package:flutter/material.dart';
+import '../geometry/staff_units.dart';
 import '../models/key_signature.dart';
 import '../geometry/box.dart';
 import '../geometry/staff_position.dart';
@@ -29,14 +30,17 @@ class KeySignatureRenderer {
         ? GlyphProvider.sharp
         : GlyphProvider.flat;
 
-    final double size = 25;
-    final double spacing = 12;
+    final double size = 2.5 * StaffUnits.kUnit;
+    final double spacing = 1.2 * StaffUnits.kUnit;
 
     for (int i = 0; i < positions.length; i++) {
       final position = positions[i];
       final textPainter = GlyphProvider.getGlyph(glyphCode, size, color: color);
 
-      final y = box.top + (position / 2) - textPainter.height / 2;
+      final y =
+          box.top +
+          (position * StaffUnits.kUnit / 2) -
+          (textPainter.height / 2);
       final accidentalX = box.left + (i * spacing);
 
       textPainter.paint(canvas, Offset(accidentalX, y));
@@ -61,16 +65,16 @@ class KeySignatureRenderer {
   List<double> _getSharpPositions(ClefType clefType, int count) {
     switch (clefType) {
       case ClefType.treble:
-        const positions = [0.0, 30.0, -10.0, 20.0, 50.0, 10.0, 40.0];
+        const positions = [0.0, 3.0, -1.0, 2.0, 5.0, 1.0, 4.0];
         return positions.take(count).toList();
       case ClefType.bass:
-        const positions = [20.0, 50.0, 10.0, 40.0, 70.0, 30.0, 60.0];
+        const positions = [2.0, 5.0, 1.0, 4.0, 7.0, 3.0, 6.0];
         return positions.take(count).toList();
       case ClefType.alto:
-        const positions = [10.0, 50.0, 0.0, 40.0, 70.0, 20.0, 60.0];
+        const positions = [1.0, 5.0, 0.0, 4.0, 7.0, 2.0, 6.0];
         return positions.take(count).toList();
       case ClefType.tenor:
-        const positions = [60.0, 20.0, 50.0, 10.0, 40.0, 0.0, 30.0];
+        const positions = [6.0, 2.0, 5.0, 1.0, 4.0, 0.0, 3.0];
         return positions.take(count).toList();
     }
   }
@@ -79,16 +83,16 @@ class KeySignatureRenderer {
   List<double> _getFlatPositions(ClefType clefType, int count) {
     switch (clefType) {
       case ClefType.treble:
-        const positions = [40.0, 10.0, 50.0, 20.0, 60.0, 30.0, 70.0];
+        const positions = [4.0, 1.0, 5.0, 2.0, 6.0, 3.0, 7.0];
         return positions.take(count).toList();
       case ClefType.bass:
-        const positions = [60.0, 30.0, 70.0, 40.0, 80.0, 50.0, 90.0];
+        const positions = [6.0, 3.0, 7.0, 4.0, 8.0, 5.0, 9.0];
         return positions.take(count).toList();
       case ClefType.alto:
-        const positions = [50.0, 20.0, 60.0, 30.0, 70.0, 40.0, 80.0];
+        const positions = [5.0, 2.0, 6.0, 3.0, 7.0, 4.0, 8.0];
         return positions.take(count).toList();
       case ClefType.tenor:
-        const positions = [30.0, 0.0, 40.0, 10.0, 50.0, 20.0, 60.0];
+        const positions = [3.0, 0.0, 4.0, 1.0, 5.0, 2.0, 6.0];
         return positions.take(count).toList();
     }
   }
@@ -99,7 +103,7 @@ class KeySignatureRenderer {
     if (keySignature.accidentals == 0) return 0;
 
     final count = keySignature.accidentals.abs();
-    final spacing = 12;
-    return (count * spacing) + 10;
+    final spacing = 1.2;
+    return ((count * spacing) + 1) * StaffUnits.kUnit;
   }
 }

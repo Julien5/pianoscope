@@ -53,13 +53,11 @@ class GrandStaffLayout {
     required this.contentHeight,
   });
 
-  /// Vertical padding above the upper staff and below the lower staff, as a
-  /// multiple of [GrandStaffParameters.staffSpaceSize]: room for the treble
-  /// clef glyph and for ledger lines.
-  static const double kVerticalPadding = 30;
+  /// Vertical padding above the upper staff and below the lower staff.
+  static const double kVerticalPadding = 3.0 * StaffUnits.kUnit;
 
   /// Height of a single staff (5 lines = 4 spaces).
-  static double staffHeight() => 40;
+  static double staffHeight() => 4 * StaffUnits.kUnit;
 
   /// Overall content height for a given set of parameters, independent of the
   /// available width.

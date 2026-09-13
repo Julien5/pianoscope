@@ -19,7 +19,7 @@ void main() {
       );
       expect(
         GrandStaffLayout.contentHeightFor(
-          const GrandStaffParameters(staffSpaceSize: 12, staffGap: 80),
+          const GrandStaffParameters(staffGap: 80),
         ),
         // 2 * padding(30) + 2 * staffHeight(40) + gap
         2 * 30 + 2 * 40 + 80, // 220

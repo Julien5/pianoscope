@@ -7,47 +7,52 @@
 class StaffUnits {
   final double value;
 
-  const StaffUnits(this.value);
-
   /// Standard spacing constants based on music engraving practice
+  ///
+  static const double kUnit = 10;
+
+  const StaffUnits(double v) : value = kUnit * v;
+
+  // Line space
+  static const staffLineSpace = StaffUnits(1.0);
 
   // Notehead dimensions
-  static const noteheadWidth = StaffUnits(13);
-  static const noteheadHeight = StaffUnits(10);
+  static const noteheadWidth = StaffUnits(1.3);
+  static const noteheadHeight = staffLineSpace;
 
   // Stem dimensions
-  static const stemThickness = StaffUnits(1.2);
-  static const stemLength = StaffUnits(35);
+  static const stemThickness = StaffUnits(0.12);
+  static const stemLength = StaffUnits(3.5);
 
   // Accidental dimensions
-  static const accidentalWidth = StaffUnits(10);
-  static const accidentalHeight = StaffUnits(20);
+  static const accidentalWidth = StaffUnits(1.0);
+  static const accidentalHeight = StaffUnits(2.0);
 
   // Spacing
-  static const minimumNoteSpacing = StaffUnits(20);
-  static const accidentalPadding = StaffUnits(3);
+  static const minimumNoteSpacing = StaffUnits(2.0);
+  static const accidentalPadding = StaffUnits(0.3);
   static const ledgerLineExtension = StaffUnits(
-    4,
+    0.4,
   ); // How far ledger lines extend beyond notehead
 
   // Line thicknesses
-  static const staffLineThickness = StaffUnits(1);
-  static const ledgerLineThickness = StaffUnits(1.2);
-  static const barlineThickness = StaffUnits(1.5);
-  static const thickBarlineThickness = StaffUnits(5);
-  static const beamThickness = StaffUnits(5);
+  static const staffLineThickness = StaffUnits(0.1);
+  static const ledgerLineThickness = StaffUnits(0.12);
+  static const barlineThickness = StaffUnits(0.15);
+  static const thickBarlineThickness = StaffUnits(0.5);
+  static const beamThickness = StaffUnits(0.5);
 
   // Clef sizes
-  static const trebleClefHeight = StaffUnits(70.0);
-  static const bassClefHeight = StaffUnits(40.0);
+  static const trebleClefHeight = StaffUnits(7.0);
+  static const bassClefHeight = StaffUnits(4.0);
 
   // Dots (for dotted notes)
-  static const dotRadius = StaffUnits(2);
-  static const dotSpacing = StaffUnits(7); // Space between note and dot
+  static const dotRadius = StaffUnits(0.2);
+  static const dotSpacing = StaffUnits(0.7); // Space between note and dot
 
   // Flag dimensions
-  static const flagWidth = StaffUnits(12);
-  static const flagHeight = StaffUnits(20);
+  static const flagWidth = StaffUnits(1.2);
+  static const flagHeight = StaffUnits(2.0);
 
   /// Arithmetic operators for convenient calculations
   StaffUnits operator +(StaffUnits other) => StaffUnits(value + other.value);

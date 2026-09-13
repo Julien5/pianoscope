@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../pianoscope.dart';
 import '../notation/grand_staff_layout.dart';
 import '../notation/grand_staff_parameters.dart';
-import '../notation/models/key_signature.dart';
-import '../notation/models/note.dart';
 import '../notation/grand_staff_painter.dart';
 
 /// Renders a single-measure grand staff (treble above, bass below) from a
@@ -29,8 +28,7 @@ class GrandStaffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //final scale = params.staffSpaceSize / 10;
-    final scale = 1;
+    final scale = StaffUnits.kUnit / 10;
     return SizedBox(
       height: GrandStaffLayout.contentHeightFor(params) * scale,
       width: double.infinity,

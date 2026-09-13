@@ -12,7 +12,7 @@ class StaffGeometry {
   /// position 0 is the bottom line, position 8 the top line.
   static double positionToY(StaffPosition position, double staffTop) {
     final inverted = 8.0 - position.value;
-    return staffTop + inverted * 5;
+    return staffTop + (inverted / 2) * StaffUnits.kUnit;
   }
 
   /// Paints the ledger lines required by [position], centered on
@@ -36,7 +36,8 @@ class StaffGeometry {
     final lineWidth = noteheadWidth + (2 * extension);
 
     for (final ledgerPos in ledgerPositions) {
-      final y = noteCenter.dy + (position.value - ledgerPos) * 5;
+      final y =
+          noteCenter.dy + (position.value - ledgerPos) * StaffUnits.kUnit / 2;
       canvas.drawLine(
         Offset(noteCenter.dx - lineWidth / 2, y),
         Offset(noteCenter.dx + lineWidth / 2, y),

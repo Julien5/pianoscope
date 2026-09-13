@@ -1,6 +1,7 @@
 // lib/src/notation/rendering/glyph_provider.dart
 
 import 'package:flutter/material.dart';
+import '../geometry/staff_units.dart';
 import '../models/pitch.dart';
 import '../models/notation_style.dart';
 

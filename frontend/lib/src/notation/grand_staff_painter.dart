@@ -3,6 +3,8 @@
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
+// ignore: unused_import
+import 'geometry/staff_units.dart';
 import 'grand_staff_parameters.dart';
 import 'grand_staff_layout.dart';
 import 'models/key_signature.dart';
@@ -35,7 +37,7 @@ class GrandStaffPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    //double scale = params.staffSpaceSize / 10.0
+    //double scale = StaffUnits.kUnit / 10.0;
     double scale = 1;
     canvas.save();
     canvas.scale(scale);

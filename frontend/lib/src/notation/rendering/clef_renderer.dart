@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../geometry/box.dart';
 import '../geometry/staff_position.dart';
+import '../geometry/staff_units.dart';
 import 'glyph_provider.dart';
 
 /// Renders clef symbols at the beginning of a staff.
@@ -22,16 +23,36 @@ class ClefRenderer {
   void paint(Canvas canvas) {
     switch (clefType) {
       case ClefType.treble:
-        _drawGlyph(canvas, GlyphProvider.trebleClef, 45, -62.5);
+        _drawGlyph(
+          canvas,
+          GlyphProvider.trebleClef,
+          4.5 * StaffUnits.kUnit,
+          -6.25 * StaffUnits.kUnit,
+        );
         break;
       case ClefType.bass:
-        _drawGlyph(canvas, GlyphProvider.bassClef, 40, -70);
+        _drawGlyph(
+          canvas,
+          GlyphProvider.bassClef,
+          4.0 * StaffUnits.kUnit,
+          -7.0 * StaffUnits.kUnit,
+        );
         break;
       case ClefType.alto:
-        _drawGlyph(canvas, GlyphProvider.altoClef, 40, -61);
+        _drawGlyph(
+          canvas,
+          GlyphProvider.altoClef,
+          4.0 * StaffUnits.kUnit,
+          -6.1 * StaffUnits.kUnit,
+        );
         break;
       case ClefType.tenor:
-        _drawGlyph(canvas, GlyphProvider.tenorClef, 40, -71);
+        _drawGlyph(
+          canvas,
+          GlyphProvider.tenorClef,
+          4.0 * StaffUnits.kUnit,
+          -7.1 * StaffUnits.kUnit,
+        );
         break;
     }
   }
@@ -49,7 +70,9 @@ class ClefRenderer {
   /// Width occupied by a clef of the given [type] at the given staff spacing,
   /// matching the glyph size actually drawn. Used by the layout engine.
   static double clefWidth(ClefType type) {
-    final double size = type == ClefType.treble ? 45 : 40;
+    final double size = type == ClefType.treble
+        ? 4.5 * StaffUnits.kUnit
+        : 4.0 * StaffUnits.kUnit;
     final glyphCode = type == ClefType.treble
         ? GlyphProvider.trebleClef
         : (type == ClefType.bass
