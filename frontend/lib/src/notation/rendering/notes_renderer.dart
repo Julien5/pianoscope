@@ -19,7 +19,6 @@ class NotesRenderer {
   final List<Note> notes;
   final KeySignature keySignature;
   final ClefType clef;
-  final double staffSpaceSize;
   final Color color;
 
   NotesRenderer({
@@ -27,7 +26,6 @@ class NotesRenderer {
     required this.notes,
     required this.keySignature,
     required this.clef,
-    required this.staffSpaceSize,
     this.color = Colors.black,
   });
 
@@ -35,8 +33,8 @@ class NotesRenderer {
   void paint(Canvas canvas) {
     if (notes.isEmpty) return;
 
-    final noteRenderer = NoteRenderer(staffSpaceSize: staffSpaceSize);
-    final stemRenderer = StemRenderer(staffSpaceSize: staffSpaceSize);
+    final noteRenderer = NoteRenderer();
+    final stemRenderer = StemRenderer();
 
     final sorted = List<Note>.from(notes)
       ..sort((a, b) => a.pitch.midiNumber.compareTo(b.pitch.midiNumber));
@@ -62,7 +60,7 @@ class NotesRenderer {
 
       final noteCenter = Offset(
         box.left,
-        StaffGeometry.positionToY(position, box.top, staffSpaceSize),
+        StaffGeometry.positionToY(position, box.top),
       );
 
       noteRenderer.paintSymbols(
@@ -72,7 +70,7 @@ class NotesRenderer {
         position: position,
         showAccidental: showAccidental,
         // Stagger accidentals vertically in tight chords to avoid overlap.
-        accidentalX: -(i * 5.0),
+        accidentalX: -(i * 0.5),
       );
     }
 
@@ -83,7 +81,7 @@ class NotesRenderer {
     final extremePosition = StaffPosition.forPitch(extremeNote.pitch, clef);
     final extremeCenter = Offset(
       box.left,
-      StaffGeometry.positionToY(extremePosition, box.top, staffSpaceSize),
+      StaffGeometry.positionToY(extremePosition, box.top),
     );
 
     stemRenderer.paint(

@@ -17,7 +17,6 @@ class StaffRenderer {
   final ClefType clef;
   final List<Note> notes;
   final KeySignature keySignature;
-  final double staffSpaceSize;
   final Color color;
 
   const StaffRenderer({
@@ -25,22 +24,16 @@ class StaffRenderer {
     required this.clef,
     required this.notes,
     required this.keySignature,
-    required this.staffSpaceSize,
     this.color = Colors.black,
   });
 
   /// Paint the complete staff into its boxes.
   void paintStaff(Canvas canvas) {
-    LinesRenderer(
-      box: layout.box,
-      staffSpaceSize: staffSpaceSize,
-      color: color,
-    ).paint(canvas);
+    LinesRenderer(box: layout.box, color: color).paint(canvas);
 
     ClefRenderer(
       box: layout.clefBox,
       clefType: clef,
-      staffSpaceSize: staffSpaceSize,
       color: color,
     ).paint(canvas);
 
@@ -50,7 +43,6 @@ class StaffRenderer {
         box: keySignatureBox,
         keySignature: keySignature,
         clefType: clef,
-        staffSpaceSize: staffSpaceSize,
         color: color,
       ).paint(canvas);
     }
@@ -66,7 +58,6 @@ class StaffRenderer {
         notes: spelled,
         keySignature: keySignature,
         clef: clef,
-        staffSpaceSize: staffSpaceSize,
         color: color,
       ).paint(canvas);
     }

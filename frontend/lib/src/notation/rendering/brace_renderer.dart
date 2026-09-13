@@ -10,12 +10,8 @@ import '../geometry/box.dart';
 /// [widthRatio].
 class BraceRenderer {
   final Box box;
-  final Color color;
 
-  const BraceRenderer({
-    required this.box,
-    this.color = Colors.black,
-  });
+  const BraceRenderer({required this.box});
 
   /// Brace width as a fraction of its height, from `frontend/grand-staff.svg`.
   static const double widthRatio = 0.07760;
@@ -62,7 +58,7 @@ class BraceRenderer {
     canvas.drawPath(
       _bracePath,
       Paint()
-        ..color = color
+        ..color = Colors.black
         ..style = PaintingStyle.fill,
     );
     canvas.restore();

@@ -12,15 +12,14 @@ import 'accidental_renderer.dart';
 /// optional accidental and a stem. Durations are assumed to be quarter notes,
 /// so flags, dots and beams are not drawn.
 class NoteRenderer {
-  final double staffSpaceSize;
   final NoteheadRenderer _noteheadRenderer;
   final StemRenderer _stemRenderer;
   final AccidentalRenderer _accidentalRenderer;
 
-  NoteRenderer({required this.staffSpaceSize})
-    : _noteheadRenderer = NoteheadRenderer(staffSpaceSize: staffSpaceSize),
-      _stemRenderer = StemRenderer(staffSpaceSize: staffSpaceSize),
-      _accidentalRenderer = AccidentalRenderer(staffSpaceSize: staffSpaceSize);
+  NoteRenderer()
+    : _noteheadRenderer = NoteheadRenderer(),
+      _stemRenderer = StemRenderer(),
+      _accidentalRenderer = AccidentalRenderer();
 
   /// Draw the notehead, optional accidental and ledger lines for a note whose
   /// center is at [noteCenter]. No stem is drawn.
@@ -33,12 +32,7 @@ class NoteRenderer {
     double accidentalX = 0,
   }) {
     // Draw ledger lines if needed.
-    StaffGeometry.paintLedgerLines(
-      canvas,
-      noteCenter,
-      position,
-      staffSpaceSize,
-    );
+    StaffGeometry.paintLedgerLines(canvas, noteCenter, position);
 
     // Draw accidental if needed.
     if (showAccidental) {
@@ -68,7 +62,7 @@ class NoteRenderer {
     final position = StaffPosition.forPitch(note.pitch, clef);
     final noteCenter = Offset(
       xPosition,
-      StaffGeometry.positionToY(position, staffTopLeft.dy, staffSpaceSize),
+      StaffGeometry.positionToY(position, staffTopLeft.dy),
     );
 
     paintSymbols(

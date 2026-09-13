@@ -32,7 +32,7 @@ class GrandStaffView extends StatelessWidget {
     final height = GrandStaffLayout.contentHeightFor(params);
 
     return SizedBox(
-      height: height,
+      height: height * params.staffSpaceSize,
       width: double.infinity,
       child: CustomPaint(
         painter: GrandStaffPainter(

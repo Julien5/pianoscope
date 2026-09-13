@@ -59,13 +59,13 @@ class GrandStaffLayout {
   static const double kVerticalPadding = 3;
 
   /// Height of a single staff (5 lines = 4 spaces).
-  static double staffHeight(double staffSpaceSize) => staffSpaceSize * 4;
+  static double staffHeight() => 4;
 
   /// Overall content height for a given set of parameters, independent of the
   /// available width.
   static double contentHeightFor(GrandStaffParameters params) {
-    final h = staffHeight(params.staffSpaceSize);
-    final pad = kVerticalPadding * params.staffSpaceSize;
+    final h = staffHeight();
+    final pad = kVerticalPadding;
     return pad + h + params.staffGap + h + pad;
   }
 
@@ -75,9 +75,8 @@ class GrandStaffLayout {
     required Size size,
     required KeySignature keySignature,
   }) {
-    final s = params.staffSpaceSize;
-    final h = staffHeight(s);
-    final pad = kVerticalPadding * s;
+    final h = staffHeight();
+    final pad = kVerticalPadding;
 
     final upperTop = pad;
     final lowerTop = pad + h + params.staffGap;
@@ -85,7 +84,7 @@ class GrandStaffLayout {
     // Vertical extent shared by brace and barlines: both staves + the gap.
     final staffSpan = h + params.staffGap + h;
     final braceWidth = staffSpan * BraceRenderer.widthRatio;
-    final barlineThickness = StaffUnits.barlineThickness.toPixels(s);
+    final barlineThickness = StaffUnits.barlineThickness.value;
 
     final braceBox = Box(
       topLeft: Offset(0, pad),
@@ -99,9 +98,9 @@ class GrandStaffLayout {
     );
 
     final clefX = startBarlineBox.right + params.barlineToClefSpace;
-    final upperClefWidth = ClefRenderer.clefWidth(ClefType.treble, s);
-    final lowerClefWidth = ClefRenderer.clefWidth(ClefType.bass, s);
-    final keySigWidth = KeySignatureRenderer.keySignatureWidth(keySignature, s);
+    final upperClefWidth = ClefRenderer.clefWidth(ClefType.treble);
+    final lowerClefWidth = ClefRenderer.clefWidth(ClefType.bass);
+    final keySigWidth = KeySignatureRenderer.keySignatureWidth(keySignature);
     final hasKeySig = keySignature.accidentals != 0;
 
     // Notes must align across staves: right-align the clef/key-signature

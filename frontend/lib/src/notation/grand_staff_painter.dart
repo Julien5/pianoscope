@@ -35,9 +35,13 @@ class GrandStaffPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final s = params.staffSpaceSize;
+    canvas.save();
+    canvas.scale(s);
+
     final layout = GrandStaffLayout.fromParameters(
       params: params,
-      size: size,
+      size: Size(size.width / s, size.height / s),
       keySignature: keySignature,
     );
 
@@ -45,17 +49,16 @@ class GrandStaffPainter extends CustomPainter {
 
     BarlineRenderer(
       box: layout.startBarlineBox,
-      staffSpaceSize: params.staffSpaceSize,
     ).paint(canvas, BarlineType.single);
 
     BarlineRenderer(
       box: layout.finalBarlineBox,
-      staffSpaceSize: params.staffSpaceSize,
     ).paint(canvas, BarlineType.single);
 
     final upperNotes = notes
         .where((n) => n.pitch.midiNumber >= splitPoint)
         .toList();
+
     final lowerNotes = notes
         .where((n) => n.pitch.midiNumber < splitPoint)
         .toList();
@@ -65,7 +68,6 @@ class GrandStaffPainter extends CustomPainter {
       clef: ClefType.treble,
       notes: upperNotes,
       keySignature: keySignature,
-      staffSpaceSize: params.staffSpaceSize,
     ).paintStaff(canvas);
 
     StaffRenderer(
@@ -73,8 +75,8 @@ class GrandStaffPainter extends CustomPainter {
       clef: ClefType.bass,
       notes: lowerNotes,
       keySignature: keySignature,
-      staffSpaceSize: params.staffSpaceSize,
     ).paintStaff(canvas);
+    canvas.restore();
   }
 
   @override

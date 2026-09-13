@@ -11,14 +11,12 @@ class KeySignatureRenderer {
   final Box box;
   final KeySignature keySignature;
   final ClefType clefType;
-  final double staffSpaceSize;
   final Color color;
 
   const KeySignatureRenderer({
     required this.box,
     required this.keySignature,
     required this.clefType,
-    required this.staffSpaceSize,
     this.color = Colors.black,
   });
 
@@ -31,16 +29,14 @@ class KeySignatureRenderer {
         ? GlyphProvider.sharp
         : GlyphProvider.flat;
 
-    final size = staffSpaceSize * 2.5;
-    final spacing = staffSpaceSize * 1.2;
+    final size = 2.5;
+    final spacing = 1.2;
 
     for (int i = 0; i < positions.length; i++) {
       final position = positions[i];
       final textPainter = GlyphProvider.getGlyph(glyphCode, size, color: color);
 
-      final y = box.top +
-          (position * staffSpaceSize / 2) -
-          textPainter.height / 2;
+      final y = box.top + (position / 2) - textPainter.height / 2;
       final accidentalX = box.left + (i * spacing);
 
       textPainter.paint(canvas, Offset(accidentalX, y));
@@ -99,15 +95,11 @@ class KeySignatureRenderer {
 
   /// Width occupied by the key signature at the given staff spacing.
   /// Used by the layout engine; 0 when there is no key signature.
-  static double keySignatureWidth(
-    KeySignature keySignature,
-    double staffSpaceSize,
-  ) {
+  static double keySignatureWidth(KeySignature keySignature) {
     if (keySignature.accidentals == 0) return 0;
 
     final count = keySignature.accidentals.abs();
-    final spacing = staffSpaceSize * 1.2;
-
-    return (count * spacing) + staffSpaceSize;
+    final spacing = 1.2;
+    return (count * spacing) + 1;
   }
 }

@@ -15,14 +15,9 @@ enum BarlineType {
 /// Renders a barline filling its box (typically spanning both staves).
 class BarlineRenderer {
   final Box box;
-  final double staffSpaceSize;
   final Color color;
 
-  const BarlineRenderer({
-    required this.box,
-    required this.staffSpaceSize,
-    this.color = Colors.black,
-  });
+  const BarlineRenderer({required this.box, this.color = Colors.black});
 
   /// Paint the barline into its box.
   void paint(Canvas canvas, BarlineType type) {
@@ -35,7 +30,7 @@ class BarlineRenderer {
   void _drawSingleBarline(Canvas canvas) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = StaffUnits.barlineThickness.toPixels(staffSpaceSize)
+      ..strokeWidth = StaffUnits.barlineThickness.value
       ..style = PaintingStyle.stroke;
 
     canvas.drawLine(

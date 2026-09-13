@@ -8,29 +8,20 @@ import '../geometry/staff_units.dart';
 /// final barline).
 class LinesRenderer {
   final Box box;
-  final double staffSpaceSize;
   final Color color;
 
-  const LinesRenderer({
-    required this.box,
-    required this.staffSpaceSize,
-    this.color = Colors.black,
-  });
+  const LinesRenderer({required this.box, this.color = Colors.black});
 
   /// Paint the staff lines into the box.
   void paint(Canvas canvas) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = StaffUnits.staffLineThickness.toPixels(staffSpaceSize)
+      ..strokeWidth = StaffUnits.staffLineThickness.value
       ..style = PaintingStyle.stroke;
 
     for (int i = 0; i < 5; i++) {
-      final y = box.top + (i * staffSpaceSize);
-      canvas.drawLine(
-        Offset(box.left, y),
-        Offset(box.right, y),
-        paint,
-      );
+      final y = box.top + i;
+      canvas.drawLine(Offset(box.left, y), Offset(box.right, y), paint);
     }
   }
 }

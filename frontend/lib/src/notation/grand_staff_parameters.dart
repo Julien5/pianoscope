@@ -8,9 +8,9 @@ import 'package:flutter/foundation.dart' show immutable;
 ///   [brace][brace space][start barline][clef space][clef][key sig space]
 ///       [key signature][key sig space][notes][final barline]
 ///
-/// Vertical layout is derived from [staffSpaceSize] (see
-/// `GrandStaffLayout`): the staves are separated by [staffGap], with
-/// `3 * staffSpaceSize` padding above and below for clefs and ledger lines.
+/// Vertical layout:
+/// `GrandStaffLayout`: the staves are separated by [staffGap], with
+/// `3` padding above and below for clefs and ledger lines.
 ///
 /// Margins around the staff are NOT part of these parameters: the painter
 /// renders in fill-width mode from the top-left of the given [Size], so any
@@ -40,11 +40,11 @@ class GrandStaffParameters {
 
   const GrandStaffParameters({
     this.staffSpaceSize = 10,
-    this.staffGap = 60,
-    this.braceToBarlineSpace = 2.5,
-    this.barlineToClefSpace = 10,
-    this.clefToKeySignatureSpace = 10,
-    this.keySignatureToNotesSpace = 60,
+    this.staffGap = 6,
+    this.braceToBarlineSpace = 0.25,
+    this.barlineToClefSpace = 1,
+    this.clefToKeySignatureSpace = 1,
+    this.keySignatureToNotesSpace = 6,
   });
 
   static const GrandStaffParameters defaults = GrandStaffParameters();

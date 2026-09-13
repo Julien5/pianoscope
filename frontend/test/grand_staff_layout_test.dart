@@ -26,33 +26,36 @@ void main() {
       );
     });
 
-    test('brace and barlines span both staves (excluding vertical padding)', () {
-      final layout = GrandStaffLayout.fromParameters(
-        params: params,
-        size: size,
-        keySignature: KeySignature.cMajor,
-      );
+    test(
+      'brace and barlines span both staves (excluding vertical padding)',
+      () {
+        final layout = GrandStaffLayout.fromParameters(
+          params: params,
+          size: size,
+          keySignature: KeySignature.cMajor,
+        );
 
-      const pad = 30.0;
-      const staffSpan = 40 + 60 + 40;
+        const pad = 30.0;
+        const staffSpan = 40 + 60 + 40;
 
-      expect(layout.braceBox.top, pad);
-      expect(layout.braceBox.height, staffSpan);
-      expect(layout.braceBox.left, 0);
-      expect(layout.braceBox.width, closeTo(staffSpan * 0.0776, 0.001));
+        expect(layout.braceBox.top, pad);
+        expect(layout.braceBox.height, staffSpan);
+        expect(layout.braceBox.left, 0);
+        expect(layout.braceBox.width, closeTo(staffSpan * 0.0776, 0.001));
 
-      expect(layout.startBarlineBox.top, pad);
-      expect(layout.startBarlineBox.height, staffSpan);
-      expect(
-        layout.startBarlineBox.left,
-        layout.braceBox.right + params.braceToBarlineSpace,
-      );
-      expect(layout.startBarlineBox.width, 1.5);
+        expect(layout.startBarlineBox.top, pad);
+        expect(layout.startBarlineBox.height, staffSpan);
+        expect(
+          layout.startBarlineBox.left,
+          layout.braceBox.right + params.braceToBarlineSpace,
+        );
+        expect(layout.startBarlineBox.width, 1.5);
 
-      expect(layout.finalBarlineBox.top, pad);
-      expect(layout.finalBarlineBox.height, staffSpan);
-      expect(layout.finalBarlineBox.right, size.width);
-    });
+        expect(layout.finalBarlineBox.top, pad);
+        expect(layout.finalBarlineBox.height, staffSpan);
+        expect(layout.finalBarlineBox.right, size.width);
+      },
+    );
 
     test('staffs are stacked with the explicit gap', () {
       final layout = GrandStaffLayout.fromParameters(
@@ -80,16 +83,19 @@ void main() {
         keySignature: KeySignature.cMajor,
       );
 
-      expect(layout.braceBox.right,
-          lessThanOrEqualTo(layout.startBarlineBox.left));
-      expect(layout.startBarlineBox.right,
-          lessThanOrEqualTo(layout.upperStaff.clefBox.left));
-      expect(layout.upperStaff.clefBox.right,
-          lessThanOrEqualTo(layout.upperStaff.notesBox.left));
       expect(
-        layout.upperStaff.notesBox.right,
-        layout.finalBarlineBox.left,
+        layout.braceBox.right,
+        lessThanOrEqualTo(layout.startBarlineBox.left),
       );
+      expect(
+        layout.startBarlineBox.right,
+        lessThanOrEqualTo(layout.upperStaff.clefBox.left),
+      );
+      expect(
+        layout.upperStaff.clefBox.right,
+        lessThanOrEqualTo(layout.upperStaff.notesBox.left),
+      );
+      expect(layout.upperStaff.notesBox.right, layout.finalBarlineBox.left);
 
       // Noteheads across the two staffs must share the same x origin.
       expect(layout.upperStaff.notesBox.left, layout.lowerStaff.notesBox.left);
@@ -97,7 +103,7 @@ void main() {
       expect(
         layout.upperStaff.notesBox.left,
         layout.upperStaff.clefBox.left +
-            ClefRenderer.clefWidth(ClefType.treble, params.staffSpaceSize) +
+            ClefRenderer.clefWidth(ClefType.treble) +
             params.keySignatureToNotesSpace,
       );
     });
@@ -118,7 +124,7 @@ void main() {
       expect(withKeySig.upperStaff.keySignatureBox, isNotNull);
       expect(
         withKeySig.upperStaff.keySignatureBox!.width,
-        KeySignatureRenderer.keySignatureWidth(KeySignature.dMajor, 10),
+        KeySignatureRenderer.keySignatureWidth(KeySignature.dMajor),
       );
       expect(
         withKeySig.upperStaff.keySignatureBox!.left,
@@ -139,8 +145,10 @@ void main() {
       );
 
       expect(layout.upperStaff.notesBox.right, 400 - 1.5);
-      expect(layout.upperStaff.notesBox.width,
-          greaterThan(layout.upperStaff.notesBox.height));
+      expect(
+        layout.upperStaff.notesBox.width,
+        greaterThan(layout.upperStaff.notesBox.height),
+      );
     });
   });
 }

@@ -6,33 +6,29 @@ import '../geometry/staff_units.dart';
 
 /// Direction of a note stem
 enum StemDirection {
-  up,   // Stem points upward
+  up, // Stem points upward
   down, // Stem points downward
   none, // No stem (whole notes)
 }
 
 /// Renders note stems
 class StemRenderer {
-  final double staffSpaceSize;
   final Color color;
 
-  const StemRenderer({
-    required this.staffSpaceSize,
-    this.color = Colors.black,
-  });
+  const StemRenderer({this.color = Colors.black});
 
   /// Paint a stem from the notehead and return the stem end position
   Offset paint(
-      Canvas canvas,
-      Offset noteheadCenter, {
-        required StemDirection direction,
-        Color? color,
-      }) {
+    Canvas canvas,
+    Offset noteheadCenter, {
+    required StemDirection direction,
+    Color? color,
+  }) {
     if (direction == StemDirection.none) return noteheadCenter;
 
-    final thickness = StaffUnits.stemThickness.toPixels(staffSpaceSize);
-    final length = StaffUnits.stemLength.toPixels(staffSpaceSize);
-    final noteheadWidth = StaffUnits.noteheadWidth.toPixels(staffSpaceSize);
+    final thickness = StaffUnits.stemThickness.value;
+    final length = StaffUnits.stemLength.value;
+    final noteheadWidth = StaffUnits.noteheadWidth.value;
 
     final paint = Paint()
       ..color = color ?? this.color
@@ -45,11 +41,17 @@ class StemRenderer {
 
     if (direction == StemDirection.up) {
       // Stem attaches to right side of notehead, goes up
-      stemStart = Offset(noteheadCenter.dx + noteheadWidth / 2, noteheadCenter.dy);
+      stemStart = Offset(
+        noteheadCenter.dx + noteheadWidth / 2,
+        noteheadCenter.dy,
+      );
       stemEnd = Offset(stemStart.dx, stemStart.dy - length);
     } else {
       // Stem attaches to left side of notehead, goes down
-      stemStart = Offset(noteheadCenter.dx - noteheadWidth / 2, noteheadCenter.dy);
+      stemStart = Offset(
+        noteheadCenter.dx - noteheadWidth / 2,
+        noteheadCenter.dy,
+      );
       stemEnd = Offset(stemStart.dx, stemStart.dy + length);
     }
 
@@ -74,12 +76,14 @@ class StemRenderer {
 
   /// Determine stem direction for a chord (multiple notes)
   /// Based on the average position of all notes
-  static StemDirection determineStemDirectionForChord(List<StaffPosition> positions) {
+  static StemDirection determineStemDirectionForChord(
+    List<StaffPosition> positions,
+  ) {
     if (positions.isEmpty) return StemDirection.up;
 
-    final averagePosition = positions
-        .map((p) => p.value)
-        .reduce((a, b) => a + b) / positions.length;
+    final averagePosition =
+        positions.map((p) => p.value).reduce((a, b) => a + b) /
+        positions.length;
 
     return averagePosition > 4 ? StemDirection.down : StemDirection.up;
   }

@@ -10,13 +10,9 @@ import 'staff_units.dart';
 class StaffGeometry {
   /// Pixels (relative to a staff top line) of the given [position];
   /// position 0 is the bottom line, position 8 the top line.
-  static double positionToY(
-    StaffPosition position,
-    double staffTop,
-    double staffSpaceSize,
-  ) {
+  static double positionToY(StaffPosition position, double staffTop) {
     final inverted = 8.0 - position.value;
-    return staffTop + (inverted * staffSpaceSize) / 2;
+    return staffTop + (inverted) / 2;
   }
 
   /// Paints the ledger lines required by [position], centered on
@@ -25,23 +21,22 @@ class StaffGeometry {
     Canvas canvas,
     Offset noteCenter,
     StaffPosition position,
-    double staffSpaceSize, {
-    Color color = const Color(0xFF000000),
-  }) {
+  ) {
+    Color color = const Color(0xFF000000);
     final ledgerPositions = position.getLedgerLinePositions();
     if (ledgerPositions.isEmpty) return;
 
     final paint = Paint()
       ..color = color
-      ..strokeWidth = StaffUnits.ledgerLineThickness.toPixels(staffSpaceSize)
+      ..strokeWidth = StaffUnits.ledgerLineThickness.value
       ..style = PaintingStyle.stroke;
 
-    final noteheadWidth = StaffUnits.noteheadWidth.toPixels(staffSpaceSize);
-    final extension = StaffUnits.ledgerLineExtension.toPixels(staffSpaceSize);
+    final noteheadWidth = StaffUnits.noteheadWidth.value;
+    final extension = StaffUnits.ledgerLineExtension.value;
     final lineWidth = noteheadWidth + (2 * extension);
 
     for (final ledgerPos in ledgerPositions) {
-      final y = noteCenter.dy + (position.value - ledgerPos) * staffSpaceSize / 2;
+      final y = noteCenter.dy + (position.value - ledgerPos) / 2;
       canvas.drawLine(
         Offset(noteCenter.dx - lineWidth / 2, y),
         Offset(noteCenter.dx + lineWidth / 2, y),

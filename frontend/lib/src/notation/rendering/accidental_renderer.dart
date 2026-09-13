@@ -7,22 +7,18 @@ import 'glyph_provider.dart';
 
 /// Renders accidental symbols (sharp, flat, natural, etc.)
 class AccidentalRenderer {
-  final double staffSpaceSize;
   final Color color;
 
-  const AccidentalRenderer({
-    required this.staffSpaceSize,
-    this.color = Colors.black,
-  });
+  const AccidentalRenderer({this.color = Colors.black});
 
   /// Paint an accidental to the left of a note
   void paint(
-      Canvas canvas,
-      Offset noteheadCenter,
-      Accidental accidental, {
-        Color? color,
-      }) {
-    final size = StaffUnits.accidentalHeight.toPixels(staffSpaceSize);
+    Canvas canvas,
+    Offset noteheadCenter,
+    Accidental accidental, {
+    Color? color,
+  }) {
+    final size = StaffUnits.accidentalHeight.value;
     final glyph = GlyphProvider.getGlyph(
       GlyphProvider.getAccidentalGlyph(accidental),
       size,
@@ -30,8 +26,8 @@ class AccidentalRenderer {
     );
 
     // Position accidental to the left of notehead
-    final noteheadWidth = StaffUnits.noteheadWidth.toPixels(staffSpaceSize);
-    final padding = StaffUnits.accidentalPadding.toPixels(staffSpaceSize);
+    final noteheadWidth = StaffUnits.noteheadWidth.value;
+    final padding = StaffUnits.accidentalPadding.value;
 
     final x = noteheadCenter.dx - noteheadWidth / 2 - padding - glyph.width;
     final y = noteheadCenter.dy - glyph.height / 2;

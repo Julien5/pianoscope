@@ -6,18 +6,14 @@ import '../geometry/staff_units.dart';
 
 /// Renders noteheads (filled or hollow ovals)
 class NoteheadRenderer {
-  final double staffSpaceSize;
   final Color color;
 
-  const NoteheadRenderer({
-    required this.staffSpaceSize,
-    this.color = Colors.black,
-  });
+  const NoteheadRenderer({this.color = Colors.black});
 
   /// Paint a notehead at the given center position
   void paint(Canvas canvas, Offset center, {Color? color}) {
-    final width = StaffUnits.noteheadWidth.toPixels(staffSpaceSize);
-    final height = StaffUnits.noteheadHeight.toPixels(staffSpaceSize);
+    final width = StaffUnits.noteheadWidth.value;
+    final height = StaffUnits.noteheadHeight.value;
 
     // Save canvas state for rotation
     canvas.save();
