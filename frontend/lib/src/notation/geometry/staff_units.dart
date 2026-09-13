@@ -11,7 +11,12 @@ class StaffUnits {
   ///
   static const double kUnit = 10;
 
-  const StaffUnits(double v) : value = kUnit * v;
+  const StaffUnits(double v) : value = kUnit * v; // public: from spaces
+  static StaffUnits fromUnits(double u) {
+    StaffUnits ret = StaffUnits(u / kUnit);
+    assert(ret.value == u);
+    return ret;
+  } // private: from units
 
   // Line space
   static const staffLineSpace = StaffUnits(1.0);
@@ -55,10 +60,13 @@ class StaffUnits {
   static const flagHeight = StaffUnits(2.0);
 
   /// Arithmetic operators for convenient calculations
-  StaffUnits operator +(StaffUnits other) => StaffUnits(value + other.value);
-  StaffUnits operator -(StaffUnits other) => StaffUnits(value - other.value);
-  StaffUnits operator *(double factor) => StaffUnits(value * factor);
-  StaffUnits operator /(double divisor) => StaffUnits(value / divisor);
+  StaffUnits operator +(StaffUnits other) =>
+      StaffUnits.fromUnits(value + other.value);
+  StaffUnits operator -(StaffUnits other) =>
+      StaffUnits.fromUnits(value - other.value);
+  StaffUnits operator *(double factor) => StaffUnits.fromUnits(value * factor);
+  StaffUnits operator /(double divisor) =>
+      StaffUnits.fromUnits(value / divisor);
 
   @override
   bool operator ==(Object other) =>

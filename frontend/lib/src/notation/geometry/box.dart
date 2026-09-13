@@ -17,7 +17,7 @@ class StaffSize {
   StaffUnits height;
   StaffSize(StaffUnits x, StaffUnits y) : width = x, height = y;
   Size value() {
-    return Size(width.value, width.value);
+    return Size(width.value, height.value);
   }
 }
 
