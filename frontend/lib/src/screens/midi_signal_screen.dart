@@ -112,11 +112,12 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     );*/
     notes.add(
       Note(
-        pitch: Pitch(
-          noteName: NoteName.D,
-          octave: 5,
-          accidental: Accidental.flat,
-        ),
+        /*pitch: Pitch(
+          noteName: NoteName.A,
+          octave: 4,
+          accidental: Accidental.sharp,
+        ),*/
+        pitch: Pitch.fromMidiNumber(70),
       ),
     );
     return Scaffold(

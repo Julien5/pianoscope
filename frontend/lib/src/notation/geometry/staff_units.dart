@@ -25,12 +25,11 @@ class StaffUnits {
   static const stemThickness = StaffUnits(0.12);
   static const stemLength = StaffUnits(3.5);
 
-  // Accidental dimensions
-  static const accidentalWidth = StaffUnits(1.0);
-  static const accidentalHeight = StaffUnits(2.0);
+  static StaffUnits accidentalSize() {
+    return StaffUnits.staffLineSpace * 3.5;
+  }
 
   // Spacing
-  static const minimumNoteSpacing = StaffUnits(2.0);
   static const accidentalPadding = StaffUnits(0.3);
   static const ledgerLineExtension = StaffUnits(
     0.4,

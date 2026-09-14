@@ -30,7 +30,7 @@ class KeySignatureRenderer {
         ? GlyphProvider.sharp
         : GlyphProvider.flat;
 
-    final size = StaffUnits(2.5);
+    final size = StaffUnits.accidentalSize();
     final spacing = StaffUnits(1.2);
 
     for (int i = 0; i < positions.length; i++) {
@@ -38,7 +38,7 @@ class KeySignatureRenderer {
       final textPainter = GlyphProvider.getGlyphPainter(glyphCode, size);
       final glyphSize = GlyphProvider.getGlyphSize(glyphCode, size);
 
-      final y = box.top + (position / 2) - (glyphSize.height / 2);
+      StaffUnits y = box.top + (position / 2) - (glyphSize.height / 2);
       final accidentalX = box.left + (spacing * i.toDouble());
 
       textPainter.paint(canvas, Offset(accidentalX.value, y.value));

@@ -4,16 +4,9 @@ import 'package:flutter/material.dart';
 import '../geometry/box.dart';
 import '../geometry/staff_units.dart';
 import '../models/pitch.dart';
-import '../models/notation_style.dart';
 
 /// Provides SMuFL-compliant music glyphs from multiple notation fonts.
 class GlyphProvider {
-  static const String bravura = 'Bravura';
-  static const String petaluma = 'Petaluma';
-
-  /// The active notation style (default: Bravura)
-  static NotationStyle currentStyle = NotationStyle.bravura;
-
   // Clefs
   static const trebleClef = '\uE050';
   static const bassClef = '\uE062';
@@ -53,6 +46,8 @@ class GlyphProvider {
 
   /// Decide which font to use for a glyph
   static String _fontForGlyph(String codepoint) {
+    return "Bravura";
+    /*
     // Always use Petaluma for accidentals when mixing
     const petalumaAccidentals = {sharp, flat, natural, doubleSharp, doubleFlat};
 
@@ -66,7 +61,7 @@ class GlyphProvider {
         return bravura;
       case NotationStyle.petaluma:
         return petaluma;
-    }
+    }*/
   }
 
   /// Get a TextPainter for a music symbol
@@ -111,11 +106,6 @@ class GlyphProvider {
       case Accidental.doubleSharp:
         return doubleSharp;
     }
-  }
-
-  /// Call this to switch notation style globally at runtime
-  static void setNotationStyle(NotationStyle style) {
-    currentStyle = style;
   }
 
   static StaffUnits glyphHeight(String codepoint, StaffUnits size) {

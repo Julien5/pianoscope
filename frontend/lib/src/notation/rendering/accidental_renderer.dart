@@ -19,7 +19,7 @@ class AccidentalRenderer {
     Accidental accidental, {
     Color? color,
   }) {
-    final size = StaffUnits.accidentalHeight;
+    final size = StaffUnits.accidentalSize();
     final glyphSize = GlyphProvider.getGlyphSize(
       GlyphProvider.getAccidentalGlyph(accidental),
       size,
@@ -34,8 +34,7 @@ class AccidentalRenderer {
     final padding = StaffUnits.accidentalPadding;
 
     final x = noteheadCenter.dx - noteheadWidth / 2 - padding - glyphSize.width;
-    final y = noteheadCenter.dy - glyphSize.height / 2;
-
+    StaffUnits y = noteheadCenter.dy - glyphSize.height / 2;
     glyph.paint(canvas, Offset(x.value, y.value));
   }
 }
