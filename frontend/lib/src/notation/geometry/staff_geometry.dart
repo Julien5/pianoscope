@@ -13,7 +13,7 @@ class StaffGeometry {
   /// position 0 is the bottom line, position 8 the top line.
   static StaffUnits positionToY(StaffPosition position, StaffUnits staffTop) {
     final inverted = 8.0 - position.value;
-    return staffTop + StaffUnits(inverted / 2);
+    return staffTop + StaffUnits.staffLineSpace*(inverted / 2);
   }
 
   /// Paints the ledger lines required by [position], centered on

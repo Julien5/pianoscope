@@ -21,38 +21,29 @@ class ClefRenderer {
   /// Paint the clef into its box. The box top is the top line of the staff;
   /// the glyph may overflow above the box (into the reserved padding).
   void paint(Canvas canvas) {
+    final fontSize = StaffUnits.staffLineSpace * 4.0;
     switch (clefType) {
       case ClefType.treble:
         _drawGlyph(
           canvas,
           GlyphProvider.trebleClef,
-          StaffUnits(4.5),
-          StaffUnits(-6.25),
+          fontSize,
+          StaffUnits.staffLineSpace * (-5),
         );
         break;
       case ClefType.bass:
         _drawGlyph(
           canvas,
           GlyphProvider.bassClef,
-          StaffUnits(4.0),
-          StaffUnits(-7.0),
+          fontSize,
+          StaffUnits.staffLineSpace * (-7),
         );
         break;
       case ClefType.alto:
-        _drawGlyph(
-          canvas,
-          GlyphProvider.altoClef,
-          StaffUnits(4.0),
-          StaffUnits(-6.1),
-        );
+        _drawGlyph(canvas, GlyphProvider.altoClef, fontSize, StaffUnits(-6.1));
         break;
       case ClefType.tenor:
-        _drawGlyph(
-          canvas,
-          GlyphProvider.tenorClef,
-          StaffUnits(4.0),
-          StaffUnits(-7.1),
-        );
+        _drawGlyph(canvas, GlyphProvider.tenorClef, fontSize, StaffUnits(-7.1));
         break;
     }
   }
@@ -71,8 +62,8 @@ class ClefRenderer {
   /// matching the glyph size actually drawn. Used by the layout engine.
   static StaffUnits clefWidth(ClefType type) {
     final StaffUnits size = type == ClefType.treble
-        ? StaffUnits(4.5)
-        : StaffUnits(4.0);
+        ? StaffUnits.staffLineSpace * (4.5)
+        : StaffUnits.staffLineSpace * (4.0);
     final glyphCode = type == ClefType.treble
         ? GlyphProvider.trebleClef
         : (type == ClefType.bass

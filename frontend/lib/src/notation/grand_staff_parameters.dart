@@ -39,7 +39,7 @@ class GrandStaffParameters {
   const GrandStaffParameters({
     this.staffGap = const StaffUnits(6),
     this.braceToBarlineSpace = const StaffUnits(0.25),
-    this.barlineToClefSpace = const StaffUnits(1),
+    this.barlineToClefSpace = const StaffUnits(1.0),
     this.clefToKeySignatureSpace = const StaffUnits(1),
     this.keySignatureToNotesSpace = const StaffUnits(6),
   });

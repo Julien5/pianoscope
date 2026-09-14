@@ -57,14 +57,14 @@ class GrandStaffLayout {
   static const StaffUnits kVerticalPadding = StaffUnits(3.0);
 
   /// Height of a single staff (5 lines = 4 spaces).
-  static StaffUnits staffHeight() => StaffUnits(4);
+  static StaffUnits staffHeight() => StaffUnits.staffLineSpace * 4.0;
 
   /// Overall content height for a given set of parameters, independent of the
   /// available width.
   static StaffUnits contentHeightFor(GrandStaffParameters params) {
     final h = staffHeight();
     final pad = kVerticalPadding;
-    return pad + h + params.staffGap + h + pad;
+    return pad + h + params.staffGap + h + pad;    
   }
 
   /// Compute the full layout for the available [size].

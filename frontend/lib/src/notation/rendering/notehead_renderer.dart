@@ -7,10 +7,6 @@ import '../geometry/staff_units.dart';
 
 /// Renders noteheads (filled or hollow ovals)
 class NoteheadRenderer {
-  final Color color;
-
-  const NoteheadRenderer({this.color = Colors.black});
-
   /// Paint a notehead at the given center position
   void paint(Canvas canvas, StaffOffset center, {Color? color}) {
     final width = StaffUnits.noteheadWidth.value;
@@ -31,11 +27,13 @@ class NoteheadRenderer {
     );
 
     final paint = Paint()
-      ..color = color ?? this.color
+      ..color = Colors.black
       ..style = PaintingStyle.fill
       ..strokeWidth = 0;
 
     canvas.drawOval(rect, paint);
+    // canvas.drawCircle(rect.center,rect.width/2,paint);
+    
     canvas.restore();
   }
 }
