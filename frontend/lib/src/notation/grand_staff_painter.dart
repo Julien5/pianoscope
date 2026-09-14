@@ -93,3 +93,52 @@ class GrandStaffPainter extends CustomPainter {
         oldDelegate.splitPoint != splitPoint;
   }
 }
+
+class KeyTilePainter extends CustomPainter {
+  final KeySignature keySignature;
+
+  KeyTilePainter({this.keySignature = KeySignature.cMajor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    double scale = 9.0 / StaffUnits.kUnit;
+    canvas.save();
+    canvas.scale(scale);
+
+    final layout = GrandStaffLayout.fromParameters(
+      params: GrandStaffParameters.keytile,
+      size: StaffSize(
+        StaffUnits.fromUnits(size.width / scale),
+        StaffUnits.fromUnits(size.height / scale),
+      ),
+      keySignature: keySignature,
+    );
+
+    final width = layout.startBarlineBox.size.width;
+    Box startBarlineBox = Box(
+      topLeft: layout.startBarlineBox.topLeft,
+      size: StaffSize(width, layout.upperStaff.box.size.height),
+    );
+    Box finalBarlineBox = Box(
+      topLeft: layout.finalBarlineBox.topLeft,
+      size: StaffSize(width, layout.upperStaff.box.size.height),
+    );
+
+    BarlineRenderer(box: startBarlineBox).paint(canvas, BarlineType.single);
+
+    BarlineRenderer(box: finalBarlineBox).paint(canvas, BarlineType.single);
+
+    StaffRenderer(
+      layout: layout.upperStaff,
+      clef: ClefType.treble,
+      notes: [],
+      keySignature: keySignature,
+    ).paintStaff(canvas);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(KeyTilePainter oldDelegate) {
+    return oldDelegate.keySignature != keySignature;
+  }
+}

@@ -42,3 +42,20 @@ class GrandStaffView extends StatelessWidget {
     );
   }
 }
+
+class KeySignatureTile extends StatelessWidget { 
+  final KeySignature keySignature;
+  const KeySignatureTile({super.key, this.keySignature = KeySignature.cMajor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 100,
+      width: 120,
+      child: CustomPaint(
+        painter: KeyTilePainter(keySignature: keySignature),
+        size: Size.infinite,
+      ),
+    );
+  }
+}

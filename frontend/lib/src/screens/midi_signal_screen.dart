@@ -10,6 +10,7 @@ import '../widgets/keyboard_widget.dart';
 import '../widgets/velocity_indicator.dart';
 import '../notation/models/note.dart';
 import '../notation/models/pitch.dart';
+import 'clef_selection_screen.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   final String portName;
@@ -74,6 +75,13 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     super.dispose();
   }
 
+  Future<void> openClefSelectionScreen() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ClefSelectionScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final signalVelocity = (_lastEvent?.velocity ?? 0).clamp(0, 127);
@@ -84,26 +92,52 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     if (simpleNote.isNotEmpty) {
       keyboardNotes = {noteFromString(simpleNote)};
     }
+    InputProvider model = context.watch<InputProvider>();
+    KeySignature? keySignature = model.keySignature;
+    List<Note> notes = _activeEvents.isEmpty
+        ? []
+        : _activeEvents.values
+              .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
+              .toList();
+
+    notes.clear();
+    /*notes.add(
+      Note(
+        pitch: Pitch(
+          noteName: NoteName.A,
+          octave: 4,
+          accidental: Accidental.sharp,
+        ),
+      ),
+    );*/
+    notes.add(
+      Note(
+        pitch: Pitch(
+          noteName: NoteName.D,
+          octave: 5,
+          accidental: Accidental.flat,
+        ),
+      ),
+    );
     return Scaffold(
       appBar: AppBar(title: Text(widget.portName)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            FilledButton(
+              onPressed: () {
+                openClefSelectionScreen();
+              },
+              child: const Text('Select Clef'),
+            ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: GrandStaffView(
-                    keySignature: KeySignature.cMajor,
-                    notes: _activeEvents.isEmpty
-                        ? const []
-                        : _activeEvents.values
-                              .map(
-                                (e) =>
-                                    Note(pitch: Pitch.fromMidiNumber(e.note)),
-                              )
-                              .toList(),
+                    keySignature: keySignature ?? KeySignature.cMajor,
+                    notes: notes,
                   ),
                 ),
                 VelocityIndicator(velocity: signalVelocity),

@@ -45,6 +45,13 @@ class GrandStaffParameters {
   });
 
   static const GrandStaffParameters defaults = GrandStaffParameters();
+  static const GrandStaffParameters keytile = GrandStaffParameters(
+    staffGap: StaffUnits(0),
+    braceToBarlineSpace: StaffUnits(0),
+    barlineToClefSpace: StaffUnits(0.2),
+    clefToKeySignatureSpace:StaffUnits(0.5),
+    keySignatureToNotesSpace: StaffUnits(0),
+  );
 
   @override
   bool operator ==(Object other) =>
