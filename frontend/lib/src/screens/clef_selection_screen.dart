@@ -6,16 +6,12 @@ import '../../pianoscope.dart';
 class KeyTile extends StatelessWidget {
   final KeySignature current;
   final KeySignature keySignature;
-  const KeyTile({
-    super.key,
-    required this.keySignature,
-    required this.current,
-  });
+  const KeyTile({super.key, required this.keySignature, required this.current});
 
   @override
   Widget build(BuildContext context) {
     BorderSide side = BorderSide(color: Colors.grey, width: 2);
-    if (current==keySignature) {
+    if (current == keySignature) {
       side = BorderSide(color: Colors.black, width: 3);
     }
     return ElevatedButton(
@@ -34,11 +30,68 @@ class KeyTile extends StatelessWidget {
   }
 }
 
+class KeyTiles extends StatefulWidget {
+  final List<KeySignature> keySignatures;
+  const KeyTiles({super.key, required this.keySignatures});
+
+  @override
+  State<KeyTiles> createState() => _KeyTilesState();
+}
+
+class _KeyTilesState extends State<KeyTiles> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    KeySignature current =
+        context.read<InputProvider>().keySignature ?? KeySignature.cMajor;
+
+    List<Widget> children = [];
+    for (int k = 0; k < widget.keySignatures.length; k++) {
+      KeySignature key = widget.keySignatures[k];
+      children.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            KeyTile(keySignature: key, current: current),
+          ], //
+        ),
+      );
+    }
+    return GridView.count(
+      crossAxisCount: 2, // 2 columns (left to right)
+      mainAxisSpacing: 1,
+      childAspectRatio: 1.7,
+      crossAxisSpacing: 1,
+      children: children,
+    );
+  }
+}
+
 class ClefSelectionScreen extends StatefulWidget {
   const ClefSelectionScreen({super.key});
 
   @override
   State<ClefSelectionScreen> createState() => _ClefSelectionScreenState();
+}
+
+(List<KeySignature>, List<KeySignature>) keyLists() {
+  List<KeySignature> ret1 = [];
+  List<KeySignature> ret2 = [];
+  for (int accidentals = 1; accidentals <= 7; accidentals++) {
+    ret1.add(KeySignature(accidentals: accidentals));
+    ret2.add(KeySignature(accidentals: -accidentals));
+  }
+  return (ret1, ret2);
 }
 
 class _ClefSelectionScreenState extends State<ClefSelectionScreen> {
@@ -54,111 +107,26 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    KeySignature current=context.read<InputProvider>().keySignature ?? KeySignature.cMajor;
+    final (sharps, flats) = keyLists();
+    final zeroChild = KeyTiles(keySignatures: [KeySignature(accidentals: 0)]);
+    final sharpChild = KeyTiles(keySignatures: sharps);
+    final flatChild = KeyTiles(keySignatures: flats);
 
-    return Scaffold(
-      appBar: AppBar(title: Text("Select Clef")),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.cMajor, current: current),
-                ],
-              ),
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.gMajor, current: current),
-                  KeyTile(keySignature: KeySignature.fMajor, current: current),
-                ],
-              ),
-
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.dMajor, current: current),
-                  KeyTile(
-                    keySignature: KeySignature.bFlatMajor,
-                    current: current,
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.aMajor, current: current),
-                  KeyTile(
-                    keySignature: KeySignature.eFlatMajor,
-                    current: current,
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.eMajor, current: current),
-                  KeyTile(
-                    keySignature: KeySignature.aFlatMajor,
-                    current: current,
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.bMajor, current: current),
-                  KeyTile(
-                    keySignature: KeySignature.dFlatMajor,
-                    current: current,
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.fSharpMajor, current: current),
-                  KeyTile(
-                    keySignature: KeySignature.gFlatMajor,
-                    current: current,
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  KeyTile(keySignature: KeySignature.cSharpMajor, current: current),
-                  KeyTile(
-                    keySignature: KeySignature.cFlatMajor,
-                    current: current
-                  ),
-                ],
-              ),
+    return DefaultTabController(
+      length: 3, // Number of tabs
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Select Clef'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'C Major'),
+              Tab(text: 'Sharps'),
+              Tab(text: 'Flats'),
             ],
           ),
         ),
+        // 3. Add TabBarView as the body
+        body: TabBarView(children: [zeroChild, sharpChild, flatChild]),
       ),
     );
   }
