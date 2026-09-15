@@ -1,3 +1,4 @@
+## test results 
 
 running 0 tests
 
@@ -47,3 +48,9 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
+```
+[julien@Z231] backend $ cat /tmp/old-piano-bad.txt | grep position-2 | wc -l
+22
+[julien@Z231] backend $ cat /tmp/old-piano-bad.txt | grep position-1 | wc -l
+26
+```

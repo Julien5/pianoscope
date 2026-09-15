@@ -16,8 +16,8 @@ pub struct Microphone {
 pub fn wavfile(filename: &str) -> hardware::Wavfile {
     hardware::Wavfile {
         path: std::path::PathBuf::from(filename),
-        paced: true,
-        looped: true,
+        paced: false,  // false for tests
+        looped: false, // false for tests
     }
 }
 
