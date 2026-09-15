@@ -6,7 +6,6 @@ import '../geometry/staff_units.dart';
 import '../models/note.dart';
 import '../geometry/staff_position.dart';
 import '../geometry/staff_geometry.dart';
-import '../models/pitch.dart';
 import 'notehead_renderer.dart';
 import 'stem_renderer.dart';
 import 'accidental_renderer.dart';

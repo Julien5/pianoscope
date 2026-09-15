@@ -71,7 +71,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   void dispose() {
     _eventSubscription?.cancel();
     _errorSubscription?.cancel();
-    context.read<InputProvider>().disconnect();
     super.dispose();
   }
 
@@ -120,47 +119,55 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         pitch: Pitch.fromMidiNumber(70),
       ),
     );
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.portName)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FilledButton(
-              onPressed: () {
-                openClefSelectionScreen();
-              },
-              child: const Text('Select Clef'),
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: GrandStaffView(
-                    keySignature: keySignature ?? KeySignature.cMajor,
-                    notes: notes,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) => {
+        context.read<InputProvider>().disconnect(),
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(widget.portName)),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FilledButton(
+                onPressed: () {
+                  openClefSelectionScreen();
+                },
+                child: const Text('Select Clef'),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: GrandStaffView(
+                      keySignature: keySignature ?? KeySignature.cMajor,
+                      notes: notes,
+                    ),
                   ),
+                  VelocityIndicator(velocity: signalVelocity),
+                  const SizedBox(width: 10),
+                ],
+              ),
+              const SizedBox(height: 8),
+              KeyboardWidget(
+                pressedNotes: keyboardNotes,
+                whiteHeight: 140,
+                whiteWidth: 40,
+                pressedDotRadius: 5,
+                pressedDotColor: Colors.blue,
+              ),
+              const SizedBox(height: 32),
+              Text(
+                _noteName,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
                 ),
-                VelocityIndicator(velocity: signalVelocity),
-                const SizedBox(width: 10),
-              ],
-            ),
-            const SizedBox(height: 8),
-            KeyboardWidget(
-              pressedNotes: keyboardNotes,
-              whiteHeight: 140,
-              whiteWidth: 40,
-              pressedDotRadius: 5,
-              pressedDotColor: Colors.blue,
-            ),
-            const SizedBox(height: 32),
-            Text(
-              _noteName,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            Text(_rawHex, style: const TextStyle(fontSize: 10)),
-            const SizedBox(height: 2),
-          ],
+              ),
+              Text(_rawHex, style: const TextStyle(fontSize: 10)),
+              const SizedBox(height: 2),
+            ],
+          ),
         ),
       ),
     );
