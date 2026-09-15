@@ -90,6 +90,7 @@ pub enum PitchRecognizerAlgorithm {
     PYIN,
     Swipe,
     AutoCorrelation,
+    Kord,
 }
 
 #[derive(Clone, Debug)]
@@ -132,6 +133,13 @@ impl PitchRecognizerParameters {
     fn new_autocorrelation(sample_rate: u32, window_len: usize) -> Self {
         Self {
             algorithm: PitchRecognizerAlgorithm::AutoCorrelation,
+            sample_rate,
+            window_len,
+        }
+    }
+    fn new_kord(sample_rate: u32, window_len: usize) -> Self {
+        Self {
+            algorithm: PitchRecognizerAlgorithm::Kord,
             sample_rate,
             window_len,
         }

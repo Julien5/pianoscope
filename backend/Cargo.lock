@@ -164,6 +164,7 @@ dependencies = [
  "pitch-core",
  "pitch-detection",
  "rtrb",
+ "rustfft",
  "serde",
  "serde_json",
  "tokio",

@@ -1,4 +1,5 @@
 pub mod algorithms;
+pub mod kord;
 
 use serde::Serialize;
 use std::f32;
@@ -180,11 +181,59 @@ mod tests {
         }
         let mut good = true;
         for (key, ok) in results {
-            log::trace!("{} => {}", key, ok);
+            log::trace!("result {} => {}", key, ok);
             if !ok {
                 good = false;
             }
         }
         debug_assert!(good);
+    }
+
+    #[test]
+    fn detects_c4_kord() {
+        let _ = env_logger::try_init();
+        let sample_rate = 48_000;
+        let signal_length = sample_rate as usize; // 1 second
+        let window_len = signal_length;
+        let algorithm = PitchRecognizerParameters::new_kord(sample_rate, window_len);
+        let table = [
+            (65.4, "C2"),
+            (261.63, "C4"),
+            (440.0, "A4"),
+        ];
+        let mut good = true;
+        for (freq, note) in table {
+            log::trace!("test: {} {}", freq, note);
+            let signal = sine_buffer(freq, sample_rate, signal_length);
+            let mut pd = PitchDetector::new(&algorithm);
+            pd.update(&signal);
+            let ok = pd.on() && pd.pitch() == note;
+            log::trace!("result {:?} => {}", note, ok);
+            if !ok {
+                good = false;
+            }
+        }
+        debug_assert!(good);
+    }
+
+    #[test]
+    fn detects_chord_kord() {
+        let _ = env_logger::try_init();
+        let sample_rate = 48_000;
+        let signal_length = sample_rate as usize; // 1 second
+        let window_len = signal_length;
+        let algorithm = PitchRecognizerParameters::new_kord(sample_rate, window_len);
+        // C4 chord with E4 (amplitude 0.8 so C4 remains the strongest estimate).
+        let signal = (0..signal_length)
+            .map(|i| {
+                let t = i as f32 / sample_rate as f32;
+                1.0 * (2.0 * std::f32::consts::PI * 261.63 * t).sin()
+                    + 0.8 * (2.0 * std::f32::consts::PI * 329.63 * t).sin()
+            })
+            .collect::<Vec<_>>();
+        let mut pd = PitchDetector::new(&algorithm);
+        pd.update(&signal);
+        debug_assert!(pd.on());
+        debug_assert_eq!(pd.pitch(), "C4");
     }
 }

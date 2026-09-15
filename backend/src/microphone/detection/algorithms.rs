@@ -59,6 +59,9 @@ pub fn make_detector(parameters: &PitchRecognizerParameters) -> Box<dyn Detector
         crate::microphone::PitchRecognizerAlgorithm::AutoCorrelation => {
             Box::new(AutoCorrelationDetector::new(parameters))
         }
+        crate::microphone::PitchRecognizerAlgorithm::Kord => {
+            Box::new(KordDetector::new(parameters))
+        }
     }
 }
 
@@ -248,5 +251,65 @@ impl Detector for AutoCorrelationDetector {
             });
         }
         Estimates { estimates: ret }
+    }
+}
+
+use crate::microphone::detection::kord;
+
+pub struct KordDetector {
+    parameters: PitchRecognizerParameters,
+    buffer: Vec<f32>,
+}
+
+impl KordDetector {
+    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+        log::trace!("make KordDetector");
+        Self {
+            parameters: parameters.clone(),
+            buffer: Vec::with_capacity(parameters.sample_rate as usize),
+        }
+    }
+}
+
+impl Detector for KordDetector {
+    fn process(&mut self, buffer: &[f32]) -> Estimates {
+        for &s in buffer {
+            self.buffer.push(s);
+        }
+        let capacity = self.parameters.sample_rate as usize;
+        if self.buffer.len() > capacity {
+            let excess = self.buffer.len() - capacity;
+            let _ = self.buffer.drain(..excess);
+        }
+        if self.buffer.len() < capacity {
+            return Estimates {
+                estimates: Vec::new(),
+            };
+        }
+        let notes = kord::analyze(&self.buffer, 1);
+        if notes.is_empty() {
+            return Estimates {
+                estimates: Vec::new(),
+            };
+        }
+        let mut max_magnitude = 0.0;
+        for (_, magnitude) in &notes {
+            if *magnitude > max_magnitude {
+                max_magnitude = *magnitude;
+            }
+        }
+        let estimates = notes
+            .iter()
+            .map(|(frequency, magnitude)| Estimate {
+                frequency: *frequency,
+                confidence: if max_magnitude > 0.0 {
+                    *magnitude / max_magnitude
+                } else {
+                    0.0
+                },
+                annotation: None,
+            })
+            .collect::<Vec<_>>();
+        Estimates { estimates }
     }
 }
