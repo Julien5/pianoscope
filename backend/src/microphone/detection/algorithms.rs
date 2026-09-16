@@ -259,6 +259,7 @@ use crate::microphone::detection::kord;
 pub struct KordDetector {
     parameters: PitchRecognizerParameters,
     buffer: Vec<f32>,
+    duration_seconds: f32,
 }
 
 impl KordDetector {
@@ -267,7 +268,12 @@ impl KordDetector {
         Self {
             parameters: parameters.clone(),
             buffer: Vec::with_capacity(parameters.sample_rate as usize),
+            duration_seconds: parameters.window_len as f32 / parameters.sample_rate as f32,
         }
+    }
+
+    pub fn set_duration(&mut self, seconds: f32) {
+        self.duration_seconds = seconds;
     }
 }
 
@@ -276,17 +282,19 @@ impl Detector for KordDetector {
         for &s in buffer {
             self.buffer.push(s);
         }
-        let capacity = self.parameters.sample_rate as usize;
+        let capacity = (self.parameters.sample_rate as f32 * self.duration_seconds) as usize;
         if self.buffer.len() > capacity {
             let excess = self.buffer.len() - capacity;
             let _ = self.buffer.drain(..excess);
         }
-        if self.buffer.len() < capacity {
+        // Analyze once enough audio is buffered; a shorter final flush is still
+        // analyzed so that recordings shorter than `duration_seconds` produce a result.
+        if self.buffer.len() < 128 {
             return Estimates {
                 estimates: Vec::new(),
             };
         }
-        let notes = kord::analyze(&self.buffer, 1);
+        let notes = kord::analyze(&self.buffer, self.parameters.sample_rate);
         if notes.is_empty() {
             return Estimates {
                 estimates: Vec::new(),

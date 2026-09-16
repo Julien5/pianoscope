@@ -193,8 +193,8 @@ mod tests {
     fn detects_c4_kord() {
         let _ = env_logger::try_init();
         let sample_rate = 48_000;
-        let signal_length = sample_rate as usize; // 1 second
-        let window_len = signal_length;
+        let window_len = (sample_rate / 8) as usize; // 0.125 seconds
+        let signal_length = window_len;
         let algorithm = PitchRecognizerParameters::new_kord(sample_rate, window_len);
         let table = [
             (65.4, "C2"),
@@ -220,8 +220,8 @@ mod tests {
     fn detects_chord_kord() {
         let _ = env_logger::try_init();
         let sample_rate = 48_000;
-        let signal_length = sample_rate as usize; // 1 second
-        let window_len = signal_length;
+        let window_len = (sample_rate / 8) as usize; // 0.125 seconds
+        let signal_length = window_len;
         let algorithm = PitchRecognizerParameters::new_kord(sample_rate, window_len);
         // C4 chord with E4 (amplitude 0.8 so C4 remains the strongest estimate).
         let signal = (0..signal_length)

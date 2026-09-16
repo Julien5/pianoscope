@@ -58,21 +58,21 @@ static ALL_NOTES_WITH_FREQUENCY: LazyLock<Vec<(Note, f32)>> = LazyLock::new(|| {
 
 /// Analyze audio and return (frequency, magnitude) pairs for the detected notes,
 /// sorted from strongest to weakest.  Empty on degenerate input.
-pub fn analyze(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32)> {
-    if length_in_seconds < 1 {
+pub fn analyze(data: &[f32], sample_rate: u32) -> Vec<(f32, f32)> {
+    if data.len() < 32 {
         return Vec::new();
     }
     if data.iter().any(|&n| n.is_nan()) {
         return Vec::new();
     }
-    if data.len() % length_in_seconds as usize != 0 {
+
+    let bin_width = sample_rate as f32 / data.len() as f32;
+    if bin_width <= 0.0 {
         return Vec::new();
     }
 
-    let frequency_space = get_frequency_space(data, length_in_seconds);
-    let smoothed_frequency_space =
-        get_smoothed_frequency_space(&frequency_space, length_in_seconds);
-    let peak_space = translate_frequency_space_to_peak_space(&smoothed_frequency_space);
+    let frequency_space = get_frequency_space(data, bin_width);
+    let peak_space = translate_frequency_space_to_peak_space(&frequency_space, bin_width);
     let peak_best_notes = get_likely_notes_from_peak_space(&peak_space, 0.1);
     let best_notes = reduce_notes_by_harmonic_series(&peak_best_notes, 0.1);
 
@@ -82,53 +82,42 @@ pub fn analyze(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32)> {
         .collect::<Vec<_>>()
 }
 
-fn get_frequency_space(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32)> {
-    let mut planner = FftPlanner::<f32>::new();
-    let fft = planner.plan_fft_forward(data.len());
+fn get_frequency_space(data: &[f32], bin_width: f32) -> Vec<(f32, f32)> {
+    let num_samples = data.len();
 
-    let mut buffer = data
-        .iter()
-        .map(|&n| Complex::new(n, 0.0))
-        .collect::<Vec<_>>();
+    let mut buffer = Vec::with_capacity(num_samples);
+    for (i, &sample) in data.iter().enumerate() {
+        let window = 0.5
+            * (1.0
+                - (2.0 * std::f32::consts::PI * i as f32 / (num_samples as f32 - 1.0)).cos());
+        buffer.push(Complex::new(sample * window, 0.0));
+    }
+
+    let mut planner = FftPlanner::<f32>::new();
+    let fft = planner.plan_fft_forward(num_samples);
     fft.process(&mut buffer);
 
     buffer
         .into_iter()
         .enumerate()
-        .map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs()))
+        .map(|(k, d)| (k as f32 * bin_width, d.abs()))
         .collect::<Vec<_>>()
 }
 
-fn get_smoothed_frequency_space(
+fn translate_frequency_space_to_peak_space(
     frequency_space: &[(f32, f32)],
-    length_in_seconds: u8,
+    bin_width: f32,
 ) -> Vec<(f32, f32)> {
-    let mut smoothed_frequency_space = Vec::new();
-    let size = length_in_seconds as usize;
-
-    let mut k = 0;
-    while k + size <= frequency_space.len() {
-        let chunk = &frequency_space[k..k + size];
-        let average_frequency = chunk.iter().map(|(f, _)| *f).sum::<f32>() / size as f32;
-        let average_magnitude = chunk.iter().map(|(_, m)| *m).sum::<f32>() / size as f32;
-        smoothed_frequency_space.push((average_frequency, average_magnitude));
-        k += size;
-    }
-
-    smoothed_frequency_space
-}
-
-fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Vec<(f32, f32)> {
     let magic_window_number = 50f32;
-    let min_index = 50;
-    let max_index = 8_000;
+    let min_index = (50.0 / bin_width).ceil() as usize;
+    let max_index = (8_000.0 / bin_width).ceil() as usize;
 
     let mut peak_space = frequency_space.to_vec();
 
     let mut last_k = min_index;
     let mut k = min_index;
     while k < max_index {
-        let window_size = (frequency_space[k].0 / magic_window_number) as usize;
+        let window_size = ((frequency_space[k].0 / magic_window_number) / bin_width).max(1.0) as usize;
         let max_end = (k + window_size).min(frequency_space.len());
 
         let mut max_in_window = 0.0;
@@ -161,8 +150,9 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
     let take = max_index - min_index;
 
     let end = (skip + take).min(peak_space.len());
+    let derivative_window = ((3.0 / bin_width).round()).max(1.0) as usize;
     for k in skip..end {
-        let window_size = 3;
+        let window_size = derivative_window;
         let average_right_derivative = ((frequency_space
             [(k + window_size).min(frequency_space.len() - 1)]
         .1 - frequency_space[k].1)
