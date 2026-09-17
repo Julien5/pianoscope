@@ -1,0 +1,6 @@
+{
+  "helloWorld": "Bonjour tout le monde!",
+  "welcomeUser": "Bonjour {username}!",
+  "selectClef": "Changer la clef",
+  "selectInput": "Choisir une entree"
+}

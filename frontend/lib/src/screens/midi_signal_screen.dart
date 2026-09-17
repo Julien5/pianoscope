@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../notation/models/key_signature.dart';
 import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
@@ -84,7 +85,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   @override
   Widget build(BuildContext context) {
     final signalVelocity = (_lastEvent?.velocity ?? 0).clamp(0, 127);
-
+    final String selectClef = AppLocalizations.of(context)!.selectClef;
     // note name without digets
     final String simpleNote = _noteName.replaceAll(RegExp(r'[0-9-]'), '');
     Set<KeyboardNote> keyboardNotes = {};
@@ -98,9 +99,10 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         : _activeEvents.values
               .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
               .toList();
-
+    /* DEBUG */
+    /*
     notes.clear();
-    /*notes.add(
+    notes.add(
       Note(
         pitch: Pitch(
           noteName: NoteName.A,
@@ -108,7 +110,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
           accidental: Accidental.sharp,
         ),
       ),
-    );*/
+    );
     notes.add(
       Note(
         /*pitch: Pitch(
@@ -118,7 +120,8 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         ),*/
         pitch: Pitch.fromMidiNumber(70),
       ),
-    );
+    */
+    /* DEBUG */
     return PopScope(
       onPopInvokedWithResult: (didPop, result) => {
         context.read<InputProvider>().disconnect(),
@@ -133,7 +136,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                 onPressed: () {
                   openClefSelectionScreen();
                 },
-                child: const Text('Select Clef'),
+                child: Text(selectClef),
               ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
+import '../providers/locale_provider.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
@@ -97,10 +99,10 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<InputProvider>();
-
+    final String title = AppLocalizations.of(context)!.selectInput;
     if (!provider.hasBridge) {
       return Scaffold(
-        appBar: AppBar(title: const Text('MIDI Devices')),
+        appBar: AppBar(title: Text(title)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -109,17 +111,36 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     final error = provider.error;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('MIDI Devices')),
+      appBar: AppBar(title: Text(title)),
       body: _buildBody(ports, error),
     );
   }
 
   Widget _buildBody(List<MidiPort> ports, String? error) {
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: true);
+    debugPrint("_buildBody: ${localeProvider.locale}");
+    final String welcome = AppLocalizations.of(context)!.welcomeUser("Julien");
+    final localizationWidget = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(welcome),
+        ElevatedButton(
+          onPressed: () => localeProvider.setLocale(const Locale('en')),
+          child: const Text('EN'),
+        ),
+        const SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: () => localeProvider.setLocale(const Locale('fr')),
+          child: const Text('FR'),
+        ),
+      ],
+    );
     if (error != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            localizationWidget,
             Text('Error: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -131,7 +152,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       );
     }
 
-    return ListView.builder(
+    final inputsWidget = ListView.builder(
       itemCount: ports.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -149,5 +170,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
         );
       },
     );
+
+    return Column(children: [Expanded(child:localizationWidget),Expanded(child:inputsWidget)],);
   }
 }

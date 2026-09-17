@@ -1,0 +1,18 @@
+{
+  "helloWorld": "Hello World!",
+  "@helloWorld": {
+    "description": "The conventional greeting"
+  },
+
+  "welcomeUser": "Welcome, {username}!",
+  "@welcomeUser": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+
+  "selectClef": "Select Clef",
+  "selectInput": "Select input"
+}

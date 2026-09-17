@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'pianoscope.dart';
 
+import 'l10n/app_localizations.dart';
+import 'src/providers/locale_provider.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
@@ -30,10 +33,23 @@ class NanoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Nano MIDI',
-      theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-      home: const DeviceListScreen(),
+    return ChangeNotifierProvider(
+      create: (_) => LocaleProvider(),
+      child: Consumer<LocaleProvider>(
+        builder: (context, localeProvider, child) {
+          return MaterialApp(
+            title: 'Nano MIDI',
+            locale: localeProvider.locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: ThemeData(
+              colorSchemeSeed: Colors.indigo,
+              useMaterial3: true,
+            ),
+            home: const DeviceListScreen(),
+          );
+        },
+      ),
     );
   }
 }

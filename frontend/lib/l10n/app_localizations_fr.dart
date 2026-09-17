@@ -1,0 +1,24 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for French (`fr`).
+class AppLocalizationsFr extends AppLocalizations {
+  AppLocalizationsFr([String locale = 'fr']) : super(locale);
+
+  @override
+  String get helloWorld => 'Bonjour tout le monde!';
+
+  @override
+  String welcomeUser(String username) {
+    return 'Bonjour $username!';
+  }
+
+  @override
+  String get selectClef => 'Changer la clef';
+
+  @override
+  String get selectInput => 'Choisir une entree';
+}
