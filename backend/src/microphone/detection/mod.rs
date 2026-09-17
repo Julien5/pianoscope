@@ -106,7 +106,7 @@ impl PitchDetector {
             self.stats.current_frequency = best.frequency;
             self.stats.current_note = freq_to_note_name(best.frequency);
         } else {
-            debug_assert!(estimates.estimates.is_empty());
+            debug_assert!(estimates.is_empty());
         }
     }
     fn compute_threshold(&self) -> f32 {
@@ -196,11 +196,7 @@ mod tests {
         let window_len = (sample_rate / 8) as usize; // 0.125 seconds
         let signal_length = window_len;
         let algorithm = PitchRecognizerParameters::new_kord(sample_rate, window_len);
-        let table = [
-            (65.4, "C2"),
-            (261.63, "C4"),
-            (440.0, "A4"),
-        ];
+        let table = [(65.4, "C2"), (261.63, "C4"), (440.0, "A4")];
         let mut good = true;
         for (freq, note) in table {
             log::trace!("test: {} {}", freq, note);

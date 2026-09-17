@@ -10,7 +10,7 @@ pub struct Estimate {
 #[derive(Clone)]
 pub struct Estimates {
     // (confidence, frequency)
-    pub estimates: Vec<Estimate>,
+    estimates: Vec<Estimate>,
 }
 
 impl Estimates {
@@ -37,6 +37,10 @@ impl Estimates {
             return Some(e.clone());
         }
         None
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.estimates.is_empty()
     }
 }
 
