@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 
 abstract class AppColors {
   static const Color background = Colors.white;
-  static const Color border = Color(0xFFE0E0E0);
+  static const Color border = Colors.grey;
   static const Color text = Colors.black;
 }
 
 abstract class AppTextStyles {
   static const TextStyle title = TextStyle(
     fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.text,
+  );
+  static const TextStyle header = TextStyle(
+    fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.text,
   );
@@ -56,7 +61,7 @@ abstract class AppTheme {
     shape: _framedShape,
 
     titleTextStyle: AppTextStyles.normal,
-    // Optional: Reduces vertical padding to match the compact text look
+    subtitleTextStyle: AppTextStyles.small,
     dense: false,
     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
   );

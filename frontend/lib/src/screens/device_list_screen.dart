@@ -5,6 +5,8 @@ import '../providers/locale_provider.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
+import '../style.dart';
+import '../utils.dart';
 import 'midi_signal_screen.dart';
 
 class MinimalButton extends StatelessWidget {
@@ -94,7 +96,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => MidiSignalScreen(
-            portName: name,
+            portName: formatMidiPortName(name),
             eventStream: streams.events,
             errorStream: streams.errors,
           ),
@@ -131,31 +133,34 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   Widget _buildBody(List<MidiPort> ports, String? error) {
     final localeProvider = Provider.of<LocaleProvider>(context, listen: true);
     // localeProvider.locale
-    final localizationWidget = Padding(
-      padding: EdgeInsetsGeometry.fromLTRB(20, 5, 20, 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 20,
-        children: [
-          Expanded(
-            child: MinimalButton(
-              onPressed: () => localeProvider.setLocale(const Locale('fr')),
-              text: 'Francais',
+    final localizationWidget = Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: EdgeInsetsGeometry.fromLTRB(20, 5, 20, 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 20,
+          children: [
+            Expanded(
+              child: MinimalButton(
+                onPressed: () => localeProvider.setLocale(const Locale('fr')),
+                text: 'Francais',
+              ),
             ),
-          ),
-          Expanded(
-            child: MinimalButton(
-              onPressed: () => localeProvider.setLocale(const Locale('en')),
-              text: 'English',
+            Expanded(
+              child: MinimalButton(
+                onPressed: () => localeProvider.setLocale(const Locale('en')),
+                text: 'English',
+              ),
             ),
-          ),
-          Expanded(
-            child: MinimalButton(
-              onPressed: () => localeProvider.setLocale(const Locale('en')),
-              text: 'Deutsch',
+            Expanded(
+              child: MinimalButton(
+                onPressed: () => localeProvider.setLocale(const Locale('en')),
+                text: 'Deutsch',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
     if (error != null) {
@@ -175,32 +180,64 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       );
     }
 
-    final inputsWidget = ListView.builder(
-      itemCount: ports.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return Card(
-          child: ListTile(
-            title: Text("Microphone"),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _connect(""),
-          ));
-        }
-
-        return Card(
-          child: ListTile(
-            title: Text(ports[index - 1].name),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _connect(ports[index - 1].id),
-          ),
-        );
-      },
+    final microphoneButton = Card(
+      child: ListTile(
+        title: const Text('Microphone'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _connect(''),
+      ),
     );
 
+    final headerAndList = <Widget>[];
+    if (ports.isNotEmpty) {
+      headerAndList.add(
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).dividerColor),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 0, 8),
+                    child: Text('MIDI ports', style: AppTextStyles.header),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: ports.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        child: ListTile(
+                          title: Text(formatMidiPortName(ports[index].name)),
+                          subtitle: Text(ports[index].name),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => _connect(ports[index].id),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: inputsWidget),
-        Expanded(child: localizationWidget),
+        microphoneButton,
+        ...headerAndList,
+        localizationWidget,
+        const SizedBox(height: 20),
       ],
     );
   }
