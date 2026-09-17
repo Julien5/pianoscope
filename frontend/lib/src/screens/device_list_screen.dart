@@ -7,6 +7,18 @@ import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
 import 'midi_signal_screen.dart';
 
+class MinimalButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+
+  const MinimalButton({super.key, required this.text, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: onPressed, child: Text(text));
+  }
+}
+
 class DeviceListScreen extends StatefulWidget {
   const DeviceListScreen({super.key});
 
@@ -118,35 +130,46 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
   Widget _buildBody(List<MidiPort> ports, String? error) {
     final localeProvider = Provider.of<LocaleProvider>(context, listen: true);
-    debugPrint("_buildBody: ${localeProvider.locale}");
-    final String welcome = AppLocalizations.of(context)!.welcomeUser("Julien");
-    final localizationWidget = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(welcome),
-        ElevatedButton(
-          onPressed: () => localeProvider.setLocale(const Locale('en')),
-          child: const Text('EN'),
-        ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () => localeProvider.setLocale(const Locale('fr')),
-          child: const Text('FR'),
-        ),
-      ],
+    // localeProvider.locale
+    final localizationWidget = Padding(
+      padding: EdgeInsetsGeometry.fromLTRB(20, 5, 20, 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 20,
+        children: [
+          Expanded(
+            child: MinimalButton(
+              onPressed: () => localeProvider.setLocale(const Locale('fr')),
+              text: 'Francais',
+            ),
+          ),
+          Expanded(
+            child: MinimalButton(
+              onPressed: () => localeProvider.setLocale(const Locale('en')),
+              text: 'English',
+            ),
+          ),
+          Expanded(
+            child: MinimalButton(
+              onPressed: () => localeProvider.setLocale(const Locale('en')),
+              text: 'Deutsch',
+            ),
+          ),
+        ],
+      ),
     );
     if (error != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            localizationWidget,
             Text('Error: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => context.read<InputProvider>().loadPorts(),
               child: const Text('Retry'),
             ),
+            localizationWidget,
           ],
         ),
       );
@@ -156,21 +179,29 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       itemCount: ports.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return ListTile(
+          return Card(
+          child: ListTile(
             title: Text("Microphone"),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _connect(""),
-          );
+          ));
         }
 
-        return ListTile(
-          title: Text(ports[index - 1].name),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => _connect(ports[index - 1].id),
+        return Card(
+          child: ListTile(
+            title: Text(ports[index - 1].name),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _connect(ports[index - 1].id),
+          ),
         );
       },
     );
 
-    return Column(children: [Expanded(child:localizationWidget),Expanded(child:inputsWidget)],);
+    return Column(
+      children: [
+        Expanded(child: inputsWidget),
+        Expanded(child: localizationWidget),
+      ],
+    );
   }
 }

@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../pianoscope.dart';
+import '../style.dart';
 
 class KeyTile extends StatelessWidget {
   final KeySignature current;
   final KeySignature keySignature;
   const KeyTile({super.key, required this.keySignature, required this.current});
 
+  ButtonStyle _getBorderStyle(bool isSelected) {
+    return ElevatedButton.styleFrom(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+      side: isSelected
+          ? const BorderSide(color: AppColors.text, width: 2.0) // Selected
+          : const BorderSide(color: AppColors.border, width: 1.0), // Unselected
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    BorderSide side = BorderSide(color: Colors.grey, width: 2);
-    if (current == keySignature) {
-      side = BorderSide(color: Colors.black, width: 3);
-    }
+    bool isSelected = current == keySignature;
     return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
-        side: side,
-      ),
+      style: _getBorderStyle(isSelected),
 
       onPressed: () {
         InputProvider model = context.read<InputProvider>();
@@ -61,9 +64,7 @@ class _KeyTilesState extends State<KeyTiles> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            KeyTile(keySignature: key, current: current),
-          ], //
+          children: [KeyTile(keySignature: key, current: current)], //
         ),
       );
     }

@@ -6,6 +6,7 @@ import '../notation/models/key_signature.dart';
 import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
+import '../style.dart';
 import '../widgets/grand_staff_view.dart';
 import '../widgets/keyboard_widget.dart';
 import '../widgets/velocity_indicator.dart';
@@ -122,6 +123,19 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
       ),
     */
     /* DEBUG */
+    Widget row = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 20,
+      children: [
+        Expanded(
+          child: GrandStaffView(
+            keySignature: keySignature ?? KeySignature.cMajor,
+            notes: notes,
+          ),
+        ),
+        VelocityIndicator(velocity: signalVelocity),
+      ],
+    );
     return PopScope(
       onPopInvokedWithResult: (didPop, result) => {
         context.read<InputProvider>().disconnect(),
@@ -132,26 +146,17 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              FilledButton(
+              ElevatedButton(
                 onPressed: () {
                   openClefSelectionScreen();
                 },
                 child: Text(selectClef),
               ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: GrandStaffView(
-                      keySignature: keySignature ?? KeySignature.cMajor,
-                      notes: notes,
-                    ),
-                  ),
-                  VelocityIndicator(velocity: signalVelocity),
-                  const SizedBox(width: 10),
-                ],
+              Padding(
+                padding: EdgeInsetsGeometry.fromLTRB(20, 0, 20, 0),
+                child: row,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               KeyboardWidget(
                 pressedNotes: keyboardNotes,
                 whiteHeight: 140,
@@ -160,14 +165,8 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                 pressedDotColor: Colors.blue,
               ),
               const SizedBox(height: 32),
-              Text(
-                _noteName,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(_rawHex, style: const TextStyle(fontSize: 10)),
+              Text(_noteName),
+              Text(_rawHex, style: AppTextStyles.small),
               const SizedBox(height: 2),
             ],
           ),

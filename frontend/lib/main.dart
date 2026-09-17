@@ -8,6 +8,7 @@ import 'pianoscope.dart';
 
 import 'l10n/app_localizations.dart';
 import 'src/providers/locale_provider.dart';
+import 'src/style.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,10 +43,7 @@ class NanoApp extends StatelessWidget {
             locale: localeProvider.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            theme: ThemeData(
-              colorSchemeSeed: Colors.indigo,
-              useMaterial3: true,
-            ),
+            theme: AppTheme.lightTheme,
             home: const DeviceListScreen(),
           );
         },
