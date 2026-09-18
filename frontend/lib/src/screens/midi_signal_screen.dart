@@ -7,6 +7,7 @@ import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
 import '../style.dart';
+import '../utils.dart';
 import '../widgets/grand_staff_view.dart';
 import '../widgets/keyboard_widget.dart';
 import '../widgets/velocity_indicator.dart';
@@ -121,6 +122,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         ),*/
         pitch: Pitch.fromMidiNumber(70),
       ),
+    );
     */
     /* DEBUG */
     Widget row = Row(
@@ -165,7 +167,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                 pressedDotColor: Colors.blue,
               ),
               const SizedBox(height: 32),
-              Text(_noteName),
+              NoteNameText(noteName: _noteName,),
               Text(_rawHex, style: AppTextStyles.small),
               const SizedBox(height: 2),
             ],
@@ -173,5 +175,15 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         ),
       ),
     );
+  }
+}
+
+class NoteNameText extends StatelessWidget {
+  final String noteName;
+  const NoteNameText({super.key, required this.noteName});
+  @override
+  Widget build(BuildContext context) {  
+    final String title = localizeNote(noteName, AppLocalizations.of(context)!);
+    return Text(title, style: AppTextStyles.normal);
   }
 }

@@ -1,6 +1,16 @@
 {
-  "helloWorld": "Bonjour tout le monde!",
-  "welcomeUser": "Bonjour {username}!",
   "selectClef": "Changer la clef",
-  "selectInput": "Choisir une entree"
+  "selectInput": "Choisir une entrée",
+  "noteC":"Do",
+  "noteD":"Ré",
+  "noteE":"Mi",
+  "noteF":"Fa",
+  "noteG":"Sol",
+  "noteA":"La",
+  "noteB":"Si",
+  "noteSharp":"dièse",
+  "noteFlat":"bémol",
+
+  "sharp": "{noteName} dièse",
+  "flat": "{noteName} bémol"
 }

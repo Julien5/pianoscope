@@ -1,18 +1,16 @@
 {
-  "helloWorld": "Hello World!",
-  "@helloWorld": {
-    "description": "The conventional greeting"
-  },
-
-  "welcomeUser": "Welcome, {username}!",
-  "@welcomeUser": {
-    "placeholders": {
-      "username": {
-        "type": "String"
-      }
-    }
-  },
-
   "selectClef": "Select Clef",
-  "selectInput": "Select input"
+  "selectInput": "Select input",
+  "noteC":"C",
+  "noteD":"D",
+  "noteE":"E",
+  "noteF":"F",
+  "noteG":"G",
+  "noteA":"A",
+  "noteB":"B",
+  "noteSharp":"sharp",
+  "noteFlat":"flat",
+
+  "sharp": "{noteName} sharp",
+  "flat": "{noteName} flat"
 }

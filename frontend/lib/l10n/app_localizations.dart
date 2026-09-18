@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
 import 'app_localizations_fr.dart';
 
@@ -94,21 +95,10 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
     Locale('en'),
     Locale('fr'),
   ];
-
-  /// The conventional greeting
-  ///
-  /// In en, this message translates to:
-  /// **'Hello World!'**
-  String get helloWorld;
-
-  /// No description provided for @welcomeUser.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome, {username}!'**
-  String welcomeUser(String username);
 
   /// No description provided for @selectClef.
   ///
@@ -121,6 +111,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select input'**
   String get selectInput;
+
+  /// No description provided for @noteC.
+  ///
+  /// In en, this message translates to:
+  /// **'C'**
+  String get noteC;
+
+  /// No description provided for @noteD.
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
+  String get noteD;
+
+  /// No description provided for @noteE.
+  ///
+  /// In en, this message translates to:
+  /// **'E'**
+  String get noteE;
+
+  /// No description provided for @noteF.
+  ///
+  /// In en, this message translates to:
+  /// **'F'**
+  String get noteF;
+
+  /// No description provided for @noteG.
+  ///
+  /// In en, this message translates to:
+  /// **'G'**
+  String get noteG;
+
+  /// No description provided for @noteA.
+  ///
+  /// In en, this message translates to:
+  /// **'A'**
+  String get noteA;
+
+  /// No description provided for @noteB.
+  ///
+  /// In en, this message translates to:
+  /// **'B'**
+  String get noteB;
+
+  /// No description provided for @noteSharp.
+  ///
+  /// In en, this message translates to:
+  /// **'sharp'**
+  String get noteSharp;
+
+  /// No description provided for @noteFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'flat'**
+  String get noteFlat;
+
+  /// No description provided for @sharp.
+  ///
+  /// In en, this message translates to:
+  /// **'{noteName} sharp'**
+  String sharp(Object noteName);
+
+  /// No description provided for @flat.
+  ///
+  /// In en, this message translates to:
+  /// **'{noteName} flat'**
+  String flat(Object noteName);
 }
 
 class _AppLocalizationsDelegate
@@ -134,7 +190,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'fr'].contains(locale.languageCode);
+      <String>['de', 'en', 'fr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -143,6 +199,8 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
     case 'fr':

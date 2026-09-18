@@ -1,0 +1,16 @@
+{
+  "selectClef": "Schlusselauswahl",
+  "selectInput": "Eingang",
+  "noteC":"C",
+  "noteD":"D",
+  "noteE":"E",
+  "noteF":"F",
+  "noteG":"G",
+  "noteA":"A",
+  "noteB":"H",
+  "noteSharp":"is",
+  "noteFlat":"es",
+
+  "sharp": "{noteName}is",
+  "flat": "{noteName}es"
+}

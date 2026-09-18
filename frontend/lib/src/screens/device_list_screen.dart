@@ -155,10 +155,11 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
             ),
             Expanded(
               child: MinimalButton(
-                onPressed: () => localeProvider.setLocale(const Locale('en')),
+                onPressed: () => localeProvider.setLocale(const Locale('de')),
                 text: 'Deutsch',
               ),
             ),
+           
           ],
         ),
       ),
