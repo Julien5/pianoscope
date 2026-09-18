@@ -90,17 +90,18 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     final String selectClef = AppLocalizations.of(context)!.selectClef;
     // note name without digets
     final String simpleNote = _noteName.replaceAll(RegExp(r'[0-9-]'), '');
-    Set<KeyboardNote> keyboardNotes = {};
+
+ final notes = _activeEvents.values
+              .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
+              .toList();
+
+    Set<Note> keyboardNotes = {};
     if (simpleNote.isNotEmpty) {
-      keyboardNotes = {noteFromString(simpleNote)};
+      keyboardNotes = notes.toSet();
     }
     InputProvider model = context.watch<InputProvider>();
     KeySignature? keySignature = model.keySignature;
-    List<Note> notes = _activeEvents.isEmpty
-        ? []
-        : _activeEvents.values
-              .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
-              .toList();
+    
     /* DEBUG */
     /*
     notes.clear();

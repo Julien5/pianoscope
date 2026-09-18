@@ -137,10 +137,16 @@ class Pitch {
     return baseNote + octaveOffset + accidentalOffset;
   }
 
-  /// Scientific pitch notation (e.g., "C4", "F♯5", "B♭3")
-  String get scientificName {
-    final accidentalStr = accidental == Accidental.natural ? '' : accidental.symbol;
-    return '${noteName.name}$accidentalStr$octave';
+  
+  String accidentalString() {
+    if (accidental == Accidental.natural) {
+      return "";
+    }
+    if (accidental == Accidental.sharp) {
+      return "#";
+    }
+
+    return  accidental.toString();
   }
 
   /// Create a copy with modified properties
@@ -169,5 +175,8 @@ class Pitch {
   int get hashCode => Object.hash(noteName, accidental, octave);
 
   @override
-  String toString() => scientificName;
+  String toString() {
+    final accidentalStr = accidental == Accidental.natural ? '' : accidental.symbol;
+    return '${noteName.name}$accidentalStr$octave';
+  }
 }

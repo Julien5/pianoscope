@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-
 import '../l10n/app_localizations.dart';
 
 /// Cleans up raw OS MIDI port names into user-friendly display labels.
@@ -191,7 +190,7 @@ String localizeNote(String note, AppLocalizations localizations) {
   }
   String ret = naturalName;
   if (note.toUpperCase().contains("#")) {
-    ret=localizations.sharp(naturalName);
+    ret = localizations.sharp(naturalName);
   }
   return ret;
 }

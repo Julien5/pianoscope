@@ -1,72 +1,72 @@
 import 'package:flutter/material.dart';
 
-/// The twelve notes of one octave, in chromatic order starting at C.
-enum KeyboardNote {
-  c,
-  cSharp,
-  d,
-  dSharp,
-  e,
-  f,
-  fSharp,
-  g,
-  gSharp,
-  a,
-  aSharp,
-  b,
-}
+import '../../pianoscope.dart';
 
-/// The seven "natural" (white) notes, in left-to-right keyboard order.
-const List<KeyboardNote> _whiteNotes = [
-  KeyboardNote.c,
-  KeyboardNote.d,
-  KeyboardNote.e,
-  KeyboardNote.f,
-  KeyboardNote.g,
-  KeyboardNote.a,
-  KeyboardNote.b,
-];
+Note makeNote(NoteName name, Accidental accidental) {
+  return Note(
+    pitch: Pitch(noteName: name, accidental: accidental, octave: 4),
+  );
+}
 
 /// For each black note, which white note it sits immediately after.
 /// E.g. C# sits after C (index 0), F# sits after F (index 3).
 /// E and B have no following black key, so they're absent from this map.
-const Map<KeyboardNote, int> _blackNoteAfterWhiteIndex = {
-  KeyboardNote.cSharp: 0,
-  KeyboardNote.dSharp: 1,
-  KeyboardNote.fSharp: 3,
-  KeyboardNote.gSharp: 4,
-  KeyboardNote.aSharp: 5,
-};
-
-KeyboardNote noteFromString(String name) {
-  const table = {
-    'C': KeyboardNote.c,
-    'C#': KeyboardNote.cSharp,
-    'DB': KeyboardNote.cSharp,
-    'D': KeyboardNote.d,
-    'D#': KeyboardNote.dSharp,
-    'EB': KeyboardNote.dSharp,
-    'E': KeyboardNote.e,
-    'F': KeyboardNote.f,
-    'F#': KeyboardNote.fSharp,
-    'GB': KeyboardNote.fSharp,
-    'G': KeyboardNote.g,
-    'G#': KeyboardNote.gSharp,
-    'AB': KeyboardNote.gSharp,
-    'A': KeyboardNote.a,
-    'A#': KeyboardNote.aSharp,
-    'BB': KeyboardNote.aSharp,
-    'B': KeyboardNote.b,
-  };
-  final key = name.trim().toUpperCase();
-  final note = table[key];
-  if (note == null) {
-    throw FormatException('Not a valid note name: "$name"');
+int _whiteIndexBeforeBlackNote(Note note) {
+  assert(note.pitch.accidental == Accidental.sharp);
+  if (note.pitch.noteName == NoteName.C) {
+    return 0;
   }
-  return note;
+  if (note.pitch.noteName == NoteName.D) {
+    return 1;
+  }
+  if (note.pitch.noteName == NoteName.F) {
+    return 3;
+  }
+  if (note.pitch.noteName == NoteName.G) {
+    return 4;
+  }
+  if (note.pitch.noteName == NoteName.A) {
+    return 5;
+  }
+  return 0;
 }
 
-bool _isBlack(KeyboardNote note) => _blackNoteAfterWhiteIndex.containsKey(note);
+List<Note> blackNotes() {
+  return [
+    makeNote(NoteName.C, Accidental.sharp),
+    makeNote(NoteName.D, Accidental.sharp),
+    makeNote(NoteName.F, Accidental.sharp),
+    makeNote(NoteName.G, Accidental.sharp),
+    makeNote(NoteName.A, Accidental.sharp),
+  ];
+}
+
+List<Note> whiteNotes() {
+  return [
+    makeNote(NoteName.C, Accidental.natural),
+    makeNote(NoteName.D, Accidental.natural),
+    makeNote(NoteName.E, Accidental.natural),
+    makeNote(NoteName.F, Accidental.natural),
+    makeNote(NoteName.G, Accidental.natural),
+    makeNote(NoteName.A, Accidental.natural),
+    makeNote(NoteName.B, Accidental.natural),
+  ];
+}
+
+int index(NoteName name) {
+  final table = {
+    NoteName.C: 0,
+    NoteName.D: 1,
+    NoteName.E: 2,
+    NoteName.F: 3,
+    NoteName.G: 4,
+    NoteName.A: 5,
+    NoteName.B: 6,
+  };
+  return table[name]!;
+}
+
+bool _isBlack(Note note) => note.pitch.accidental.semitoneOffset != 0;
 
 /// A one-octave (C to B) piano keyboard display widget.
 ///
@@ -94,7 +94,7 @@ class KeyboardWidget extends StatelessWidget {
   });
 
   /// Notes currently held down. Order and duplicates don't matter.
-  final Set<KeyboardNote> pressedNotes;
+  final Set<Note> pressedNotes;
 
   /// Width of a single white key, in logical pixels, at natural (1:1) scale.
   final double whiteWidth;
@@ -165,7 +165,7 @@ class _KeyboardPainter extends CustomPainter {
     required this.pressedDotColor,
   });
 
-  final Set<KeyboardNote> pressedNotes;
+  final Set<Note> pressedNotes;
   final double whiteWidth;
   final double whiteHeight;
   final double blackWidthRatio;
@@ -197,15 +197,15 @@ class _KeyboardPainter extends CustomPainter {
     final dotPaint = Paint()..color = pressedDotColor;
 
     // White keys.
-    for (var i = 0; i < _whiteNotes.length; i++) {
+    for (var i = 0; i < whiteNotes().length; i++) {
       final rect = Rect.fromLTWH(_whiteKeyLeft(i), 0, whiteWidth, whiteHeight);
       canvas.drawRect(rect, whiteFill);
       canvas.drawRect(rect, whiteStroke);
     }
 
     // Black keys, drawn on top of the white keys' upper portion.
-    for (final entry in _blackNoteAfterWhiteIndex.entries) {
-      final centerX = _seamCenter(entry.value);
+    for (final entry in blackNotes()) {
+      final centerX = _seamCenter(index(entry.pitch.noteName));
       final rect = Rect.fromLTWH(
         centerX - _blackWidth / 2,
         0,
@@ -224,10 +224,10 @@ class _KeyboardPainter extends CustomPainter {
       final double centerX;
       final double keyBottom;
       if (_isBlack(note)) {
-        centerX = _seamCenter(_blackNoteAfterWhiteIndex[note]!);
+        centerX = _seamCenter(_whiteIndexBeforeBlackNote(note));
         keyBottom = _blackHeight;
       } else {
-        final whiteIndex = _whiteNotes.indexOf(note);
+        final whiteIndex = whiteNotes().indexOf(note);
         if (whiteIndex == -1) continue;
         centerX = _whiteKeyLeft(whiteIndex) + whiteWidth / 2;
         keyBottom = whiteHeight;

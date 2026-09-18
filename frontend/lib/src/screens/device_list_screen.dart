@@ -159,7 +159,6 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
                 text: 'Deutsch',
               ),
             ),
-           
           ],
         ),
       ),
