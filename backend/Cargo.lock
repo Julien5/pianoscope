@@ -1409,8 +1409,7 @@ dependencies = [
 [[package]]
 name = "pitch-detection"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e086e70dfcfd46cd6097c501a66fb07cd73ee8c27844b0941d9b2b3e43dfbf92"
+source = "git+https://github.com/Julien5/pitch-detection.git#cf401b484b432e5862a62f931ad6ee0d0fcf4fb9"
 dependencies = [
  "rustfft",
 ]

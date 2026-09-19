@@ -57,6 +57,15 @@ fn detect(path: &PathBuf) -> Vec<String> {
         .collect()
 }
 
+#[test]
+fn smoke_c4_test() {
+    let _ = env_logger::try_init();
+    let ret = detect(&"data/C4.wav".into());
+    let nc4 = ret.iter().filter(|s| *s == "C4").collect::<Vec<_>>().len();
+    let nother = ret.len() - nc4;
+    debug_assert!(nc4 > nother);
+}
+
 fn old_piano_note(pos: usize, note: &str, octave: usize) -> (bool, String, String) {
     let absnote = format!("{}{}", note, octave);
     let directory = format!(

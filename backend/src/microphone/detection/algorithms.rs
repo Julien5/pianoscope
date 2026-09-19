@@ -13,6 +13,12 @@ pub struct Estimates {
     estimates: Vec<Estimate>,
 }
 
+fn _safe_padding(size: usize, min_padding: usize) -> usize {
+    let min_total = size + min_padding;
+    let total = min_total.next_power_of_two();
+    total - size
+}
+
 impl Estimates {
     pub fn print(&self) {
         if self.estimates.is_empty() {
