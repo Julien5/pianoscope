@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../routes.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
@@ -75,7 +76,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
         await provider.connectMidi(id);
       }
       if (!mounted) return;
-      GoRouter.of(context).push('/note');
+      GoRouter.of(context).push(Routes.note);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

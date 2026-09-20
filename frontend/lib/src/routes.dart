@@ -21,8 +21,14 @@ String _shellTitle(BuildContext context, GoRouterState state) {
   return 'Nano MIDI';
 }
 
+class Routes {
+  static const String devices = "/devices";
+  static const String note = "/note";
+  static const String clefs = "/clefs";
+}
+
 final router = GoRouter(
-  initialLocation: '/',
+  initialLocation: Routes.devices,
   routes: [
     ShellRoute(
       builder: (context, state, child) {
@@ -35,22 +41,20 @@ final router = GoRouter(
       },
       routes: [
         GoRoute(
-          path: '/',
+          path: Routes.devices,
           builder: (context, state) => const DeviceListScreen(),
         ),
         GoRoute(
-          path: '/note',
+          path: Routes.note,
           builder: (context, state) => const MidiSignalScreen(),
           onExit: (context, state) async {
             await context.read<InputProvider>().disconnect();
             return true;
           },
-          routes: [
-            GoRoute(
-              path: 'clef',
-              builder: (context, state) => const ClefSelectionScreen(),
-            ),
-          ],
+        ),
+        GoRoute(
+          path: Routes.clefs,
+          builder: (context, state) => const ClefSelectionScreen(),
         ),
       ],
     ),

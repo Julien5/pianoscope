@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../notation/models/key_signature.dart';
+import '../routes.dart';
 import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
@@ -70,7 +71,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   }
 
   Future<void> openClefSelectionScreen() async {
-    GoRouter.of(context).push('/note/clef');
+    GoRouter.of(context).push(Routes.clefs);
   }
 
   @override
