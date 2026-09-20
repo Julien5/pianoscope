@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/locale_provider.dart';
+import '../routes.dart';
 
 class SettingsDrawer extends StatelessWidget {
   const SettingsDrawer({super.key});
@@ -21,7 +23,6 @@ class SettingsDrawer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                SizedBox(height: 8),
                 Text(
                   'Language',
                   style: TextStyle(color: Colors.white, fontSize: 20),
@@ -29,6 +30,29 @@ class SettingsDrawer extends StatelessWidget {
               ],
             ),
           ),
+
+          ListTile(
+            leading: const Icon(Icons.device_hub),
+            title: const Text('Devices'),
+            onTap: () {
+              Scaffold.of(context).closeDrawer();
+              GoRouter.of(context).go(Routes.devices);
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.music_note),
+            title: const Text('Clefs'),
+            onTap: () {
+              Scaffold.of(context).closeDrawer();
+              debugPrint("go to clefs");
+              GoRouter.of(context).go(Routes.clefs);
+            },
+          ),
+
+          ListTile(title: const Divider()),
+
+          ListTile(title: const Text("Languages")),
 
           ListTile(
             leading: const Icon(Icons.flag),

@@ -14,7 +14,7 @@ String _shellTitle(BuildContext context, GoRouterState state) {
     case '/':
       return AppLocalizations.of(context)!.selectInput;
     case '/note':
-      return context.read<InputProvider>().portName ?? 'MIDI Signal';
+      return context.read<InputProvider>().portName() ?? 'MIDI Signal';
     case '/note/clef':
       return AppLocalizations.of(context)!.selectClef;
   }
@@ -47,10 +47,6 @@ final router = GoRouter(
         GoRoute(
           path: Routes.note,
           builder: (context, state) => const MidiSignalScreen(),
-          onExit: (context, state) async {
-            await context.read<InputProvider>().disconnect();
-            return true;
-          },
         ),
         GoRoute(
           path: Routes.clefs,

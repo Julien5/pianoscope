@@ -28,15 +28,17 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _rawHex = '';
   final Map<int, MidiEvent> _activeEvents = {};
   MidiEvent? _lastEvent;
-  StreamSubscription<MidiEvent>? _eventSubscription;
-  StreamSubscription<String>? _errorSubscription;
+
+  InputProvider? inputProvider;
 
   @override
   void initState() {
     super.initState();
-    final provider = context.read<InputProvider>();
-    _eventSubscription = provider.eventStream!.listen(_onEvent);
-    _errorSubscription = provider.errorStream!.listen(_onError);
+    inputProvider = context.read<InputProvider>();
+    //assert(provider.eventStream != null);
+    //_eventSubscription ??= provider.eventStream!.listen(_onEvent);
+    //_errorSubscription ??= provider.errorStream!.listen(_onError);
+    inputProvider!.attachObservers(_onEvent, _onError);
   }
 
   void _onEvent(MidiEvent event) {
@@ -65,13 +67,13 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
 
   @override
   void dispose() {
-    _eventSubscription?.cancel();
-    _errorSubscription?.cancel();
+    debugPrint("midi dispose: cancel subsription");
+    inputProvider?.clearObservers();
     super.dispose();
   }
 
   Future<void> openClefSelectionScreen() async {
-    GoRouter.of(context).push(Routes.clefs);
+    GoRouter.of(context).go(Routes.clefs);
   }
 
   @override

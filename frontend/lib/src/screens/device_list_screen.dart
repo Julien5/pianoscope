@@ -69,14 +69,11 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
   Future<void> _connect(String id) async {
     final provider = context.read<InputProvider>();
+    final inputDevice = InputDevice.fromId(id);
     try {
-      if (id.isEmpty) {
-        await provider.connectMicrophone();
-      } else {
-        await provider.connectMidi(id);
-      }
-      if (!mounted) return;
-      GoRouter.of(context).push(Routes.note);
+    await provider.connect(inputDevice);
+    if (!mounted) return;
+    GoRouter.of(context).go(Routes.note);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
