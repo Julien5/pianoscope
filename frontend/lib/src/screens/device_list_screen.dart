@@ -1,25 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
 import '../style.dart';
 import '../utils.dart';
-import '../widgets/settings_drawer.dart';
-import 'midi_signal_screen.dart';
-
-class MinimalButton extends StatelessWidget {
-  final String text;
-  final VoidCallback? onPressed;
-
-  const MinimalButton({super.key, required this.text, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(onPressed: onPressed, child: Text(text));
-  }
-}
 
 class DeviceListScreen extends StatefulWidget {
   const DeviceListScreen({super.key});
@@ -83,25 +69,13 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   Future<void> _connect(String id) async {
     final provider = context.read<InputProvider>();
     try {
-      String name;
       if (id.isEmpty) {
-        name = await provider.selectMicrophone();
+        await provider.connectMicrophone();
       } else {
-        name = await provider.selectMidi(id);
+        await provider.connectMidi(id);
       }
       if (!mounted) return;
-      final streams = await provider.startEventStream();
-      if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MidiSignalScreen(
-            portName: formatMidiPortName(name),
-            eventStream: streams.events,
-            errorStream: streams.errors,
-          ),
-        ),
-      );
+      GoRouter.of(context).push('/note');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -113,23 +87,14 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<InputProvider>();
-    final String title = AppLocalizations.of(context)!.selectInput;
     if (!provider.hasBridge) {
-      return Scaffold(
-        appBar: AppBar(title: Text(title)),
-        drawer: const SettingsDrawer(),
-        body: const Center(child: CircularProgressIndicator()),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     final ports = provider.ports;
     final error = provider.error;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      drawer: const SettingsDrawer(),
-      body: _buildBody(ports, error),
-    );
+    return _buildBody(ports, error);
   }
 
   Widget _buildBody(List<MidiPort> ports, String? error) {

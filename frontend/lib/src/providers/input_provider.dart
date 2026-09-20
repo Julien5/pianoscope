@@ -5,6 +5,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import '../notation/models/key_signature.dart';
 import '../rust/api/bridge.dart';
 import '../rust/api/event.dart';
+import '../utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class InputProvider extends ChangeNotifier {
@@ -12,6 +13,8 @@ class InputProvider extends ChangeNotifier {
   List<MidiPort> _ports = [];
   String? _error;
   KeySignature? _keySignature;
+  String? _portName;
+  ({Stream<MidiEvent> events, Stream<String> errors})? _streams;
 
   bool get hasBridge => _bridge != null;
   List<MidiPort> get ports => _ports;
@@ -21,6 +24,10 @@ class InputProvider extends ChangeNotifier {
     _keySignature = value;
     notifyListeners();
   }
+
+  String? get portName => _portName;
+  Stream<MidiEvent>? get eventStream => _streams?.events;
+  Stream<String>? get errorStream => _streams?.errors;
 
   Future<void> init() async {
     _bridge = await Bridge.newInstance();
@@ -37,14 +44,14 @@ class InputProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> selectMidi(String id) async {
+  Future<void> connectMidi(String id) async {
     debugPrint("selectMidi=$id");
     MidiPort port = _ports.firstWhere((port) => port.id == id);
     await _bridge!.selectMidi(port: port);
-    return port.name;
+    await _startEventStream(formatMidiPortName(port.name));
   }
 
-  Future<String> selectMicrophone() async {
+  Future<void> connectMicrophone() async {
     debugPrint("selectMicrophone");
     if (Platform.isAndroid) {
       var status = await Permission.microphone.request();
@@ -53,15 +60,16 @@ class InputProvider extends ChangeNotifier {
       }
     }
     await _bridge!.selectMicrophone();
-    return "microphone";
+    await _startEventStream("microphone");
   }
 
-  Future<({Stream<MidiEvent> events, Stream<String> errors})>
-  startEventStream() async {
+  Future<void> _startEventStream(String portName) async {
     final sink = RustStreamSink<MidiEvent>();
     final errorSink = RustStreamSink<String>();
     await _bridge!.startStream(sink: sink, errorSink: errorSink);
-    return (events: sink.stream, errors: errorSink.stream);
+    _portName = portName;
+    _streams = (events: sink.stream, errors: errorSink.stream);
+    notifyListeners();
   }
 
   Future<void> disconnect() async {

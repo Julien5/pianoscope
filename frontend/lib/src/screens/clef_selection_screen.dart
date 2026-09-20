@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../pianoscope.dart';
 import '../style.dart';
@@ -26,7 +27,7 @@ class KeyTile extends StatelessWidget {
       onPressed: () {
         InputProvider model = context.read<InputProvider>();
         model.keySignature = keySignature;
-        Navigator.pop(context);
+        GoRouter.of(context).pop();
       },
       child: KeySignatureTile(keySignature: keySignature),
     );
@@ -115,19 +116,19 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen> {
 
     return DefaultTabController(
       length: 3, // Number of tabs
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Select Clef'),
-          bottom: const TabBar(
+      child: Column(
+        children: [
+          const TabBar(
             tabs: [
               Tab(text: 'C Major'),
               Tab(text: 'Sharps'),
               Tab(text: 'Flats'),
             ],
           ),
-        ),
-        // 3. Add TabBarView as the body
-        body: TabBarView(children: [zeroChild, sharpChild, flatChild]),
+          Expanded(
+            child: TabBarView(children: [zeroChild, sharpChild, flatChild]),
+          ),
+        ],
       ),
     );
   }

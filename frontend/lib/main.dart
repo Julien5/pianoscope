@@ -8,6 +8,7 @@ import 'pianoscope.dart';
 
 import 'l10n/app_localizations.dart';
 import 'src/providers/locale_provider.dart';
+import 'src/routes.dart';
 import 'src/style.dart';
 
 Future<void> main() async {
@@ -38,13 +39,13 @@ class NanoApp extends StatelessWidget {
       create: (_) => LocaleProvider(),
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, child) {
-          return MaterialApp(
+          return MaterialApp.router(
             title: 'Nano MIDI',
             locale: localeProvider.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.lightTheme,
-            home: const DeviceListScreen(),
+            routerConfig: router,
           );
         },
       ),

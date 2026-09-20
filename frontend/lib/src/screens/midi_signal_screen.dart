@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../notation/models/key_signature.dart';
 import '../rust/api/event.dart';
@@ -13,19 +14,9 @@ import '../widgets/keyboard_widget.dart';
 import '../widgets/velocity_indicator.dart';
 import '../notation/models/note.dart';
 import '../notation/models/pitch.dart';
-import 'clef_selection_screen.dart';
 
 class MidiSignalScreen extends StatefulWidget {
-  final String portName;
-  final Stream<MidiEvent> eventStream;
-  final Stream<String> errorStream;
-
-  const MidiSignalScreen({
-    super.key,
-    required this.portName,
-    required this.eventStream,
-    required this.errorStream,
-  });
+  const MidiSignalScreen({super.key});
 
   @override
   State<MidiSignalScreen> createState() => _MidiSignalScreenState();
@@ -42,8 +33,9 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   @override
   void initState() {
     super.initState();
-    _eventSubscription = widget.eventStream.listen(_onEvent);
-    _errorSubscription = widget.errorStream.listen(_onError);
+    final provider = context.read<InputProvider>();
+    _eventSubscription = provider.eventStream!.listen(_onEvent);
+    _errorSubscription = provider.errorStream!.listen(_onError);
   }
 
   void _onEvent(MidiEvent event) {
@@ -78,10 +70,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   }
 
   Future<void> openClefSelectionScreen() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ClefSelectionScreen()),
-    );
+    GoRouter.of(context).push('/note/clef');
   }
 
   @override
@@ -91,9 +80,9 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     // note name without digets
     final String simpleNote = _noteName.replaceAll(RegExp(r'[0-9-]'), '');
 
- final notes = _activeEvents.values
-              .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
-              .toList();
+    final notes = _activeEvents.values
+        .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
+        .toList();
 
     Set<Note> keyboardNotes = {};
     if (simpleNote.isNotEmpty) {
@@ -101,7 +90,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     }
     InputProvider model = context.watch<InputProvider>();
     KeySignature? keySignature = model.keySignature;
-    
+
     /* DEBUG */
     /*
     notes.clear();
@@ -139,41 +128,33 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         VelocityIndicator(velocity: signalVelocity),
       ],
     );
-    return PopScope(
-      onPopInvokedWithResult: (didPop, result) => {
-        context.read<InputProvider>().disconnect(),
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text(widget.portName)),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  openClefSelectionScreen();
-                },
-                child: Text(selectClef),
-              ),
-              Padding(
-                padding: EdgeInsetsGeometry.fromLTRB(20, 0, 20, 0),
-                child: row,
-              ),
-              const SizedBox(height: 10),
-              KeyboardWidget(
-                pressedNotes: keyboardNotes,
-                whiteHeight: 140,
-                whiteWidth: 40,
-                pressedDotRadius: 5,
-                pressedDotColor: Colors.blue,
-              ),
-              const SizedBox(height: 32),
-              NoteNameText(noteName: _noteName,),
-              Text(_rawHex, style: AppTextStyles.small),
-              const SizedBox(height: 2),
-            ],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              openClefSelectionScreen();
+            },
+            child: Text(selectClef),
           ),
-        ),
+          Padding(
+            padding: EdgeInsetsGeometry.fromLTRB(20, 0, 20, 0),
+            child: row,
+          ),
+          const SizedBox(height: 10),
+          KeyboardWidget(
+            pressedNotes: keyboardNotes,
+            whiteHeight: 140,
+            whiteWidth: 40,
+            pressedDotRadius: 5,
+            pressedDotColor: Colors.blue,
+          ),
+          const SizedBox(height: 32),
+          NoteNameText(noteName: _noteName),
+          Text(_rawHex, style: AppTextStyles.small),
+          const SizedBox(height: 2),
+        ],
       ),
     );
   }
@@ -183,7 +164,7 @@ class NoteNameText extends StatelessWidget {
   final String noteName;
   const NoteNameText({super.key, required this.noteName});
   @override
-  Widget build(BuildContext context) {  
+  Widget build(BuildContext context) {
     final String title = localizeNote(noteName, AppLocalizations.of(context)!);
     return Text(title, style: AppTextStyles.normal);
   }

@@ -35,7 +35,7 @@ class SettingsDrawer extends StatelessWidget {
             title: const Text('English'),
             onTap: () {
               localeProvider.setLocale(const Locale('en'));
-              Navigator.pop(context); // Close the menu
+              Scaffold.of(context).closeDrawer();
             },
           ),
 
@@ -44,7 +44,7 @@ class SettingsDrawer extends StatelessWidget {
             title: const Text('Francais'),
             onTap: () {
               localeProvider.setLocale(const Locale('fr'));
-              Navigator.pop(context); // Close the menu
+              Scaffold.of(context).closeDrawer();
             },
           ),
 
@@ -53,7 +53,7 @@ class SettingsDrawer extends StatelessWidget {
             title: const Text('Deutsch'),
             onTap: () {
               localeProvider.setLocale(const Locale('de'));
-              Navigator.pop(context); // Close the menu
+              Scaffold.of(context).closeDrawer();
             },
           ),
         ],
