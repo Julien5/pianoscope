@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
-import '../providers/locale_provider.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
 import '../style.dart';
 import '../utils.dart';
+import '../widgets/settings_drawer.dart';
 import 'midi_signal_screen.dart';
 
 class MinimalButton extends StatelessWidget {
@@ -117,6 +117,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     if (!provider.hasBridge) {
       return Scaffold(
         appBar: AppBar(title: Text(title)),
+        drawer: const SettingsDrawer(),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -126,43 +127,13 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
+      drawer: const SettingsDrawer(),
       body: _buildBody(ports, error),
     );
   }
 
   Widget _buildBody(List<MidiPort> ports, String? error) {
-    final localeProvider = Provider.of<LocaleProvider>(context, listen: true);
     // localeProvider.locale
-    final localizationWidget = Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: EdgeInsetsGeometry.fromLTRB(20, 5, 20, 5),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 20,
-          children: [
-            Expanded(
-              child: MinimalButton(
-                onPressed: () => localeProvider.setLocale(const Locale('fr')),
-                text: 'Francais',
-              ),
-            ),
-            Expanded(
-              child: MinimalButton(
-                onPressed: () => localeProvider.setLocale(const Locale('en')),
-                text: 'English',
-              ),
-            ),
-            Expanded(
-              child: MinimalButton(
-                onPressed: () => localeProvider.setLocale(const Locale('de')),
-                text: 'Deutsch',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
     if (error != null) {
       return Center(
         child: Column(
@@ -174,7 +145,6 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
               onPressed: () => context.read<InputProvider>().loadPorts(),
               child: const Text('Retry'),
             ),
-            localizationWidget,
           ],
         ),
       );
@@ -236,7 +206,6 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       children: [
         microphoneButton,
         ...headerAndList,
-        localizationWidget,
         const SizedBox(height: 20),
       ],
     );
