@@ -90,9 +90,9 @@ impl Midi {
         debug_handle: &Option<DebugServerHandle>,
     ) {
         match &self.input {
-            Input::Simulation(looop) => {
+            Input::Simulation(spec) => {
                 self.start_simulation_stream(
-                    looop,
+                    spec,
                     event_sender,
                     error_sender,
                     debug_handle.clone(),
@@ -115,13 +115,13 @@ impl Midi {
 
     fn start_simulation_stream(
         &self,
-        looop: &str,
+        spec: &str,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
         debug_handle: Option<DebugServerHandle>,
     ) {
         let handle =
-            midi_simulation::start_stream(&looop, event_sender, error_sender, debug_handle.clone());
+            midi_simulation::start_stream(&spec, event_sender, error_sender, debug_handle.clone());
         *self.connection.lock().unwrap() = Connection::Simulation(handle);
     }
 

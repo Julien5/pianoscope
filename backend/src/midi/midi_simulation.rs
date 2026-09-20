@@ -28,7 +28,7 @@ const SCALE_NOTES: &[&str] = &[
 static SIM_STOP: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
 pub fn start_stream(
-    looop: &str,
+    spec: &str,
     sender: EventSender,
     _error_sender: ErrorSender,
     debug_handle: Option<DebugServerHandle>,
@@ -36,10 +36,10 @@ pub fn start_stream(
     let stop = Arc::new(AtomicBool::new(false));
     *SIM_STOP.lock().unwrap() = Some(stop.clone());
 
-    let loops = if infinite(&looop) {
+    let loops = if infinite(&spec) {
         u32::MAX
     } else {
-        loop_count(&looop)
+        loop_count(&spec)
     };
 
     thread::Builder::new()
