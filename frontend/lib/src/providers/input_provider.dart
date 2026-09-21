@@ -34,6 +34,15 @@ class StreamSink {
       }
     });
   }
+
+  Future<void> stop() async {
+    debugPrint("stop start");
+    await _eventSub?.cancel();
+    await _errorSub?.cancel();
+    _eventSub = null;
+    _errorSub = null;
+    debugPrint("stop end");
+  }
 }
 
 sealed class InputDevice {
@@ -98,10 +107,10 @@ class InputProvider extends ChangeNotifier {
   }
 
   Future<void> connect(InputDevice device) async {
-    if (_inputDevice != null) {
-      await disconnect();
-    }
     debugPrint("connect: $device");
+    if (_inputDevice != null) {
+      await _disconnect();
+    }
     assert(_inputDevice == null);
     _inputDevice = device;
     switch (_inputDevice!) {
@@ -155,9 +164,10 @@ class InputProvider extends ChangeNotifier {
     _streamSink!.errorObservers.clear();
   }
 
-  Future<void> disconnect() async {
+  Future<void> _disconnect() async {
+    await _bridge?.disconnect();
+    await _streamSink?.stop();
     _streamSink = null;
     _inputDevice = null;
-    await _bridge?.disconnect();
   }
 }

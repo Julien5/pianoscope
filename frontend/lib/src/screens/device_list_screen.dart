@@ -71,9 +71,9 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     final provider = context.read<InputProvider>();
     final inputDevice = InputDevice.fromId(id);
     try {
-    await provider.connect(inputDevice);
-    if (!mounted) return;
-    GoRouter.of(context).go(Routes.note);
+      await provider.connect(inputDevice);
+      if (!mounted) return;
+      GoRouter.of(context).go(Routes.note);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
