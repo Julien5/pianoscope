@@ -47,10 +47,12 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
   }
 
   Future<void> autoConnectSimulatioMidi() async {
+    debugPrint("autoConnectSimulatioMidi");
     if (!mounted) return;
     final provider = context.read<InputProvider>();
     provider.loadPorts();
     assert(provider.ports.isNotEmpty);
+    debugPrint("autoConnectSimulatioMidi _connect");
     _connect(provider.ports[0].id);
   }
 
@@ -73,7 +75,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     try {
       await provider.connect(inputDevice);
       if (!mounted) return;
-      GoRouter.of(context).go(Routes.note);
+      GoRouter.of(context).push(Routes.note);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

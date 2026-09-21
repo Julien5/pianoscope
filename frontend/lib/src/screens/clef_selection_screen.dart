@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../pianoscope.dart';
-import '../routes.dart';
 import '../style.dart';
 
 class KeyTile extends StatelessWidget {
@@ -28,7 +27,7 @@ class KeyTile extends StatelessWidget {
       onPressed: () {
         InputProvider model = context.read<InputProvider>();
         model.keySignature = keySignature;
-        GoRouter.of(context).go(Routes.note);
+        GoRouter.of(context).pop();
       },
       child: KeySignatureTile(keySignature: keySignature),
     );

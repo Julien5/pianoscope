@@ -29,16 +29,25 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   final Map<int, MidiEvent> _activeEvents = {};
   MidiEvent? _lastEvent;
 
-  InputProvider? inputProvider;
+  InputProvider? _inputProvider;
+
+  Future<void> _setupProvider() async {
+    final provider = context.read<InputProvider>();
+    assert(provider.connected());
+    if (!mounted) return;
+    provider.attachObservers(_onEvent, _onError);
+    _inputProvider = provider;
+    // rebuild, otherwise the "loading..." Text stays forever.
+    setState(() {});
+  }
 
   @override
-  void initState() {
-    super.initState();
-    inputProvider = context.read<InputProvider>();
-    //assert(provider.eventStream != null);
-    //_eventSubscription ??= provider.eventStream!.listen(_onEvent);
-    //_errorSubscription ??= provider.errorStream!.listen(_onError);
-    inputProvider!.attachObservers(_onEvent, _onError);
+  void didChangeDependencies() {
+    debugPrint("didChangeDependencies");
+    if (_inputProvider == null) {
+      _setupProvider();
+    }
+    super.didChangeDependencies();
   }
 
   void _onEvent(MidiEvent event) {
@@ -68,16 +77,21 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   @override
   void dispose() {
     debugPrint("midi dispose: cancel subsription");
-    inputProvider?.clearObservers();
+    _inputProvider?.disconnect();
     super.dispose();
   }
 
   Future<void> openClefSelectionScreen() async {
-    GoRouter.of(context).go(Routes.clefs);
+    GoRouter.of(context).push(Routes.clefs);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_inputProvider == null) {
+      return Text("loading..");
+    }
+    // because we need to rebuild on clef change
+    context.watch<InputProvider>();
     final signalVelocity = (_lastEvent?.velocity ?? 0).clamp(0, 127);
     final String selectClef = AppLocalizations.of(context)!.selectClef;
     // note name without digets
@@ -91,8 +105,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     if (simpleNote.isNotEmpty) {
       keyboardNotes = notes.toSet();
     }
-    InputProvider model = context.watch<InputProvider>();
-    KeySignature? keySignature = model.keySignature;
+    KeySignature? keySignature = _inputProvider!.keySignature;
 
     /* DEBUG */
     /*

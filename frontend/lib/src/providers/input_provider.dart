@@ -108,10 +108,10 @@ class InputProvider extends ChangeNotifier {
 
   Future<void> connect(InputDevice device) async {
     debugPrint("connect: $device");
-    if (_inputDevice != null) {
-      await _disconnect();
+    if (_streamSink != null) {
+      assert(_inputDevice != null);
+      await _disconnectInputDevice();
     }
-    assert(_inputDevice == null);
     _inputDevice = device;
     switch (_inputDevice!) {
       case Microphone():
@@ -120,6 +120,10 @@ class InputProvider extends ChangeNotifier {
         await _connectMidi(name);
     }
     assert(_streamSink != null);
+  }
+
+  bool connected() {
+    return _streamSink != null;
   }
 
   Future<void> _connectMidi(String portName) async {
@@ -155,19 +159,24 @@ class InputProvider extends ChangeNotifier {
     EventObserver eventObserver,
     ErrorObserver errorObserver,
   ) {
+    assert(_streamSink != null);
     _streamSink!.eventObservers.add(eventObserver);
     _streamSink!.errorObservers.add(errorObserver);
   }
 
-  void clearObservers() {
-    _streamSink!.eventObservers.clear();
-    _streamSink!.errorObservers.clear();
+  void disconnect() {
+    if (_inputDevice == null) {
+      return;
+    }
+    _streamSink?.eventObservers.clear();
+    _streamSink?.errorObservers.clear();
+    _disconnectInputDevice();
   }
 
-  Future<void> _disconnect() async {
+  Future<void> _disconnectInputDevice() async {
+    assert(_inputDevice != null);
     await _bridge?.disconnect();
     await _streamSink?.stop();
     _streamSink = null;
-    _inputDevice = null;
   }
 }

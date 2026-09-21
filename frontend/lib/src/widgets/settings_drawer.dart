@@ -42,13 +42,13 @@ class SettingsDrawer extends StatelessWidget {
 
           ListTile(
             leading: const Icon(Icons.music_note),
-            title: const Text('Clefs'),
+            title: const Text('Clef'),
             onTap: () {
               Scaffold.of(context).closeDrawer();
-              debugPrint("go to clefs");
-              GoRouter.of(context).go(Routes.clefs);
+              GoRouter.of(context).push(Routes.clefs);
             },
           ),
+
 
           ListTile(title: const Divider()),
 
