@@ -101,19 +101,13 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
         .toList();
 
-    Set<Note> keyboardNotes = {};
-    if (simpleNote.isNotEmpty) {
-      keyboardNotes = notes.toSet();
-    }
-    KeySignature? keySignature = _inputProvider!.keySignature;
-
     /* DEBUG */
     /*
     notes.clear();
     notes.add(
       Note(
         pitch: Pitch(
-          noteName: NoteName.A,
+          noteName: NoteName.C,
           octave: 4,
           accidental: Accidental.sharp,
         ),
@@ -121,16 +115,22 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     );
     notes.add(
       Note(
-        /*pitch: Pitch(
-          noteName: NoteName.A,
-          octave: 4,
-          accidental: Accidental.sharp,
-        ),*/
-        pitch: Pitch.fromMidiNumber(70),
+        pitch: Pitch(
+          noteName: NoteName.E,
+          octave: 5,
+          accidental: Accidental.natural,
+        ),
       ),
     );
     */
     /* DEBUG */
+
+    Set<Note> keyboardNotes = {};
+    if (simpleNote.isNotEmpty) {
+      keyboardNotes = notes.toSet();
+    }
+    InputProvider model = context.watch<InputProvider>();
+    KeySignature? keySignature = model.keySignature;
     Widget row = Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       spacing: 20,

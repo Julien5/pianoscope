@@ -8,6 +8,12 @@ Note makeNote(NoteName name, Accidental accidental) {
   );
 }
 
+Note project(Note note) {
+  return Note(
+    pitch: Pitch(noteName: note.pitch.noteName, accidental: note.pitch.accidental, octave: 4),
+  );
+}
+
 /// For each black note, which white note it sits immediately after.
 /// E.g. C# sits after C (index 0), F# sits after F (index 3).
 /// E and B have no following black key, so they're absent from this map.
@@ -220,9 +226,10 @@ class _KeyboardPainter extends CustomPainter {
 
     // Pressed-note dots, one per pressed note that's actually in this
     // octave's key set.
-    for (final note in pressedNotes) {
+    for (final pressedNote in pressedNotes) {
       final double centerX;
       final double keyBottom;
+      final Note note = project(pressedNote);
       if (_isBlack(note)) {
         centerX = _seamCenter(_whiteIndexBeforeBlackNote(note));
         keyBottom = _blackHeight;
