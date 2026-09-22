@@ -7,6 +7,7 @@ import 'providers/input_provider.dart';
 import 'screens/clef_selection_screen.dart';
 import 'screens/device_list_screen.dart';
 import 'screens/midi_signal_screen.dart';
+import 'utils.dart';
 import 'widgets/settings_drawer.dart';
 
 String _shellTitle(BuildContext context, GoRouterState state) {
@@ -14,7 +15,11 @@ String _shellTitle(BuildContext context, GoRouterState state) {
     case '/':
       return AppLocalizations.of(context)!.selectInput;
     case '/note':
-      return context.read<InputProvider>().portName() ?? 'MIDI Signal';
+      String portName = context
+          .read<InputProvider>()
+          .currentDevice()!
+          .portName();
+      return formatMidiPortName(portName);
     case '/note/clef':
       return AppLocalizations.of(context)!.selectClef;
   }

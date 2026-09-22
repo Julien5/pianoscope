@@ -53,12 +53,12 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     provider.loadPorts();
     assert(provider.ports.isNotEmpty);
     debugPrint("autoConnectSimulatioMidi _connect");
-    _connect(provider.ports[0].id);
+    _connect(Midi(provider.ports[0]));
   }
 
   Future<void> autoConnectSimulatioMicrophone() async {
     if (!mounted) return;
-    _connect("");
+    _connect(Microphone());
   }
 
   @override
@@ -69,9 +69,8 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     super.dispose();
   }
 
-  Future<void> _connect(String id) async {
+  Future<void> _connect(InputDevice inputDevice) async {
     final provider = context.read<InputProvider>();
-    final inputDevice = InputDevice.fromId(id);
     try {
       await provider.connect(inputDevice);
       if (!mounted) return;
@@ -119,7 +118,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       child: ListTile(
         title: const Text('Microphone'),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => _connect(''),
+        onTap: () => _connect(Microphone()),
       ),
     );
 
@@ -153,7 +152,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
                           title: Text(formatMidiPortName(ports[index].name)),
                           subtitle: Text(ports[index].name),
                           trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _connect(ports[index].id),
+                          onTap: () => _connect(Midi(ports[index])),
                         ),
                       );
                     },

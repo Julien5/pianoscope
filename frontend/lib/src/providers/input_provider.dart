@@ -5,7 +5,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import '../notation/models/key_signature.dart';
 import '../rust/api/bridge.dart';
 import '../rust/api/event.dart';
-import '../utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 typedef EventObserver = Function(MidiEvent);
@@ -46,20 +45,19 @@ class StreamSink {
 }
 
 sealed class InputDevice {
-  static InputDevice fromId(String id) {
-    if (id.isEmpty) {
-      return Microphone();
-    } else {
-      return Midi(id);
-    }
-  }
+  String portName();
 }
 
-class Microphone extends InputDevice {}
+class Microphone extends InputDevice {
+  @override
+  String portName() => 'Microphone';
+}
 
 class Midi extends InputDevice {
-  final String portName;
-  Midi(this.portName);
+  final MidiPort port;
+  Midi(this.port);
+  @override
+  String portName() => port.name;
 }
 
 class InputProvider extends ChangeNotifier {
@@ -77,18 +75,6 @@ class InputProvider extends ChangeNotifier {
   set keySignature(KeySignature value) {
     _keySignature = value;
     notifyListeners();
-  }
-
-  String? portName() {
-    if (_inputDevice == null) {
-      return null;
-    }
-    switch (_inputDevice!) {
-      case Microphone():
-        return "Microphone";
-      case Midi(portName: final name):
-        return name;
-    }
   }
 
   Future<void> init() async {
@@ -115,9 +101,9 @@ class InputProvider extends ChangeNotifier {
     _inputDevice = device;
     switch (_inputDevice!) {
       case Microphone():
-        await _connectMicrophone();
-      case Midi(portName: final name):
-        await _connectMidi(name);
+        await _connectMicrophone(_inputDevice as Microphone);
+      case Midi(port: final port):
+        await _connectMidi(Midi(port));
     }
     assert(_streamSink != null);
   }
@@ -126,14 +112,18 @@ class InputProvider extends ChangeNotifier {
     return _streamSink != null;
   }
 
-  Future<void> _connectMidi(String portName) async {
-    debugPrint("selectMidi=$portName");
-    MidiPort port = _ports.firstWhere((port) => port.id == portName);
-    await _bridge!.selectMidi(port: port);
-    await _startEventStream(formatMidiPortName(port.name));
+  InputDevice? currentDevice() {
+    return _inputDevice;
   }
 
-  Future<void> _connectMicrophone() async {
+  Future<void> _connectMidi(Midi port) async {
+    debugPrint("selectMidi=${port.portName()}");
+
+    await _bridge!.selectMidi(port: port.port);
+    await _startEventStream();
+  }
+
+  Future<void> _connectMicrophone(Microphone mic) async {
     debugPrint("selectMicrophone");
     if (Platform.isAndroid) {
       var status = await Permission.microphone.request();
@@ -142,10 +132,10 @@ class InputProvider extends ChangeNotifier {
       }
     }
     await _bridge!.selectMicrophone();
-    await _startEventStream("microphone");
+    await _startEventStream();
   }
 
-  Future<void> _startEventStream(String portName) async {
+  Future<void> _startEventStream() async {
     _streamSink = StreamSink();
     await _bridge!.startStream(
       sink: _streamSink!.eventsSink,

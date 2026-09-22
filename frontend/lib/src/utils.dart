@@ -165,12 +165,14 @@ String formatMidiPortNameAndroid(String rawName) {
 }
 
 String formatMidiPortName(String rawName) {
+  String ret = rawName;
   if (Platform.isLinux) {
-    return formatMidiPortNameAlsa(rawName);
+    ret = formatMidiPortNameAlsa(rawName);
   } else if (Platform.isAndroid) {
-    return formatMidiPortNameAndroid(rawName);
+    ret = formatMidiPortNameAndroid(rawName);
   }
-  return formatMidiPortName(rawName);
+  debugPrint("$rawName => $ret");
+  return ret;
 }
 
 String localizeNote(String note, AppLocalizations localizations) {
