@@ -7,7 +7,7 @@ import '../models/note.dart';
 import '../geometry/staff_position.dart';
 import '../geometry/staff_geometry.dart';
 import 'notehead_renderer.dart';
-import 'stem_renderer.dart';
+
 import 'accidental_renderer.dart';
 
 /// Paints a single note (quarter-note assumption): notehead, ledger lines,
@@ -15,12 +15,10 @@ import 'accidental_renderer.dart';
 /// so flags, dots and beams are not drawn.
 class NoteRenderer {
   final NoteheadRenderer _noteheadRenderer;
-  final StemRenderer _stemRenderer;
   final AccidentalRenderer _accidentalRenderer;
 
   NoteRenderer()
     : _noteheadRenderer = NoteheadRenderer(),
-      _stemRenderer = StemRenderer(),
       _accidentalRenderer = AccidentalRenderer();
 
   /// Draw the notehead, optional accidental and ledger lines for a note whose
@@ -75,13 +73,6 @@ class NoteRenderer {
       showAccidental: showAccidental,
     );
 
-    // Quarter-note assumption: stem always present.
-    final direction = StemRenderer.determineStemDirection(position);
-    _stemRenderer.paint(
-      canvas,
-      noteCenter,
-      direction: direction,
-      color: note.color,
-    );
+    
   }
 }

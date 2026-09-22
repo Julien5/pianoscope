@@ -63,6 +63,18 @@ class NotesRenderer {
         box.left,
         StaffGeometry.positionToY(position, box.top),
       );
+      stemRenderer.paint(
+        canvas,
+        StaffOffset(
+          box.left,
+          StaffGeometry.positionToY(
+            StaffPosition.forPitch(note.pitch, clef),
+            box.top,
+          ),
+        ),
+        direction: direction,
+        color: note.color,
+      );
 
       noteRenderer.paintSymbols(
         canvas,
@@ -74,22 +86,5 @@ class NotesRenderer {
         accidentalX: StaffUnits(i.toDouble()) * (-0.5),
       );
     }
-
-    // Single stem for the whole chord, from the extreme note.
-    final extremeNote = direction == StemDirection.up
-        ? sorted.last
-        : sorted.first;
-    final extremePosition = StaffPosition.forPitch(extremeNote.pitch, clef);
-    final extremeCenter = StaffOffset(
-      box.left,
-      StaffGeometry.positionToY(extremePosition, box.top),
-    );
-
-    stemRenderer.paint(
-      canvas,
-      extremeCenter,
-      direction: direction,
-      color: extremeNote.color,
-    );
   }
 }

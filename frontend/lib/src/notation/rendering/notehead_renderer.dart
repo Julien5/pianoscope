@@ -32,6 +32,7 @@ class NoteheadRenderer {
       ..strokeWidth = 0;
 
     canvas.drawOval(rect, paint);
+    // debug
     // canvas.drawCircle(rect.center,rect.width/2,paint);
     
     canvas.restore();
