@@ -114,8 +114,20 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen> {
     final sharpChild = KeyTiles(keySignatures: sharps);
     final flatChild = KeyTiles(keySignatures: flats);
 
+    int initialIndex = 0;
+    KeySignature? current = context.read<InputProvider>().keySignature;
+    if (current != null) {
+      if (current.accidentals > 0) {
+        initialIndex = 1;
+      }
+      if (current.accidentals < 0) {
+        initialIndex = 2;
+      }
+    }
+
     return DefaultTabController(
       length: 3, // Number of tabs
+      initialIndex: initialIndex,
       child: Column(
         children: [
           const TabBar(
