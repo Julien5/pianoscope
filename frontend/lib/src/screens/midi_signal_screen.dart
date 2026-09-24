@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../notation/models/key_signature.dart';
 import '../routes.dart';
@@ -42,6 +43,12 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WakelockPlus.enable();
+  }
+
+  @override
   void didChangeDependencies() {
     debugPrint("didChangeDependencies");
     if (_inputProvider == null) {
@@ -78,6 +85,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   void dispose() {
     debugPrint("midi dispose: cancel subsription");
     _inputProvider?.disconnect();
+    WakelockPlus.disable();
     super.dispose();
   }
 

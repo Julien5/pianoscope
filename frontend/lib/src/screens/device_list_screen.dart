@@ -6,7 +6,6 @@ import '../routes.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
-import '../style.dart';
 
 class DeviceListScreen extends StatefulWidget {
   const DeviceListScreen({super.key});
