@@ -43,9 +43,9 @@ impl Backend {
         self.source = Some(Source::Midi(midi::Midi::new_device(port)));
     }
 
-    pub fn select_midi_simulation(&mut self, looop: &str) {
+    pub fn select_midi_simulation(&mut self, spec: &str) {
         assert!(self.source.is_none());
-        self.source = Some(Source::Midi(midi::Midi::new_simulation(looop)));
+        self.source = Some(Source::Midi(midi::Midi::new_simulation(spec)));
     }
 
     pub fn select_microphone(&mut self) {

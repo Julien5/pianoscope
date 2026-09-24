@@ -12,5 +12,7 @@
   "noteFlat":"bémol",
 
   "sharp": "{noteName} dièse",
-  "flat": "{noteName} bémol"
+  "flat": "{noteName} bémol",
+
+  "microphone": "Microphone"
 }

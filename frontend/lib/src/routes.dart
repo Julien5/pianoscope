@@ -7,7 +7,6 @@ import 'providers/input_provider.dart';
 import 'screens/clef_selection_screen.dart';
 import 'screens/device_list_screen.dart';
 import 'screens/midi_signal_screen.dart';
-import 'utils.dart';
 import 'widgets/settings_drawer.dart';
 
 String _shellTitle(BuildContext context, GoRouterState state) {
@@ -15,15 +14,14 @@ String _shellTitle(BuildContext context, GoRouterState state) {
     case '/':
       return AppLocalizations.of(context)!.selectInput;
     case '/note':
-      String portName = context
+      return context
           .read<InputProvider>()
           .currentDevice()!
-          .portName();
-      return formatMidiPortName(portName);
+          .localizedPortName(context);
     case '/note/clef':
       return AppLocalizations.of(context)!.selectClef;
   }
-  return 'Nano MIDI';
+  return 'Pianoscope';
 }
 
 class Routes {

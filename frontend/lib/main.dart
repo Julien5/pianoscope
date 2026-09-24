@@ -40,7 +40,7 @@ class NanoApp extends StatelessWidget {
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, child) {
           return MaterialApp.router(
-            title: 'Nano MIDI',
+            title: 'Pianoscope',
             locale: localeProvider.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

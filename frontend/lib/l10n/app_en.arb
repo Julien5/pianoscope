@@ -12,5 +12,7 @@
   "noteFlat":"flat",
 
   "sharp": "{noteName} sharp",
-  "flat": "{noteName} flat"
+  "flat": "{noteName} flat",
+
+  "microphone": "Microphone"
 }

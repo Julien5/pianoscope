@@ -50,4 +50,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String flat(Object noteName) {
     return '$noteName bémol';
   }
+
+  @override
+  String get microphone => 'Microphone';
 }

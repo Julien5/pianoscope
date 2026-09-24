@@ -12,5 +12,7 @@
   "noteFlat":"es",
 
   "sharp": "{noteName}is",
-  "flat": "{noteName}es"
+  "flat": "{noteName}es",
+
+  "microphone": "Mikrofon"
 }

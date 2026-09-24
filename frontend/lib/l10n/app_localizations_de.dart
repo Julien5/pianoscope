@@ -50,4 +50,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String flat(Object noteName) {
     return '${noteName}es';
   }
+
+  @override
+  String get microphone => 'Mikrofon';
 }

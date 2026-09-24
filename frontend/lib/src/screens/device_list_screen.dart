@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/locale_provider.dart';
 import '../routes.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
 import '../style.dart';
-import '../utils.dart';
 
 class DeviceListScreen extends StatefulWidget {
   const DeviceListScreen({super.key});
@@ -50,10 +50,14 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     debugPrint("autoConnectSimulatioMidi");
     if (!mounted) return;
     final provider = context.read<InputProvider>();
-    provider.loadPorts();
-    assert(provider.ports.isNotEmpty);
+    provider.loadInputDevices();
+    assert(provider.inputDevices.isNotEmpty);
     debugPrint("autoConnectSimulatioMidi _connect");
-    _connect(Midi(provider.ports[0]));
+    for (InputDevice device in provider.inputDevices) {
+      if (device is Midi) {
+        return _connect(device);
+      }
+    }
   }
 
   Future<void> autoConnectSimulatioMicrophone() async {
@@ -90,14 +94,13 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final ports = provider.ports;
+    final inputDevices = provider.inputDevices;
     final error = provider.error;
 
-    return _buildBody(ports, error);
+    return _buildBody(inputDevices, error);
   }
 
-  Widget _buildBody(List<MidiPort> ports, String? error) {
-    // localeProvider.locale
+  Widget _buildBody(List<InputDevice> ports, String? error) {
     if (error != null) {
       return Center(
         child: Column(
@@ -106,7 +109,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
             Text('Error: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.read<InputProvider>().loadPorts(),
+              onPressed: () => context.read<InputProvider>().loadInputDevices(),
               child: const Text('Retry'),
             ),
           ],
@@ -114,64 +117,27 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
       );
     }
 
-    final microphoneButton = Card(
-      child: ListTile(
-        title: const Text('Microphone'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _connect(Microphone()),
+    context.watch<LocaleProvider>();
+
+    final child = Expanded(
+      child: ListView.builder(
+        itemCount: ports.length,
+        itemBuilder: (context, index) {
+          return Card(
+            child: ListTile(
+              title: Text(ports[index].localizedPortName(context)),
+              subtitle: Text(ports[index].portName()),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _connect(ports[index]),
+            ),
+          );
+        },
       ),
     );
 
-    final headerAndList = <Widget>[];
-    if (ports.isNotEmpty) {
-      headerAndList.add(
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).dividerColor),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 0, 8),
-                    child: Text('MIDI ports', style: AppTextStyles.header),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: ports.length,
-                    itemBuilder: (context, index) {
-                      return Card(
-                        child: ListTile(
-                          title: Text(formatMidiPortName(ports[index].name)),
-                          subtitle: Text(ports[index].name),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _connect(Midi(ports[index])),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        microphoneButton,
-        ...headerAndList,
-        const SizedBox(height: 20),
-      ],
+      children: [child],
     );
   }
 }
