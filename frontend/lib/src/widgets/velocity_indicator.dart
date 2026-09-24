@@ -12,7 +12,7 @@ class VelocityIndicator extends StatelessWidget {
 
     return SizedBox(
       width: 10,
-      height: 100,
+      height: 150,
       child: Stack(
         children: [
           Container(

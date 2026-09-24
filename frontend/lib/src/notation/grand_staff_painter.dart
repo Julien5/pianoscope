@@ -34,14 +34,19 @@ class GrandStaffPainter extends CustomPainter {
     this.notes = const [],
     this.keySignature = KeySignature.cMajor,
     this.splitPoint = 60,
+    this.centerVertically = true,
   });
+
+  /// If true, the painter will center the staff content vertically inside
+  /// the available `size`. When the available height is smaller than the
+  /// content height, the painter draws top-aligned (no negative translate).
+  final bool centerVertically;
 
   @override
   void paint(Canvas canvas, Size size) {
     double scale = 10.0 / StaffUnits.kUnit;
     canvas.save();
     canvas.scale(scale);
-
     final layout = GrandStaffLayout.fromParameters(
       params: params,
       size: StaffSize(
@@ -50,6 +55,17 @@ class GrandStaffPainter extends CustomPainter {
       ),
       keySignature: keySignature,
     );
+
+    // Optionally center the content vertically when there is extra space.
+    if (centerVertically) {
+      final availableUnits = StaffUnits.fromUnits(size.height / scale);
+      final extra = availableUnits - layout.contentHeight;
+      if (extra > StaffUnits(0)) {
+        final shift = (extra / 2).value;
+        // Translate in the current (scaled) canvas coordinate system.
+        canvas.translate(0, shift);
+      }
+    }
 
     BraceRenderer(box: layout.braceBox).paint(canvas);
 

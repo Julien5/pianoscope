@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -26,7 +25,7 @@ class MidiSignalScreen extends StatefulWidget {
 
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _noteName = '---';
-  String _rawHex = '';
+
   final Map<int, MidiEvent> _activeEvents = {};
   MidiEvent? _lastEvent;
 
@@ -61,7 +60,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     setState(() {
       _lastEvent = event;
       _noteName = event.noteName;
-      _rawHex = _formatRaw(event.raw);
       if (event.status == Status.noteOn) {
         _activeEvents[event.note] = event;
       } else if (event.status == Status.noteOff) {
@@ -73,12 +71,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   void _onError(String error) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-  }
-
-  String _formatRaw(Uint8List raw) {
-    return raw
-        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-        .join(' ');
   }
 
   @override
@@ -96,42 +88,18 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   @override
   Widget build(BuildContext context) {
     if (_inputProvider == null) {
-      return Text("loading..");
+      return const Text("loading..");
     }
     // because we need to rebuild on clef change
     context.watch<InputProvider>();
     final signalVelocity = (_lastEvent?.velocity ?? 0).clamp(0, 127);
     final String selectClef = AppLocalizations.of(context)!.selectClef;
-    // note name without digets
+    // note name without digits
     final String simpleNote = _noteName.replaceAll(RegExp(r'[0-9-]'), '');
 
     final notes = _activeEvents.values
         .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
         .toList();
-
-    /* DEBUG */
-    /*
-    notes.clear();
-    notes.add(
-      Note(
-        pitch: Pitch(
-          noteName: NoteName.C,
-          octave: 4,
-          accidental: Accidental.sharp,
-        ),
-      ),
-    );
-    notes.add(
-      Note(
-        pitch: Pitch(
-          noteName: NoteName.E,
-          octave: 5,
-          accidental: Accidental.natural,
-        ),
-      ),
-    );
-    */
-    /* DEBUG */
 
     Set<Note> keyboardNotes = {};
     if (simpleNote.isNotEmpty) {
@@ -139,47 +107,136 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     }
     InputProvider model = context.watch<InputProvider>();
     KeySignature? keySignature = model.keySignature;
-    Widget row = Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      spacing: 20,
-      children: [
-        Expanded(
-          child: GrandStaffView(
-            keySignature: keySignature ?? KeySignature.cMajor,
-            notes: notes,
-          ),
-        ),
-        VelocityIndicator(velocity: signalVelocity),
-      ],
-    );
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              openClefSelectionScreen();
-            },
-            child: Text(selectClef),
-          ),
-          Padding(
-            padding: EdgeInsetsGeometry.fromLTRB(20, 0, 20, 0),
-            child: row,
-          ),
-          const SizedBox(height: 10),
-          KeyboardWidget(
-            pressedNotes: keyboardNotes,
-            whiteHeight: 140,
-            whiteWidth: 40,
-            pressedDotRadius: 5,
-            pressedDotColor: Colors.blue,
-          ),
-          const SizedBox(height: 32),
-          NoteNameText(noteName: _noteName),
-          Text(_rawHex, style: AppTextStyles.small),
-          const SizedBox(height: 2),
-        ],
-      ),
+
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        final isLandscape = orientation == Orientation.landscape;
+
+        final mainContent = isLandscape
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: SizedBox(height: 20)),
+                  // Keyboard on the left, in a fixed-width column, centered vertically
+                  SizedBox(
+                    width: 200,
+                    child: Center(
+                      child: KeyboardWidget(
+                        pressedNotes: keyboardNotes,
+                        whiteHeight: 200,
+                        whiteWidth: 50,
+                        pressedDotRadius: 5,
+                        pressedDotColor: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Center(
+                        child: SizedBox(
+                          height: 300,
+                          width: 300,
+                          child: Column(
+                            children: [
+                              ElevatedButton(
+                                onPressed: openClefSelectionScreen,
+                                child: Text(selectClef),
+                              ),
+                              GrandStaffView(
+                                keySignature:
+                                    keySignature ?? KeySignature.cMajor,
+                                notes: notes,
+                              ),
+                              NoteNameText(noteName: _noteName),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Right column: velocity indicator only (clef button moved below)
+                  SizedBox(
+                    width: 50,
+                    child: Center(
+                      child: VelocityIndicator(velocity: signalVelocity),
+                    ),
+                  ),
+                  Expanded(child: SizedBox(height: 20)),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsetsGeometry.fromLTRB(20, 0, 20, 0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: GrandStaffView(
+                              keySignature: keySignature ?? KeySignature.cMajor,
+                              notes: notes,
+                            ),
+                          ),
+                        ),
+                        VelocityIndicator(velocity: signalVelocity),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Keyboard below the staff in portrait
+                  KeyboardWidget(
+                    pressedNotes: keyboardNotes,
+                    whiteHeight: 140,
+                    whiteWidth: 40,
+                    pressedDotRadius: 5,
+                    pressedDotColor: Colors.blue,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              );
+
+        // Bottom full-width row: (1) note name under keyboard (left),
+        // (2) select-clef button under grand staff (center). Layout differs
+        // slightly by orientation to align with mainContent columns.
+        final bottomRow = isLandscape
+            ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(children: []),
+              )
+            : Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Center(child: NoteNameText(noteName: _noteName)),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: ElevatedButton(
+                          onPressed: openClefSelectionScreen,
+                          child: Text(selectClef),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: mainContent),
+            bottomRow,
+            const SizedBox(height: 2),
+          ],
+        );
+      },
     );
   }
 }

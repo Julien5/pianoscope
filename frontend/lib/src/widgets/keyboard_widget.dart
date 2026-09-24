@@ -10,7 +10,11 @@ Note makeNote(NoteName name, Accidental accidental) {
 
 Note project(Note note) {
   return Note(
-    pitch: Pitch(noteName: note.pitch.noteName, accidental: note.pitch.accidental, octave: 4),
+    pitch: Pitch(
+      noteName: note.pitch.noteName,
+      accidental: note.pitch.accidental,
+      octave: 4,
+    ),
   );
 }
 
