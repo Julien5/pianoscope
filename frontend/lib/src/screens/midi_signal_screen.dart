@@ -103,20 +103,13 @@ class MainContentLandscape extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Expanded(child: SizedBox(height: 20)),
-        SizedBox(
-          width: 200,
+
+        Expanded(
+          flex: 2,
           child: Column(
             children: [
               Expanded(child: SizedBox(width: 10)),
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    openClefSelectionScreen();
-                  },
-                  child: Text(selectClef),
-                ),
-              ),
+
               KeyboardWidget(
                 pressedNotes: keyboardNotes,
                 whiteHeight: 200,
@@ -126,12 +119,68 @@ class MainContentLandscape extends StatelessWidget {
               ),
               SizedBox(
                 height: 50,
-                child: Align(child: NoteNameText(noteName: noteName)),
+                child: Align(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          openClefSelectionScreen();
+                        },
+                        child: Icon(Icons.menu),
+                      ),
+
+                      SizedBox(
+                        width: 50,
+                        child: NoteNameText(noteName: noteName),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               Expanded(child: SizedBox(width: 10)),
             ],
           ),
         ),
+
+        Expanded(
+          child: Column(
+            spacing: 10,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(child: SizedBox(width: 10)),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        openClefSelectionScreen();
+                      },
+                      child: Icon(Icons.arrow_upward),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        openClefSelectionScreen();
+                      },
+                      child: Icon(Icons.music_note_rounded),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        openClefSelectionScreen();
+                      },
+                      child: Icon(Icons.arrow_downward),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(child: SizedBox(width: 10)),
+            ],
+          ),
+        ),
+
         const SizedBox(width: 20),
         Expanded(
           flex: 4,
@@ -151,7 +200,8 @@ class MainContentLandscape extends StatelessWidget {
           ),
         ),
 
-        Expanded(
+        SizedBox(
+          width: 50,
           child: Column(
             children: [
               Expanded(child: SizedBox(width: 10)),
