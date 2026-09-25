@@ -27,35 +27,37 @@ class GrandStaffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      // Let the parent decide width; for height prefer the available
-      // height if large, otherwise a sensible default. This avoids a
-      // tiny fixed height that causes the painter content to stick to the
-      // top in wide/landscape layouts.
-      final preferredHeight = constraints.maxHeight.isFinite &&
-              constraints.maxHeight > 0
-          ? constraints.maxHeight
-          : 200.0;
-      return SizedBox(
-        height: preferredHeight,
-        width: double.infinity,
-        child: CustomPaint(
-          painter: GrandStaffPainter(
-            params: params,
-            notes: notes,
-            keySignature: keySignature,
-            splitPoint: splitPoint,
-            // preserve default centering behavior
-            centerVertically: true,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Let the parent decide width; for height prefer the available
+        // height if large, otherwise a sensible default. This avoids a
+        // tiny fixed height that causes the painter content to stick to the
+        // top in wide/landscape layouts.
+        final preferredHeight =
+            constraints.maxHeight.isFinite && constraints.maxHeight > 0
+            ? constraints.maxHeight
+            : 200.0;
+        return SizedBox(
+          height: preferredHeight,
+          width: double.infinity,
+          child: CustomPaint(
+            painter: GrandStaffPainter(
+              params: params,
+              notes: notes,
+              keySignature: keySignature,
+              splitPoint: splitPoint,
+              // preserve default centering behavior
+              centerVertically: true,
+            ),
+            size: Size.infinite,
           ),
-          size: Size.infinite,
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
-class KeySignatureTile extends StatelessWidget { 
+class KeySignatureTile extends StatelessWidget {
   final KeySignature keySignature;
   const KeySignatureTile({super.key, this.keySignature = KeySignature.cMajor});
 

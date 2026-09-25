@@ -44,7 +44,8 @@ class GrandStaffPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    double scale = 10.0 / StaffUnits.kUnit;
+    double cheight = GrandStaffLayout.contentHeightFor(params).value;
+    double scale = (size.height / cheight) * 10.0 / StaffUnits.kUnit;
     canvas.save();
     canvas.scale(scale);
     final layout = GrandStaffLayout.fromParameters(

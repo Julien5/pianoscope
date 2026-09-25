@@ -14,14 +14,26 @@ String _shellTitle(BuildContext context, GoRouterState state) {
     case '/':
       return AppLocalizations.of(context)!.selectInput;
     case '/note':
-      return context
-          .read<InputProvider>()
-          .currentDevice()!
-          .localizedPortName(context);
+      return context.read<InputProvider>().currentDevice()!.localizedPortName(
+        context,
+      );
     case '/note/clef':
       return AppLocalizations.of(context)!.selectClef;
   }
   return 'Pianoscope';
+}
+
+Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
+  final isLandscape =
+      MediaQuery.of(context).orientation == Orientation.landscape;
+  if (state.uri.path == "/note" && isLandscape) {
+    return Scaffold(drawer: const SettingsDrawer(), body: child);
+  }
+  return Scaffold(
+    appBar: AppBar(title: Text(_shellTitle(context, state))),
+    drawer: const SettingsDrawer(), // Available across all routes in this shell
+    body: child,
+  );
 }
 
 class Routes {
@@ -35,12 +47,7 @@ final router = GoRouter(
   routes: [
     ShellRoute(
       builder: (context, state, child) {
-        return Scaffold(
-          appBar: AppBar(title: Text(_shellTitle(context, state))),
-          drawer:
-              const SettingsDrawer(), // Available across all routes in this shell
-          body: child,
-        );
+        return _scaffold(context, state, child);
       },
       routes: [
         GoRoute(

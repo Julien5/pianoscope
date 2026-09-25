@@ -23,6 +23,150 @@ class MidiSignalScreen extends StatefulWidget {
   State<MidiSignalScreen> createState() => _MidiSignalScreenState();
 }
 
+class MainContentPortrait extends StatelessWidget {
+  final int signalVelocity;
+  final Set<Note> keyboardNotes;
+  final KeySignature? keySignature;
+  final List<Note> notes;
+
+  const MainContentPortrait({
+    super.key,
+    required this.signalVelocity,
+    required this.keyboardNotes,
+    required this.keySignature,
+    required this.notes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              spacing: 10,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: GrandStaffView(
+                      keySignature: keySignature ?? KeySignature.cMajor,
+                      notes: notes,
+                    ),
+                  ),
+                ),
+                VelocityIndicator(velocity: signalVelocity),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        KeyboardWidget(
+          pressedNotes: keyboardNotes,
+          whiteHeight: 140,
+          whiteWidth: 40,
+          pressedDotRadius: 5,
+          pressedDotColor: Colors.blue,
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
+class MainContentLandscape extends StatelessWidget {
+  final int signalVelocity;
+  final Set<Note> keyboardNotes;
+  final KeySignature? keySignature;
+  final List<Note> notes;
+  final String selectClef;
+  final VoidCallback openClefSelectionScreen;
+  final String noteName;
+
+  const MainContentLandscape({
+    super.key,
+    required this.signalVelocity,
+    required this.keyboardNotes,
+    required this.keySignature,
+    required this.notes,
+    required this.selectClef,
+    required this.openClefSelectionScreen,
+    required this.noteName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Expanded(child: SizedBox(height: 20)),
+        SizedBox(
+          width: 200,
+          child: Column(
+            children: [
+              Expanded(child: SizedBox(width: 10)),
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    openClefSelectionScreen();
+                  },
+                  child: Text(selectClef),
+                ),
+              ),
+              KeyboardWidget(
+                pressedNotes: keyboardNotes,
+                whiteHeight: 200,
+                whiteWidth: 50,
+                pressedDotRadius: 5,
+                pressedDotColor: Colors.blue,
+              ),
+              SizedBox(
+                height: 50,
+                child: Align(child: NoteNameText(noteName: noteName)),
+              ),
+              Expanded(child: SizedBox(width: 10)),
+            ],
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          flex: 4,
+          child: Column(
+            children: [
+              Expanded(child: SizedBox(width: 10)),
+              Expanded(
+                flex: 6,
+                child: GrandStaffView(
+                  keySignature: keySignature ?? KeySignature.cMajor,
+                  notes: notes,
+                ),
+              ),
+
+              Expanded(child: SizedBox(width: 10)),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: Column(
+            children: [
+              Expanded(child: SizedBox(width: 10)),
+              VelocityIndicator(velocity: signalVelocity),
+              Expanded(child: SizedBox(width: 10)),
+            ],
+          ),
+        ),
+
+        const Expanded(child: SizedBox(height: 20)),
+      ],
+    );
+  }
+}
+
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _noteName = '---';
 
@@ -113,126 +257,26 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         final isLandscape = orientation == Orientation.landscape;
 
         final mainContent = isLandscape
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(child: SizedBox(height: 20)),
-                  // Keyboard on the left, in a fixed-width column, centered vertically
-                  SizedBox(
-                    width: 200,
-                    child: Center(
-                      child: KeyboardWidget(
-                        pressedNotes: keyboardNotes,
-                        whiteHeight: 200,
-                        whiteWidth: 50,
-                        pressedDotRadius: 5,
-                        pressedDotColor: Colors.blue,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 3,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Center(
-                        child: SizedBox(
-                          height: 300,
-                          width: 300,
-                          child: Column(
-                            children: [
-                              ElevatedButton(
-                                onPressed: openClefSelectionScreen,
-                                child: Text(selectClef),
-                              ),
-                              GrandStaffView(
-                                keySignature:
-                                    keySignature ?? KeySignature.cMajor,
-                                notes: notes,
-                              ),
-                              NoteNameText(noteName: _noteName),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Right column: velocity indicator only (clef button moved below)
-                  SizedBox(
-                    width: 50,
-                    child: Center(
-                      child: VelocityIndicator(velocity: signalVelocity),
-                    ),
-                  ),
-                  Expanded(child: SizedBox(height: 20)),
-                ],
+            ? MainContentLandscape(
+                signalVelocity: signalVelocity,
+                keyboardNotes: keyboardNotes,
+                keySignature: keySignature,
+                notes: notes,
+                selectClef: selectClef,
+                openClefSelectionScreen: openClefSelectionScreen,
+                noteName: _noteName,
               )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: EdgeInsetsGeometry.fromLTRB(20, 0, 20, 0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: GrandStaffView(
-                              keySignature: keySignature ?? KeySignature.cMajor,
-                              notes: notes,
-                            ),
-                          ),
-                        ),
-                        VelocityIndicator(velocity: signalVelocity),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  // Keyboard below the staff in portrait
-                  KeyboardWidget(
-                    pressedNotes: keyboardNotes,
-                    whiteHeight: 140,
-                    whiteWidth: 40,
-                    pressedDotRadius: 5,
-                    pressedDotColor: Colors.blue,
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              );
-
-        // Bottom full-width row: (1) note name under keyboard (left),
-        // (2) select-clef button under grand staff (center). Layout differs
-        // slightly by orientation to align with mainContent columns.
-        final bottomRow = isLandscape
-            ? Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(children: []),
-              )
-            : Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Center(child: NoteNameText(noteName: _noteName)),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: ElevatedButton(
-                          onPressed: openClefSelectionScreen,
-                          child: Text(selectClef),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            : MainContentPortrait(
+                signalVelocity: signalVelocity,
+                keyboardNotes: keyboardNotes,
+                keySignature: keySignature,
+                notes: notes,
               );
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(child: mainContent),
-            bottomRow,
             const SizedBox(height: 2),
           ],
         );
