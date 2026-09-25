@@ -28,6 +28,9 @@ class MainContentPortrait extends StatelessWidget {
   final Set<Note> keyboardNotes;
   final KeySignature? keySignature;
   final List<Note> notes;
+  final String selectClef;
+  final VoidCallback openClefSelectionScreen;
+  final String noteName;
 
   const MainContentPortrait({
     super.key,
@@ -35,43 +38,75 @@ class MainContentPortrait extends StatelessWidget {
     required this.keyboardNotes,
     required this.keySignature,
     required this.notes,
+    required this.selectClef,
+    required this.openClefSelectionScreen,
+    required this.noteName,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 10,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: GrandStaffView(
-                      keySignature: keySignature ?? KeySignature.cMajor,
-                      notes: notes,
-                    ),
+          flex: 2,
+          child: Row(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      openClefSelectionScreen();
+                    },
+                    child: Icon(Icons.arrow_upward),
                   ),
+                  ElevatedButton(
+                    onPressed: () {
+                      openClefSelectionScreen();
+                    },
+                    child: Icon(Icons.music_note_rounded),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      openClefSelectionScreen();
+                    },
+                    child: Icon(Icons.arrow_downward),
+                  ),
+                ],
+              ),
+              Expanded(
+                flex: 6,
+                child: GrandStaffView(
+                  keySignature: keySignature ?? KeySignature.cMajor,
+                  notes: notes,
                 ),
-                VelocityIndicator(velocity: signalVelocity),
-              ],
-            ),
+              ),
+              Padding(
+                padding: EdgeInsetsGeometry.fromLTRB(10, 0, 10, 0),
+                child: VelocityIndicator(velocity: signalVelocity),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 10),
-        KeyboardWidget(
-          pressedNotes: keyboardNotes,
-          whiteHeight: 140,
-          whiteWidth: 40,
-          pressedDotRadius: 5,
-          pressedDotColor: Colors.blue,
+
+        Expanded(
+          child: Column(
+            spacing: 10,
+            children: [
+              KeyboardWidget(
+                pressedNotes: keyboardNotes,
+                whiteHeight: 150,
+                whiteWidth: 40,
+                pressedDotRadius: 5,
+                pressedDotColor: Colors.blue,
+              ),
+
+              NoteNameText(noteName: noteName),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
       ],
     );
   }
@@ -321,6 +356,9 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                 keyboardNotes: keyboardNotes,
                 keySignature: keySignature,
                 notes: notes,
+                selectClef: selectClef,
+                openClefSelectionScreen: openClefSelectionScreen,
+                noteName: _noteName,
               );
 
         return Column(
