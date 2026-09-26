@@ -25,8 +25,8 @@ class MidiSignalScreen extends StatefulWidget {
 
 class ScreenCallbacks {
   final VoidCallback openClefSelectionClicked;
-  final VoidCallback onNoteUpperStaffClicked;
-  final VoidCallback onNoteLowerStaffClicked;
+  final VoidCallback? onNoteUpperStaffClicked;
+  final VoidCallback? onNoteLowerStaffClicked;
 
   ScreenCallbacks({
     required this.openClefSelectionClicked,
@@ -35,24 +35,34 @@ class ScreenCallbacks {
   });
 }
 
-class MainContentPortrait extends StatelessWidget {
+class ScreenData {
   final int signalVelocity;
   final Set<Note> keyboardNotes;
   final KeySignature? keySignature;
   final List<Note> notes;
   final String selectClef;
-  final ScreenCallbacks callbacks;
   final String noteName;
+  final int splitPoint;
 
-  const MainContentPortrait({
-    super.key,
+  ScreenData({
     required this.signalVelocity,
     required this.keyboardNotes,
     required this.keySignature,
     required this.notes,
     required this.selectClef,
-    required this.callbacks,
     required this.noteName,
+    required this.splitPoint,
+  });
+}
+
+class MainContentPortrait extends StatelessWidget {
+  final ScreenData data;
+  final ScreenCallbacks callbacks;
+
+  const MainContentPortrait({
+    super.key,
+    required this.callbacks,
+    required this.data,
   });
 
   @override
@@ -62,12 +72,7 @@ class MainContentPortrait extends StatelessWidget {
       children: [
         Expanded(
           flex: 2,
-          child: GrandStaffPanel(
-            signalVelocity: signalVelocity,
-            keySignature: keySignature,
-            notes: notes,
-            callbacks: callbacks,
-          ),
+          child: GrandStaffPanel(data: data, callbacks: callbacks),
         ),
 
         Expanded(
@@ -75,14 +80,14 @@ class MainContentPortrait extends StatelessWidget {
             spacing: 10,
             children: [
               KeyboardWidget(
-                pressedNotes: keyboardNotes,
+                pressedNotes: data.keyboardNotes,
                 whiteHeight: 150,
                 whiteWidth: 40,
                 pressedDotRadius: 5,
                 pressedDotColor: Colors.blue,
               ),
 
-              NoteNameText(noteName: noteName),
+              NoteNameText(noteName: data.noteName),
             ],
           ),
         ),
@@ -92,23 +97,13 @@ class MainContentPortrait extends StatelessWidget {
 }
 
 class MainContentLandscape extends StatelessWidget {
-  final int signalVelocity;
-  final Set<Note> keyboardNotes;
-  final KeySignature? keySignature;
-  final List<Note> notes;
-  final String selectClef;
+  final ScreenData data;
   final ScreenCallbacks callbacks;
-  final String noteName;
 
   const MainContentLandscape({
     super.key,
-    required this.signalVelocity,
-    required this.keyboardNotes,
-    required this.keySignature,
-    required this.notes,
-    required this.selectClef,
+    required this.data,
     required this.callbacks,
-    required this.noteName,
   });
 
   @override
@@ -124,7 +119,7 @@ class MainContentLandscape extends StatelessWidget {
               Expanded(child: SizedBox(width: 10)),
 
               KeyboardWidget(
-                pressedNotes: keyboardNotes,
+                pressedNotes: data.keyboardNotes,
                 whiteHeight: 200,
                 whiteWidth: 50,
                 pressedDotRadius: 5,
@@ -145,7 +140,7 @@ class MainContentLandscape extends StatelessWidget {
 
                       SizedBox(
                         width: 50,
-                        child: NoteNameText(noteName: noteName),
+                        child: NoteNameText(noteName: data.noteName),
                       ),
                     ],
                   ),
@@ -159,12 +154,7 @@ class MainContentLandscape extends StatelessWidget {
         const SizedBox(width: 20),
         Expanded(
           flex: 4,
-          child: GrandStaffPanel(
-            signalVelocity: signalVelocity,
-            keySignature: keySignature,
-            notes: notes,
-            callbacks: callbacks,
-          ),
+          child: GrandStaffPanel(data: data, callbacks: callbacks),
         ),
 
         const Expanded(child: SizedBox(height: 20)),
@@ -174,16 +164,12 @@ class MainContentLandscape extends StatelessWidget {
 }
 
 class GrandStaffPanel extends StatelessWidget {
-  final int signalVelocity;
-  final KeySignature? keySignature;
-  final List<Note> notes;
+  final ScreenData data;
   final ScreenCallbacks callbacks;
 
   const GrandStaffPanel({
     super.key,
-    required this.signalVelocity,
-    required this.keySignature,
-    required this.notes,
+    required this.data,
     required this.callbacks,
   });
 
@@ -195,7 +181,7 @@ class GrandStaffPanel extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             ElevatedButton(
-              onPressed: () => callbacks.onNoteUpperStaffClicked(),
+              onPressed: callbacks.onNoteUpperStaffClicked,
               child: Icon(Icons.arrow_upward),
             ),
             ElevatedButton(
@@ -203,7 +189,7 @@ class GrandStaffPanel extends StatelessWidget {
               child: Icon(Icons.music_note_rounded),
             ),
             ElevatedButton(
-              onPressed: () => callbacks.onNoteLowerStaffClicked(),
+              onPressed: callbacks.onNoteLowerStaffClicked,
               child: Icon(Icons.arrow_downward),
             ),
           ],
@@ -212,22 +198,26 @@ class GrandStaffPanel extends StatelessWidget {
         Expanded(
           flex: 6,
           child: GrandStaffView(
-            keySignature: keySignature ?? KeySignature.cMajor,
-            notes: notes,
+            keySignature: data.keySignature ?? KeySignature.cMajor,
+            notes: data.notes,
+            splitPoint: data.splitPoint,
           ),
         ),
 
         Padding(
           padding: EdgeInsetsGeometry.fromLTRB(10, 0, 10, 0),
-          child: VelocityIndicator(velocity: signalVelocity),
+          child: VelocityIndicator(velocity: data.signalVelocity),
         ),
       ],
     );
   }
 }
 
+enum Move { toUpper, toLower }
+
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _noteName = '---';
+  int splitPoint = 60;
 
   final Map<int, MidiEvent> _activeEvents = {};
   MidiEvent? _lastEvent;
@@ -288,9 +278,46 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     GoRouter.of(context).push(Routes.clefs);
   }
 
-  void onNoteUpperStaffClicked() {}
+  List<Note> currentNotes() {
+    return _activeEvents.values
+        .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
+        .toList();
+  }
 
-  void onNoteLowerStaffClicked() {}
+  Move? moveCandidate() {
+    final notes = currentNotes();
+    if (notes.isEmpty) {
+      return null;
+    }
+    final note = notes.last;
+    if (splitPoint <= note.pitch.midiNumber) {
+      return Move.toLower;
+    }
+    return Move.toUpper;
+  }
+
+  void onNoteUpperStaffClicked() {
+    final notes = currentNotes();
+    if (notes.isEmpty) {
+      return;
+    }
+    final note = notes.last;
+    setState(() {
+      splitPoint = note.pitch.midiNumber;
+    });
+  }
+
+  void onNoteLowerStaffClicked() {
+    debugPrint("onNoteLowerStaffClicked");
+    final notes = currentNotes();
+    if (notes.isEmpty) {
+      return;
+    }
+    final note = notes.last;
+    setState(() {
+      splitPoint = note.pitch.midiNumber + 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -302,23 +329,37 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     final signalVelocity = (_lastEvent?.velocity ?? 0).clamp(0, 127);
     final String selectClef = AppLocalizations.of(context)!.selectClef;
     // note name without digits
-    final String simpleNote = _noteName.replaceAll(RegExp(r'[0-9-]'), '');
+    final String simpleNoteName = _noteName.replaceAll(RegExp(r'[0-9-]'), '');
 
-    final notes = _activeEvents.values
-        .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
-        .toList();
+    final notes = currentNotes();
 
     Set<Note> keyboardNotes = {};
-    if (simpleNote.isNotEmpty) {
+    if (simpleNoteName.isNotEmpty) {
       keyboardNotes = notes.toSet();
     }
     InputProvider model = context.watch<InputProvider>();
     KeySignature? keySignature = model.keySignature;
 
+    Move? candidate = moveCandidate();
+
     final callbacks = ScreenCallbacks(
       openClefSelectionClicked: openClefSelectionScreen,
-      onNoteUpperStaffClicked: onNoteUpperStaffClicked,
-      onNoteLowerStaffClicked: onNoteLowerStaffClicked,
+      onNoteUpperStaffClicked: candidate == null || candidate != Move.toUpper
+          ? null
+          : onNoteUpperStaffClicked,
+      onNoteLowerStaffClicked: candidate == null || candidate != Move.toLower
+          ? null
+          : onNoteLowerStaffClicked,
+    );
+
+    final data = ScreenData(
+      signalVelocity: signalVelocity,
+      keyboardNotes: keyboardNotes,
+      keySignature: keySignature,
+      notes: notes,
+      selectClef: selectClef,
+      noteName: _noteName,
+      splitPoint: splitPoint,
     );
 
     return OrientationBuilder(
@@ -326,32 +367,10 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         final isLandscape = orientation == Orientation.landscape;
 
         final mainContent = isLandscape
-            ? MainContentLandscape(
-                signalVelocity: signalVelocity,
-                keyboardNotes: keyboardNotes,
-                keySignature: keySignature,
-                notes: notes,
-                selectClef: selectClef,
-                callbacks: callbacks,
-                noteName: _noteName,
-              )
-            : MainContentPortrait(
-                signalVelocity: signalVelocity,
-                keyboardNotes: keyboardNotes,
-                keySignature: keySignature,
-                notes: notes,
-                selectClef: selectClef,
-                callbacks: callbacks,
-                noteName: _noteName,
-              );
+            ? MainContentLandscape(data: data, callbacks: callbacks)
+            : MainContentPortrait(data: data, callbacks: callbacks);
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(child: mainContent),
-            const SizedBox(height: 2),
-          ],
-        );
+        return mainContent;
       },
     );
   }
