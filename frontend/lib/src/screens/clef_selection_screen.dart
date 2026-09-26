@@ -69,12 +69,26 @@ class _KeyTilesState extends State<KeyTiles> {
         ),
       );
     }
-    return GridView.count(
-      crossAxisCount: 2, // 2 columns (left to right)
-      mainAxisSpacing: 1,
-      childAspectRatio: 1.7,
-      crossAxisSpacing: 1,
-      children: children,
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        final isLandscape = orientation == Orientation.landscape;
+        if (isLandscape) {
+          return GridView.count(
+            crossAxisCount: 3,
+            mainAxisSpacing: 1,
+            childAspectRatio: 1.7,
+            crossAxisSpacing: 0,
+            children: children,
+          );
+        }
+        return GridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 1,
+          childAspectRatio: 1.7,
+          crossAxisSpacing: 1,
+          children: children,
+        );
+      },
     );
   }
 }
@@ -96,14 +110,36 @@ class ClefSelectionScreen extends StatefulWidget {
   return (ret1, ret2);
 }
 
-class _ClefSelectionScreenState extends State<ClefSelectionScreen> {
+class _ClefSelectionScreenState extends State<ClefSelectionScreen>
+    with SingleTickerProviderStateMixin {
+  int _selectedIndex = 0;
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    KeySignature? current = context.read<InputProvider>().keySignature;
+    if (current != null) {
+      if (current.accidentals > 0) _selectedIndex = 1;
+      if (current.accidentals < 0) _selectedIndex = 2;
+    }
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: _selectedIndex,
+    );
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {
+          _selectedIndex = _tabController.index;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -113,35 +149,56 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen> {
     final zeroChild = KeyTiles(keySignatures: [KeySignature(accidentals: 0)]);
     final sharpChild = KeyTiles(keySignatures: sharps);
     final flatChild = KeyTiles(keySignatures: flats);
+    final pages = [zeroChild, sharpChild, flatChild];
 
-    int initialIndex = 0;
-    KeySignature? current = context.read<InputProvider>().keySignature;
-    if (current != null) {
-      if (current.accidentals > 0) {
-        initialIndex = 1;
-      }
-      if (current.accidentals < 0) {
-        initialIndex = 2;
-      }
-    }
-
-    return DefaultTabController(
-      length: 3, // Number of tabs
-      initialIndex: initialIndex,
-      child: Column(
-        children: [
-          const TabBar(
-            tabs: [
-              Tab(text: 'C Major'),
-              Tab(text: 'Sharps'),
-              Tab(text: 'Flats'),
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        final isLandscape = orientation == Orientation.landscape;
+        if (!isLandscape) {
+          return Column(
+            children: [
+              TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'C Major'),
+                  Tab(text: 'Sharps'),
+                  Tab(text: 'Flats'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(controller: _tabController, children: pages),
+              ),
             ],
-          ),
-          Expanded(
-            child: TabBarView(children: [zeroChild, sharpChild, flatChild]),
-          ),
-        ],
-      ),
+          );
+        }
+
+        // Landscape: vertical tabs on the left (rotated TabBar)
+        return Row(
+          children: [
+            Container(
+              width: 80,
+              alignment: Alignment.center,
+              child: RotatedBox(
+                quarterTurns: -1,
+                child: TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.center,
+                  tabs: const [
+                    Tab(text: 'C Major'),
+                    Tab(text: 'Sharps'),
+                    Tab(text: 'Flats'),
+                  ],
+                ),
+              ),
+            ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(
+              child: TabBarView(controller: _tabController, children: pages),
+            ),
+          ],
+        );
+      },
     );
   }
 }
