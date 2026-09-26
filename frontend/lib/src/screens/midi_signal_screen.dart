@@ -23,13 +23,25 @@ class MidiSignalScreen extends StatefulWidget {
   State<MidiSignalScreen> createState() => _MidiSignalScreenState();
 }
 
+class ScreenCallbacks {
+  final VoidCallback openClefSelectionClicked;
+  final VoidCallback onNoteUpperStaffClicked;
+  final VoidCallback onNoteLowerStaffClicked;
+
+  ScreenCallbacks({
+    required this.openClefSelectionClicked,
+    required this.onNoteUpperStaffClicked,
+    required this.onNoteLowerStaffClicked,
+  });
+}
+
 class MainContentPortrait extends StatelessWidget {
   final int signalVelocity;
   final Set<Note> keyboardNotes;
   final KeySignature? keySignature;
   final List<Note> notes;
   final String selectClef;
-  final VoidCallback openClefSelectionScreen;
+  final ScreenCallbacks callbacks;
   final String noteName;
 
   const MainContentPortrait({
@@ -39,7 +51,7 @@ class MainContentPortrait extends StatelessWidget {
     required this.keySignature,
     required this.notes,
     required this.selectClef,
-    required this.openClefSelectionScreen,
+    required this.callbacks,
     required this.noteName,
   });
 
@@ -50,44 +62,11 @@ class MainContentPortrait extends StatelessWidget {
       children: [
         Expanded(
           flex: 2,
-          child: Row(
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      openClefSelectionScreen();
-                    },
-                    child: Icon(Icons.arrow_upward),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      openClefSelectionScreen();
-                    },
-                    child: Icon(Icons.music_note_rounded),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      openClefSelectionScreen();
-                    },
-                    child: Icon(Icons.arrow_downward),
-                  ),
-                ],
-              ),
-              Expanded(
-                flex: 6,
-                child: GrandStaffView(
-                  keySignature: keySignature ?? KeySignature.cMajor,
-                  notes: notes,
-                ),
-              ),
-              Padding(
-                padding: EdgeInsetsGeometry.fromLTRB(10, 0, 10, 0),
-                child: VelocityIndicator(velocity: signalVelocity),
-              ),
-            ],
+          child: GrandStaffPanel(
+            signalVelocity: signalVelocity,
+            keySignature: keySignature,
+            notes: notes,
+            callbacks: callbacks,
           ),
         ),
 
@@ -118,7 +97,7 @@ class MainContentLandscape extends StatelessWidget {
   final KeySignature? keySignature;
   final List<Note> notes;
   final String selectClef;
-  final VoidCallback openClefSelectionScreen;
+  final ScreenCallbacks callbacks;
   final String noteName;
 
   const MainContentLandscape({
@@ -128,7 +107,7 @@ class MainContentLandscape extends StatelessWidget {
     required this.keySignature,
     required this.notes,
     required this.selectClef,
-    required this.openClefSelectionScreen,
+    required this.callbacks,
     required this.noteName,
   });
 
@@ -138,7 +117,6 @@ class MainContentLandscape extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Expanded(child: SizedBox(height: 20)),
-
         Expanded(
           flex: 2,
           child: Column(
@@ -160,7 +138,7 @@ class MainContentLandscape extends StatelessWidget {
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          openClefSelectionScreen();
+                          callbacks.openClefSelectionClicked();
                         },
                         child: Icon(Icons.menu),
                       ),
@@ -178,75 +156,71 @@ class MainContentLandscape extends StatelessWidget {
           ),
         ),
 
-        Expanded(
-          child: Column(
-            spacing: 10,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(child: SizedBox(width: 10)),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        openClefSelectionScreen();
-                      },
-                      child: Icon(Icons.arrow_upward),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        openClefSelectionScreen();
-                      },
-                      child: Icon(Icons.music_note_rounded),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        openClefSelectionScreen();
-                      },
-                      child: Icon(Icons.arrow_downward),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(child: SizedBox(width: 10)),
-            ],
-          ),
-        ),
-
         const SizedBox(width: 20),
         Expanded(
           flex: 4,
-          child: Column(
-            children: [
-              Expanded(child: SizedBox(width: 10)),
-              Expanded(
-                flex: 6,
-                child: GrandStaffView(
-                  keySignature: keySignature ?? KeySignature.cMajor,
-                  notes: notes,
-                ),
-              ),
-
-              Expanded(child: SizedBox(width: 10)),
-            ],
-          ),
-        ),
-
-        SizedBox(
-          width: 50,
-          child: Column(
-            children: [
-              Expanded(child: SizedBox(width: 10)),
-              VelocityIndicator(velocity: signalVelocity),
-              Expanded(child: SizedBox(width: 10)),
-            ],
+          child: GrandStaffPanel(
+            signalVelocity: signalVelocity,
+            keySignature: keySignature,
+            notes: notes,
+            callbacks: callbacks,
           ),
         ),
 
         const Expanded(child: SizedBox(height: 20)),
+      ],
+    );
+  }
+}
+
+class GrandStaffPanel extends StatelessWidget {
+  final int signalVelocity;
+  final KeySignature? keySignature;
+  final List<Note> notes;
+  final ScreenCallbacks callbacks;
+
+  const GrandStaffPanel({
+    super.key,
+    required this.signalVelocity,
+    required this.keySignature,
+    required this.notes,
+    required this.callbacks,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              onPressed: () => callbacks.onNoteUpperStaffClicked(),
+              child: Icon(Icons.arrow_upward),
+            ),
+            ElevatedButton(
+              onPressed: () => callbacks.openClefSelectionClicked(),
+              child: Icon(Icons.music_note_rounded),
+            ),
+            ElevatedButton(
+              onPressed: () => callbacks.onNoteLowerStaffClicked(),
+              child: Icon(Icons.arrow_downward),
+            ),
+          ],
+        ),
+
+        Expanded(
+          flex: 6,
+          child: GrandStaffView(
+            keySignature: keySignature ?? KeySignature.cMajor,
+            notes: notes,
+          ),
+        ),
+
+        Padding(
+          padding: EdgeInsetsGeometry.fromLTRB(10, 0, 10, 0),
+          child: VelocityIndicator(velocity: signalVelocity),
+        ),
       ],
     );
   }
@@ -314,6 +288,10 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     GoRouter.of(context).push(Routes.clefs);
   }
 
+  void onNoteUpperStaffClicked() {}
+
+  void onNoteLowerStaffClicked() {}
+
   @override
   Widget build(BuildContext context) {
     if (_inputProvider == null) {
@@ -337,6 +315,12 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     InputProvider model = context.watch<InputProvider>();
     KeySignature? keySignature = model.keySignature;
 
+    final callbacks = ScreenCallbacks(
+      openClefSelectionClicked: openClefSelectionScreen,
+      onNoteUpperStaffClicked: onNoteUpperStaffClicked,
+      onNoteLowerStaffClicked: onNoteLowerStaffClicked,
+    );
+
     return OrientationBuilder(
       builder: (context, orientation) {
         final isLandscape = orientation == Orientation.landscape;
@@ -348,7 +332,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                 keySignature: keySignature,
                 notes: notes,
                 selectClef: selectClef,
-                openClefSelectionScreen: openClefSelectionScreen,
+                callbacks: callbacks,
                 noteName: _noteName,
               )
             : MainContentPortrait(
@@ -357,7 +341,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
                 keySignature: keySignature,
                 notes: notes,
                 selectClef: selectClef,
-                openClefSelectionScreen: openClefSelectionScreen,
+                callbacks: callbacks,
                 noteName: _noteName,
               );
 
