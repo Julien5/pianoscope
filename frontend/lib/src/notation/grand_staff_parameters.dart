@@ -37,11 +37,11 @@ class GrandStaffParameters {
   final StaffUnits keySignatureToNotesSpace;
 
   const GrandStaffParameters({
-    this.staffGap = const StaffUnits(6),
+    this.staffGap = const StaffUnits(5),
     this.braceToBarlineSpace = const StaffUnits(0.25),
     this.barlineToClefSpace = const StaffUnits(1.0),
-    this.clefToKeySignatureSpace = const StaffUnits(1),
-    this.keySignatureToNotesSpace = const StaffUnits(6),
+    this.clefToKeySignatureSpace = const StaffUnits(0.1),
+    this.keySignatureToNotesSpace = const StaffUnits(3),
   });
 
   static const GrandStaffParameters defaults = GrandStaffParameters();
@@ -49,8 +49,16 @@ class GrandStaffParameters {
     staffGap: StaffUnits(0),
     braceToBarlineSpace: StaffUnits(0),
     barlineToClefSpace: StaffUnits(0.2),
-    clefToKeySignatureSpace:StaffUnits(0.5),
+    clefToKeySignatureSpace: StaffUnits(0.5),
     keySignatureToNotesSpace: StaffUnits(0),
+  );
+
+  static const GrandStaffParameters tight = GrandStaffParameters(
+    staffGap: StaffUnits(5),
+    braceToBarlineSpace: StaffUnits(0.1),
+    barlineToClefSpace: StaffUnits(0.1),
+    clefToKeySignatureSpace: StaffUnits(0.1),
+    keySignatureToNotesSpace: StaffUnits(3),
   );
 
   @override

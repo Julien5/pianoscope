@@ -22,7 +22,7 @@
             "request": "launch",
             "type": "dart",
             "env": {
-                "SIMULATION": "/home/julien/projects/pianoscope/backend/data/C4.wav"
+                "SIMULATION": "../backend/data/C4.wav"
             }
         },
         {

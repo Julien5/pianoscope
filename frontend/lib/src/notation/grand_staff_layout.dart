@@ -2,6 +2,8 @@
 
 import 'dart:ui' show Size;
 
+import 'package:flutter/foundation.dart';
+
 import 'grand_staff_parameters.dart';
 import 'models/key_signature.dart';
 import 'geometry/box.dart';
@@ -64,7 +66,7 @@ class GrandStaffLayout {
   static StaffUnits contentHeightFor(GrandStaffParameters params) {
     final h = staffHeight();
     final pad = kVerticalPadding;
-    return pad + h + params.staffGap + h + pad;    
+    return pad + h + params.staffGap + h + pad;
   }
 
   /// Compute the full layout for the available [size].
@@ -97,8 +99,36 @@ class GrandStaffLayout {
     final clefX = startBarlineBox.right + params.barlineToClefSpace;
     final upperClefWidth = ClefRenderer.clefWidth(ClefType.treble);
     final lowerClefWidth = ClefRenderer.clefWidth(ClefType.bass);
-    final keySigWidth = KeySignatureRenderer.keySignatureWidth(keySignature);
+
     final hasKeySig = keySignature.accidentals != 0;
+    final widths = [
+      braceWidth,
+      params.braceToBarlineSpace,
+      barlineThickness,
+      params.barlineToClefSpace,
+      upperClefWidth,
+      params.clefToKeySignatureSpace,
+      params.keySignatureToNotesSpace,
+    ];
+    final contentWidth = widths.reduce((a, b) => (a + b));
+
+    KeySignatureRenderer.horizontalShrink = 1;
+    while (KeySignatureRenderer.horizontalShrink > 0.5) {
+      KeySignatureRenderer.horizontalShrink *= 0.9;
+      final keySigWidth = KeySignatureRenderer.keySignatureWidth(keySignature);
+      final spaceForNotes =
+          size.width - barlineThickness - (contentWidth + keySigWidth);
+      final spaceNeededForNotes = StaffUnits.staffLineSpace;
+
+      debugPrint(
+        "factor=${KeySignatureRenderer.horizontalShrink} available=$spaceForNotes needed=$spaceNeededForNotes",
+      );
+
+      if (spaceForNotes >= spaceNeededForNotes) {
+        break;
+      }
+    }
+    final keySigWidth = KeySignatureRenderer.keySignatureWidth(keySignature);
 
     // Notes must align across staves: right-align the clef/key-signature
     // prefix, so both note boxes start at the widest end of the two.

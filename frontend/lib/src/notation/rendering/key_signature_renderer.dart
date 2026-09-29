@@ -14,6 +14,8 @@ class KeySignatureRenderer {
   final ClefType clefType;
   final Color color;
 
+  static double horizontalShrink=1;
+
   const KeySignatureRenderer({
     required this.box,
     required this.keySignature,
@@ -30,8 +32,10 @@ class KeySignatureRenderer {
         ? GlyphProvider.sharp
         : GlyphProvider.flat;
 
-    final size = StaffUnits.accidentalSize();
-    final spacing = StaffUnits(1.2);
+    
+
+    final size = StaffUnits.accidentalSize() * horizontalShrink;
+    final spacing = StaffUnits(horizontalShrink);
 
     for (int i = 0; i < positions.length; i++) {
       final position = positions[i];
@@ -102,6 +106,6 @@ class KeySignatureRenderer {
 
     final count = keySignature.accidentals.abs();
     final spacing = 1.2;
-    return StaffUnits((count * spacing) + 1);
+    return StaffUnits((count * spacing) + 1) * horizontalShrink;
   }
 }

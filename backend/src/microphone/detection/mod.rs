@@ -113,6 +113,7 @@ impl PitchDetector {
         self.stats.level_min + (self.stats.level_max - self.stats.level_min) / 6.0
     }
     pub fn on(&self) -> bool {
+        // here
         self.stats.energy >= self.stats.threshold
     }
     pub fn pitch(&self) -> String {

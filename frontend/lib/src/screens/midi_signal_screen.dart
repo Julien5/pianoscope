@@ -3,18 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
-import '../notation/models/key_signature.dart';
+import '../../pianoscope.dart';
+import '../notation/grand_staff_parameters.dart';
 import '../routes.dart';
 import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
-import '../providers/input_provider.dart';
 import '../style.dart';
 import '../utils.dart';
-import '../widgets/grand_staff_view.dart';
 import '../widgets/keyboard_widget.dart';
 import '../widgets/velocity_indicator.dart';
-import '../notation/models/note.dart';
-import '../notation/models/pitch.dart';
 
 class MidiSignalScreen extends StatefulWidget {
   const MidiSignalScreen({super.key});
@@ -43,6 +40,8 @@ class ScreenData {
   final String selectClef;
   final String noteName;
   final int splitPoint;
+  final Orientation orientation;
+  final BoxConstraints constraints;
 
   ScreenData({
     required this.signalVelocity,
@@ -52,7 +51,68 @@ class ScreenData {
     required this.selectClef,
     required this.noteName,
     required this.splitPoint,
+    required this.orientation,
+    required this.constraints,
   });
+}
+
+class MainContentTightPortrait extends StatelessWidget {
+  final ScreenData data;
+  final ScreenCallbacks callbacks;
+
+  const MainContentTightPortrait({
+    super.key,
+    required this.callbacks,
+    required this.data,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 0,
+          child: ButtonsRow(data: data, callbacks: callbacks),
+        ),
+        Expanded(
+          flex: 1,
+          child: Padding(
+            padding: EdgeInsetsGeometry.all(5),
+            child: GrandStaffView(
+              keySignature: data.keySignature ?? KeySignature.cMajor,
+              notes: data.notes,
+              splitPoint: data.splitPoint,
+              params: GrandStaffParameters.tight,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 0,
+          child: Padding(
+            padding: EdgeInsetsGeometry.fromLTRB(0, 10, 0, 10),
+            child: HorizontalVelocityIndicator(velocity: data.signalVelocity),
+          ),
+        ),
+        Expanded(
+          child: Column(
+            spacing: 10,
+            children: [
+              KeyboardWidget(
+                pressedNotes: data.keyboardNotes,
+                whiteHeight: 150,
+                whiteWidth: 40,
+                pressedDotRadius: 5,
+                pressedDotColor: Colors.blue,
+              ),
+
+              NoteNameText(noteName: data.noteName),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class MainContentPortrait extends StatelessWidget {
@@ -71,8 +131,11 @@ class MainContentPortrait extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          flex: 2,
-          child: GrandStaffPanel(data: data, callbacks: callbacks),
+          flex: 1,
+          child: Padding(
+            padding: EdgeInsetsGeometry.fromLTRB(5, 0, 5, 0),
+            child: GrandStaffPanel(data: data, callbacks: callbacks),
+          ),
         ),
 
         Expanded(
@@ -117,7 +180,6 @@ class MainContentLandscape extends StatelessWidget {
           child: Column(
             children: [
               Expanded(child: SizedBox(width: 10)),
-
               KeyboardWidget(
                 pressedNotes: data.keyboardNotes,
                 whiteHeight: 200,
@@ -158,6 +220,35 @@ class MainContentLandscape extends StatelessWidget {
         ),
 
         const Expanded(child: SizedBox(height: 20)),
+      ],
+    );
+  }
+}
+
+class ButtonsRow extends StatelessWidget {
+  final ScreenData data;
+  final ScreenCallbacks callbacks;
+
+  const ButtonsRow({super.key, required this.data, required this.callbacks});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        ElevatedButton(
+          onPressed: callbacks.onNoteUpperStaffClicked,
+          child: Icon(Icons.arrow_upward),
+        ),
+        ElevatedButton(
+          onPressed: () => callbacks.openClefSelectionClicked(),
+          child: Icon(Icons.music_note_rounded),
+        ),
+        ElevatedButton(
+          onPressed: callbacks.onNoteLowerStaffClicked,
+          child: Icon(Icons.arrow_downward),
+        ),
       ],
     );
   }
@@ -352,25 +443,37 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
           : onNoteLowerStaffClicked,
     );
 
-    final data = ScreenData(
-      signalVelocity: signalVelocity,
-      keyboardNotes: keyboardNotes,
-      keySignature: keySignature,
-      notes: notes,
-      selectClef: selectClef,
-      noteName: _noteName,
-      splitPoint: splitPoint,
-    );
-
     return OrientationBuilder(
       builder: (context, orientation) {
-        final isLandscape = orientation == Orientation.landscape;
-
-        final mainContent = isLandscape
-            ? MainContentLandscape(data: data, callbacks: callbacks)
-            : MainContentPortrait(data: data, callbacks: callbacks);
-
-        return mainContent;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final data = ScreenData(
+              signalVelocity: signalVelocity,
+              keyboardNotes: keyboardNotes,
+              keySignature: keySignature,
+              notes: notes,
+              selectClef: selectClef,
+              noteName: _noteName,
+              splitPoint: splitPoint,
+              orientation: orientation,
+              constraints: constraints,
+            );
+            final isLandscape = orientation == Orientation.landscape;
+            debugPrint("constr:$constraints");
+            final isTight =
+                constraints.hasBoundedWidth &&
+                constraints.maxWidth < 400.0 &&
+                data.keySignature != null &&
+                data.keySignature!.accidentals.abs() > 2;
+            if (isTight) {
+              return MainContentTightPortrait(data: data, callbacks: callbacks);
+            }
+            if (isLandscape) {
+              return MainContentLandscape(data: data, callbacks: callbacks);
+            }
+            return MainContentPortrait(data: data, callbacks: callbacks);
+          },
+        );
       },
     );
   }

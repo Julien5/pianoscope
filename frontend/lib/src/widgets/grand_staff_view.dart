@@ -3,14 +3,6 @@ import '../../pianoscope.dart';
 import '../notation/grand_staff_parameters.dart';
 import '../notation/grand_staff_painter.dart';
 
-/// Renders a single-measure grand staff (treble above, bass below) from a
-/// flat list of notes.
-///
-/// Notes at MIDI >= [splitPoint] go on the treble staff, notes below on the
-/// bass staff; each staff shows its notes as a single chord.
-///
-/// Margins are intentionally not managed here: set them with a parent widget
-/// (e.g. `Padding`) around this view.
 class GrandStaffView extends StatelessWidget {
   final GrandStaffParameters params;
   final List<Note> notes;
@@ -37,6 +29,9 @@ class GrandStaffView extends StatelessWidget {
             constraints.maxHeight.isFinite && constraints.maxHeight > 0
             ? constraints.maxHeight
             : 200.0;
+
+        debugPrint("size $constraints");
+
         return SizedBox(
           height: preferredHeight,
           width: double.infinity,
