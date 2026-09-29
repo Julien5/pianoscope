@@ -99,7 +99,7 @@ class InputProvider extends ChangeNotifier {
   void loadInputDevices() {
     _inputDevices = [Microphone()];
     try {
-      for(MidiPort port in listMidiPorts()) {
+      for (MidiPort port in listMidiPorts()) {
         _inputDevices.add(Midi(port));
       }
       _error = null;

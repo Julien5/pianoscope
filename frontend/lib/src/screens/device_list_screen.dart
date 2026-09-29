@@ -6,6 +6,7 @@ import '../routes.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
+import '../routes/route_observer.dart';
 
 class DeviceListScreen extends StatefulWidget {
   const DeviceListScreen({super.key});
@@ -14,7 +15,7 @@ class DeviceListScreen extends StatefulWidget {
   State<DeviceListScreen> createState() => _DeviceListScreenState();
 }
 
-class _DeviceListScreenState extends State<DeviceListScreen> {
+class _DeviceListScreenState extends State<DeviceListScreen> with RouteAware {
   Timer? _simulationTimer;
 
   @override
@@ -66,10 +67,42 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     if (_simulationTimer != null) {
       _simulationTimer?.cancel();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPush() {
+    // Route was pushed onto navigator and is now visible.
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        onRefreshClicked(context);
+      });
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // Returned to this route (another route was popped).
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        onRefreshClicked(context);
+      });
+    }
   }
 
   Future<void> _connect(InputDevice inputDevice) async {
@@ -84,6 +117,11 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Connection failed: $e')));
     }
+  }
+
+  void onRefreshClicked(BuildContext context) {
+    final provider = context.read<InputProvider>();
+    provider.loadInputDevices();
   }
 
   @override
@@ -108,7 +146,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
             Text('Error: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.read<InputProvider>().loadInputDevices(),
+              onPressed: () => onRefreshClicked(context),
               child: const Text('Retry'),
             ),
           ],
@@ -118,25 +156,47 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
     context.watch<LocaleProvider>();
 
-    final child = Expanded(
-      child: ListView.builder(
-        itemCount: ports.length,
-        itemBuilder: (context, index) {
+    final deviceList = ListView.builder(
+      shrinkWrap: true,
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: ports.length,
+      itemBuilder: (context, index) {
+        if (ports[index] is Microphone) {
           return Card(
             child: ListTile(
               title: Text(ports[index].localizedPortName(context)),
-              subtitle: Text(ports[index].portName()),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const Icon(Icons.mic),
               onTap: () => _connect(ports[index]),
             ),
           );
-        },
+        }
+        return Card(
+          child: ListTile(
+            title: Text(ports[index].localizedPortName(context)),
+            subtitle: Text(ports[index].portName()),
+            trailing: const Icon(Icons.usb),
+            onTap: () => _connect(ports[index]),
+          ),
+        );
+      },
+    );
+
+    final refreshButton = Align(
+      alignment: Alignment.topCenter,
+      child: ElevatedButton.icon(
+        onPressed: () => onRefreshClicked(context),
+        icon: const Icon(Icons.refresh),
+        label: const Text('Refresh'),
       ),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [child],
+      children: [
+        Flexible(fit: FlexFit.loose, child: deviceList),
+        const SizedBox(height: 10),
+        refreshButton,
+      ],
     );
   }
 }

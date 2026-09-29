@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'routes/route_observer.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -44,6 +45,7 @@ class Routes {
 
 final router = GoRouter(
   initialLocation: Routes.devices,
+  observers: [routeObserver],
   routes: [
     ShellRoute(
       builder: (context, state, child) {
