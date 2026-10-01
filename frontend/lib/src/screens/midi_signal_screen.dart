@@ -360,7 +360,9 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   @override
   void dispose() {
     debugPrint("midi dispose: cancel subsription");
-    _inputProvider?.disconnect();
+    // Cannot be awaited here. The observers are cleared synchronously by
+    // disconnect(), so nothing reaches this disposed State.
+    unawaited(_inputProvider?.disconnect());
     WakelockPlus.disable();
     super.dispose();
   }

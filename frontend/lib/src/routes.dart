@@ -15,6 +15,10 @@ String _shellTitle(BuildContext context, GoRouterState state) {
     case '/':
       return AppLocalizations.of(context)!.selectInput;
     case '/note':
+      // Defensive: `/note` is only reachable after a successful connect(), so
+      // there should always be a device. Render something rather than throw if
+      // that ever stops holding. Not localized, unlike the other titles, because
+      // the branch should be unreachable.
       final device = context.read<InputProvider>().currentDevice();
       final title = device != null
           ? device.localizedPortName(context)
