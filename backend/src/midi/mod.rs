@@ -173,6 +173,7 @@ impl Midi {
                 *self.connection.lock().unwrap() = Connection::Device(conn);
             }
             Err(e) => {
+                log::trace!("error: {:?}", e);
                 error_sender(format!("{e}"));
             }
         }
@@ -182,7 +183,33 @@ impl Midi {
         if crate::simulation::enabled() {
             midi_simulation::disconnect_midi();
         }
-        *self.connection.lock().unwrap() = Connection::None;
+        let conn = std::mem::replace(&mut *self.connection.lock().unwrap(), Connection::None);
+        match conn {
+            Connection::Device(connection) => {
+                // midir's Android backend has no `Drop` impl: merely dropping the
+                // connection would detach the reader thread, which keeps our
+                // event-sender `Arc` (and with it the FRB `StreamSink`) alive
+                // forever, so Dart would never receive `close_stream`. `close()`
+                // stops and joins the thread, dropping the callback and releasing
+                // the sink.
+                #[cfg(target_os = "android")]
+                {
+                    crate::init::android::with_attached_jvm(|| {
+                        let _ = connection.close();
+                    });
+                }
+                #[cfg(not(target_os = "android"))]
+                {
+                    let _ = connection.close();
+                }
+            }
+            Connection::Simulation(handle) => {
+                // Stop flag set above; join so the sink is dropped and
+                // `close_stream` is posted before disconnect returns.
+                let _ = handle.join();
+            }
+            Connection::None => {}
+        }
     }
 }
 

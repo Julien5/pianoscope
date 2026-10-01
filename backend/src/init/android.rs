@@ -44,3 +44,25 @@ pub fn system_property(name: &str) -> Option<String> {
         None
     }
 }
+
+/// Runs `f` with the current thread attached to the JVM, detaching it again if
+/// this call performed the attach.
+///
+/// Some NDK APIs abort when the calling thread is not attached to the JVM: for
+/// instance `AMidiDevice_release` (called by midir's
+/// `MidiInputConnection::close`) fails with "Error accessing JNIEnv err:-2".
+/// FRB executes Rust methods on plain worker threads that are not attached, so
+/// `Midi::disconnect` needs this before closing a device connection.
+pub fn with_attached_jvm<R>(f: impl FnOnce() -> R) -> R {
+    unsafe {
+        let ctx = ndk_context::android_context();
+        let vm = jni::JavaVM::from_raw(ctx.vm().cast())
+            .expect("ndk_context should provide a valid JavaVM");
+        let env = vm
+            .attach_current_thread()
+            .expect("failed to attach current thread to the JVM");
+        let result = f();
+        drop(env);
+        result
+    }
+}
