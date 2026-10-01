@@ -37,13 +37,42 @@ class StreamSink {
     });
   }
 
+  void clearObservers() {
+    eventObservers.clear();
+    errorObservers.clear();
+  }
+
+  bool hasNoObservers() {
+    return eventObservers.isEmpty && errorObservers.isEmpty;
+  }
+
   Future<void> stop() async {
-    debugPrint("stop start");
-    await _eventSub?.cancel();
-    await _errorSub?.cancel();
+    debugPrint('stop: start');
+    clearObservers();
+    debugPrint('stop: eventSub.cancel() ...');
+    // Why not await? Because there are situations where the cancel() did not complete.
+    // Agent says: "Cancelling the FRB stream subscription while the Rust
+    // producer is idle never completes.""
+    //
+    // => do not await.
+    (_eventSub?.cancel() ?? Future.value())
+        .catchError((Object e) {
+          debugPrint('stop: eventSub.cancel() error: $e');
+        })
+        .whenComplete(() {
+          debugPrint('stop: eventSub.cancel() completed');
+        });
+    debugPrint('stop: errorSub.cancel() ...');
+    (_errorSub?.cancel() ?? Future.value())
+        .catchError((Object e) {
+          debugPrint('stop: errorSub.cancel() error: $e');
+        })
+        .whenComplete(() {
+          debugPrint('stop: errorSub.cancel() completed');
+        });
     _eventSub = null;
     _errorSub = null;
-    debugPrint("stop end");
+    debugPrint('stop: end');
   }
 }
 
@@ -112,10 +141,15 @@ class InputProvider extends ChangeNotifier {
   Future<void> connect(InputDevice device) async {
     debugPrint("connect: $device");
     if (_streamSink != null) {
+      debugPrint(
+        'connect: disconnecting previous (inputDevice=${_inputDevice != null})',
+      );
       assert(_inputDevice != null);
-      await _disconnectInputDevice();
+      await disconnect();
+      debugPrint('connect: previous disconnected');
     }
     _inputDevice = device;
+    debugPrint('connect: starting stream for $device');
     switch (_inputDevice!) {
       case Microphone():
         await _connectMicrophone(_inputDevice as Microphone);
@@ -123,6 +157,7 @@ class InputProvider extends ChangeNotifier {
         await _connectMidi(Midi(port));
     }
     assert(_streamSink != null);
+    debugPrint('connect: done');
   }
 
   bool connected() {
@@ -171,19 +206,35 @@ class InputProvider extends ChangeNotifier {
     _streamSink!.errorObservers.add(errorObserver);
   }
 
-  void disconnect() {
+  /// Because disconnect() is called (1) synchronously from midi screen dispose (not await)
+  /// and (2) from InputProvider::connect() (with await), we must guard _disconnectInputDevice.
+  Future<void>? _disconnecting;
+  Future<void> disconnect() async {
     if (_inputDevice == null) {
+      assert(_streamSink == null);
       return;
     }
-    _streamSink?.eventObservers.clear();
-    _streamSink?.errorObservers.clear();
-    _disconnectInputDevice();
+    _streamSink?.clearObservers();
+    // Assigns a *Future* to _disconnecting if the operation is not in-flight.
+    // After `disconnect()` is called without await, _disconnecting is non-null.
+    // After `await disconnect()` is called, _disconnecting is null because of whenComplete.
+    return _disconnecting ??= _disconnectInputDevice().whenComplete(() {
+      _disconnecting = null;
+    });
   }
 
   Future<void> _disconnectInputDevice() async {
+    // _inputDevice is the last connected device.
+    // after init, it never gets null.
     assert(_inputDevice != null);
-    await _bridge?.disconnect();
-    await _streamSink?.stop();
+    final sink = _streamSink;
+    if (sink == null) {
+      return;
+    }
+    assert(sink.hasNoObservers());
+    // "publicly disable the sink".
     _streamSink = null;
+    await _bridge?.disconnect();
+    await sink.stop();
   }
 }

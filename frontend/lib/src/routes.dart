@@ -15,9 +15,11 @@ String _shellTitle(BuildContext context, GoRouterState state) {
     case '/':
       return AppLocalizations.of(context)!.selectInput;
     case '/note':
-      return context.read<InputProvider>().currentDevice()!.localizedPortName(
-        context,
-      );
+      final device = context.read<InputProvider>().currentDevice();
+      final title = device != null
+          ? device.localizedPortName(context)
+          : "unknown";
+      return title;
     case '/note/clef':
       return AppLocalizations.of(context)!.selectClef;
   }
