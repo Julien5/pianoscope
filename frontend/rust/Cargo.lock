@@ -212,6 +212,7 @@ dependencies = [
  "cpal",
  "env_logger",
  "hound",
+ "jni 0.21.1",
  "libc",
  "log",
  "midir",

@@ -46,33 +46,29 @@ class StreamSink {
     return eventObservers.isEmpty && errorObservers.isEmpty;
   }
 
-  Future<void> stop() async {
-    debugPrint('stop: start');
+  void stop() {
     clearObservers();
-    debugPrint('stop: eventSub.cancel() ...');
     // Why not await? Because there are situations where the cancel() did not complete.
     // Agent says: "Cancelling the FRB stream subscription while the Rust
     // producer is idle never completes.""
-    //
-    // => do not await.
-    (_eventSub?.cancel() ?? Future.value())
-        .catchError((Object e) {
-          debugPrint('stop: eventSub.cancel() error: $e');
-        })
-        .whenComplete(() {
-          debugPrint('stop: eventSub.cancel() completed');
-        });
-    debugPrint('stop: errorSub.cancel() ...');
-    (_errorSub?.cancel() ?? Future.value())
-        .catchError((Object e) {
-          debugPrint('stop: errorSub.cancel() error: $e');
-        })
-        .whenComplete(() {
-          debugPrint('stop: errorSub.cancel() completed');
-        });
+    _cancel(_eventSub, 'eventSub');
+    _cancel(_errorSub, 'errorSub');
     _eventSub = null;
     _errorSub = null;
-    debugPrint('stop: end');
+  }
+
+  void _cancel(StreamSubscription<dynamic>? sub, String name) {
+    if (sub == null) return;
+    unawaited(
+      sub
+          .cancel()
+          .catchError((Object e) {
+            debugPrint('StreamSink: $name.cancel() error: $e');
+          })
+          .whenComplete(() {
+            debugPrint('StreamSink: $name.cancel() completed');
+          }),
+    );
   }
 }
 
@@ -138,16 +134,31 @@ class InputProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> connect(InputDevice device) async {
+  /// Serializes [connect] calls: two rapid taps on the device list must not
+  /// both reach `select_*`, which asserts the backend has no source yet. The
+  /// last call wins -- it runs after the previous one, whose connection its own
+  /// teardown removes.
+  Future<void> _connectTail = Future.value();
+
+  Future<void> connect(InputDevice device) {
+    final result = _connectTail.then((_) => _connect(device));
+    // The tail must not inherit a failure, or the next tap would be skipped
+    // (a denied microphone permission would wedge the whole list).
+    _connectTail = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return result;
+  }
+
+  Future<void> _connect(InputDevice device) async {
     debugPrint("connect: $device");
-    if (_streamSink != null) {
-      debugPrint(
-        'connect: disconnecting previous (inputDevice=${_inputDevice != null})',
-      );
-      assert(_inputDevice != null);
-      await disconnect();
-      debugPrint('connect: previous disconnected');
-    }
+    // Always awaited, even when `_streamSink` is already null:
+    // `MidiSignalScreen.dispose()` starts the teardown without awaiting, and it
+    // nulls `_streamSink` synchronously while `_bridge.disconnect()` is still
+    // in flight. Skipping it would let `select_*`/`startStream` race that
+    // teardown, and `Backend::disconnect` sets `source = None` last.
+    await disconnect();
     _inputDevice = device;
     debugPrint('connect: starting stream for $device');
     switch (_inputDevice!) {
@@ -228,13 +239,14 @@ class InputProvider extends ChangeNotifier {
     // after init, it never gets null.
     assert(_inputDevice != null);
     final sink = _streamSink;
-    if (sink == null) {
-      return;
+    if (sink != null) {
+      assert(sink.hasNoObservers());
     }
-    assert(sink.hasNoObservers());
-    // "publicly disable the sink".
+    // "publicly disable the sink", synchronously
     _streamSink = null;
     await _bridge?.disconnect();
-    await sink.stop();
+    // After the await on purpose: `disconnect` drops the event sender, so FRB
+    // posts `close_stream` and `cancel()` is far likelier to complete.
+    sink?.stop();
   }
 }
