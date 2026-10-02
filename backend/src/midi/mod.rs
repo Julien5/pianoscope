@@ -2,6 +2,7 @@ use midir::{MidiInput, MidiInputConnection, MidiInputPort};
 use std::ops::Deref;
 use std::sync::Mutex;
 use std::thread::JoinHandle;
+mod filter;
 mod midi_simulation;
 
 use crate::debug::packets::EventDebugPacket;
@@ -157,9 +158,21 @@ impl Midi {
 
         let in_port = in_port.unwrap();
 
+        // "The 15 ms choice strikes a sweet spot balancing human perception against
+        //  mechanical/electrical switch dynamics."
+        // says Gemini.
+        let mut filter = filter::MidiFilter::new(15);
+
         let callback_sender = event_sender.clone();
         let callback = move |_timestamp: u64, bytes: &[u8], _data: &mut ()| {
+            // 1. Filter out MIDI Real-time / Sensing bytes (0xF8 - 0xFF)
+            if !filter.should_forward(bytes) {
+                log::trace!("ignore bytes: {:?}", bytes);
+                return;
+            }
+
             if let Some(event) = MidiEvent::from_midi(bytes) {
+                log::trace!("forward event: {:?}", event);
                 if let Some(debugger) = &debug_handle {
                     debugger
                         .stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());

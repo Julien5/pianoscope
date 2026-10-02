@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#set -euo pipefail
+set -e
 set -x
 
 function init() {
@@ -95,7 +95,7 @@ function setup-simulation() {
 	if [ -z "${SIMULATION}" ]; then
 		case "$TARGET" in
 			android*)
-				adb shell "setprop debug.pianoscope.simulation ''"
+				adb -s $(pixel) shell "setprop debug.pianoscope.simulation ''"
 				;;
 		esac
 		return
@@ -103,7 +103,7 @@ function setup-simulation() {
 	
 	case "$TARGET" in
 		android*)
-			adb shell setprop debug.pianoscope.simulation ${SIMULATION}
+			adb -s $(pixel) shell setprop debug.pianoscope.simulation ${SIMULATION}
 			;;
 		linux)
 			export SIMULATION=${SIMULATION}
