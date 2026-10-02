@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import '../../l10n/app_localizations.dart';
-import '../notation/models/key_signature.dart';
 import '../rust/api/bridge.dart';
 import '../rust/api/event.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -103,18 +102,13 @@ class InputProvider extends ChangeNotifier {
   Bridge? _bridge;
   List<InputDevice> _inputDevices = [];
   String? _error;
-  KeySignature? _keySignature;
+  
   InputDevice? _inputDevice;
   StreamSink? _streamSink;
 
   bool get hasBridge => _bridge != null;
   List<InputDevice> get inputDevices => _inputDevices;
   String? get error => _error;
-  KeySignature? get keySignature => _keySignature;
-  set keySignature(KeySignature value) {
-    _keySignature = value;
-    notifyListeners();
-  }
 
   Future<void> init() async {
     _bridge = await Bridge.newInstance();

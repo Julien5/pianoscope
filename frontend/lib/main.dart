@@ -37,17 +37,21 @@ Future<void> main() async {
   final provider = InputProvider();
   await provider.init();
   debugPrint("provided init done");
-  runApp(ChangeNotifierProvider.value(value: provider, child: const NanoApp()));
+
+  final userSettings = UserSettingsProvider();
+  await userSettings.init();
+  runApp(ChangeNotifierProvider.value(value: provider, child: NanoApp(userSettings: userSettings,)));
 }
 
 class NanoApp extends StatelessWidget {
-  const NanoApp({super.key});
+  final UserSettingsProvider userSettings;
+  const NanoApp({super.key, required this.userSettings});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => LocaleProvider(),
-      child: Consumer<LocaleProvider>(
+    return ChangeNotifierProvider.value(
+      value: userSettings,
+      child: Consumer<UserSettingsProvider>(
         builder: (context, localeProvider, child) {
           return MaterialApp.router(
             title: 'Pianoscope',

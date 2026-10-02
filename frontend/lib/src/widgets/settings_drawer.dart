@@ -8,9 +8,16 @@ import '../routes.dart';
 class SettingsDrawer extends StatelessWidget {
   const SettingsDrawer({super.key});
 
+  void _setLocale(UserSettingsProvider userSettings, String value) async {
+    await userSettings.setLocale(value);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final localeProvider = Provider.of<LocaleProvider>(context, listen: true);
+    final localeProvider = Provider.of<UserSettingsProvider>(
+      context,
+      listen: true,
+    );
 
     return Drawer(
       child: ListView(
@@ -49,7 +56,6 @@ class SettingsDrawer extends StatelessWidget {
             },
           ),
 
-
           ListTile(title: const Divider()),
 
           ListTile(title: const Text("Languages")),
@@ -58,7 +64,7 @@ class SettingsDrawer extends StatelessWidget {
             leading: const Icon(Icons.flag),
             title: const Text('English'),
             onTap: () {
-              localeProvider.setLocale(const Locale('en'));
+              _setLocale(localeProvider, 'en');
               Scaffold.of(context).closeDrawer();
             },
           ),
@@ -67,7 +73,7 @@ class SettingsDrawer extends StatelessWidget {
             leading: const Icon(Icons.flag),
             title: const Text('Francais'),
             onTap: () {
-              localeProvider.setLocale(const Locale('fr'));
+              _setLocale(localeProvider, 'fr');
               Scaffold.of(context).closeDrawer();
             },
           ),
@@ -76,7 +82,7 @@ class SettingsDrawer extends StatelessWidget {
             leading: const Icon(Icons.flag),
             title: const Text('Deutsch'),
             onTap: () {
-              localeProvider.setLocale(const Locale('de'));
+              _setLocale(localeProvider, 'de');
               Scaffold.of(context).closeDrawer();
             },
           ),

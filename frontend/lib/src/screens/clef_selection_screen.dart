@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../pianoscope.dart';
+import '../providers/locale_provider.dart';
 import '../style.dart';
 
 class KeyTile extends StatelessWidget {
@@ -18,6 +19,10 @@ class KeyTile extends StatelessWidget {
     );
   }
 
+  void setKeySignature(UserSettingsProvider userSettings, KeySignature keySignature) async {
+     await userSettings.setKeySignature(keySignature);
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isSelected = current == keySignature;
@@ -25,8 +30,8 @@ class KeyTile extends StatelessWidget {
       style: _getBorderStyle(isSelected),
 
       onPressed: () {
-        InputProvider model = context.read<InputProvider>();
-        model.keySignature = keySignature;
+        final userSettings = context.read<UserSettingsProvider>();
+        setKeySignature(userSettings, keySignature);
         GoRouter.of(context).pop();
       },
       child: KeySignatureTile(keySignature: keySignature),
@@ -55,8 +60,7 @@ class _KeyTilesState extends State<KeyTiles> {
 
   @override
   Widget build(BuildContext context) {
-    KeySignature current =
-        context.read<InputProvider>().keySignature ?? KeySignature.cMajor;
+    KeySignature current = context.read<UserSettingsProvider>().keySignature;
 
     List<Widget> children = [];
     for (int k = 0; k < widget.keySignatures.length; k++) {
@@ -118,11 +122,11 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
   @override
   void initState() {
     super.initState();
-    KeySignature? current = context.read<InputProvider>().keySignature;
-    if (current != null) {
-      if (current.accidentals > 0) _selectedIndex = 1;
-      if (current.accidentals < 0) _selectedIndex = 2;
-    }
+    KeySignature current = context.read<UserSettingsProvider>().keySignature;
+
+    if (current.accidentals > 0) _selectedIndex = 1;
+    if (current.accidentals < 0) _selectedIndex = 2;
+
     _tabController = TabController(
       length: 3,
       vsync: this,

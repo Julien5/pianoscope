@@ -154,7 +154,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> with RouteAware {
       );
     }
 
-    context.watch<LocaleProvider>();
+    context.watch<UserSettingsProvider>();
 
     final deviceList = ListView.builder(
       shrinkWrap: true,

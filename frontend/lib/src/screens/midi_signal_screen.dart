@@ -5,6 +5,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../../pianoscope.dart';
 import '../notation/grand_staff_parameters.dart';
+import '../providers/locale_provider.dart';
 import '../routes.dart';
 import '../rust/api/event.dart';
 import 'package:provider/provider.dart';
@@ -430,8 +431,8 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     if (simpleNoteName.isNotEmpty) {
       keyboardNotes = notes.toSet();
     }
-    InputProvider model = context.watch<InputProvider>();
-    KeySignature? keySignature = model.keySignature;
+    final userSettings = context.watch<UserSettingsProvider>();
+    KeySignature? keySignature = userSettings.keySignature;
 
     Move? candidate = moveCandidate();
 
