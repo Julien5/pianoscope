@@ -6,6 +6,7 @@ import '../../pianoscope.dart';
 class UserSettingsProvider extends ChangeNotifier {
   static const String _keyLocale = 'local';
   static const String _keyKeySignature = 'key_signature';
+  static const String _keySplitPoint = 'key_split_point';
 
   late final SharedPreferencesWithCache _prefs;
 
@@ -13,7 +14,7 @@ class UserSettingsProvider extends ChangeNotifier {
   Future<void> init() async {
     _prefs = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(
-        allowList: {_keyLocale, _keyKeySignature},
+        allowList: {_keyLocale, _keyKeySignature, _keySplitPoint},
       ),
     );
   }
@@ -32,6 +33,14 @@ class UserSettingsProvider extends ChangeNotifier {
   Future<void> setKeySignature(KeySignature value) async {
     if (_keySignatureSetting == value.accidentals) return;
     await _prefs.setInt(_keyKeySignature, value.accidentals);
+    notifyListeners();
+  }
+
+  int get _splitPointSetting => _prefs.getInt(_keySplitPoint) ?? 60;
+  int get splitPoint => _splitPointSetting;
+  Future<void> setSplitPoint(int value) async {
+    if (_splitPointSetting == value) return;
+    await _prefs.setInt(_keySplitPoint, value);
     notifyListeners();
   }
 }

@@ -309,7 +309,6 @@ enum Move { toUpper, toLower }
 
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   String _noteName = '---';
-  int splitPoint = 60;
 
   final Map<int, MidiEvent> _activeEvents = {};
   MidiEvent? _lastEvent;
@@ -378,39 +377,35 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
         .toList();
   }
 
-  Move? moveCandidate() {
+  Move? moveCandidate(UserSettingsProvider userSettings) {
     final notes = currentNotes();
     if (notes.isEmpty) {
       return null;
     }
     final note = notes.last;
-    if (splitPoint <= note.pitch.midiNumber) {
+    if (userSettings.splitPoint <= note.pitch.midiNumber) {
       return Move.toLower;
     }
     return Move.toUpper;
   }
 
-  void onNoteUpperStaffClicked() {
+  void onNoteUpperStaffClicked(UserSettingsProvider userSettings) {
     final notes = currentNotes();
     if (notes.isEmpty) {
       return;
     }
     final note = notes.last;
-    setState(() {
-      splitPoint = note.pitch.midiNumber;
-    });
+    userSettings.setSplitPoint(note.pitch.midiNumber);
   }
 
-  void onNoteLowerStaffClicked() {
+  void onNoteLowerStaffClicked(UserSettingsProvider userSettings) {
     debugPrint("onNoteLowerStaffClicked");
     final notes = currentNotes();
     if (notes.isEmpty) {
       return;
     }
     final note = notes.last;
-    setState(() {
-      splitPoint = note.pitch.midiNumber + 1;
-    });
+    userSettings.setSplitPoint(note.pitch.midiNumber + 1);
   }
 
   @override
@@ -434,16 +429,21 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     final userSettings = context.watch<UserSettingsProvider>();
     KeySignature? keySignature = userSettings.keySignature;
 
-    Move? candidate = moveCandidate();
+    Move? candidate = moveCandidate(userSettings);
 
     final callbacks = ScreenCallbacks(
       openClefSelectionClicked: openClefSelectionScreen,
+
       onNoteUpperStaffClicked: candidate == null || candidate != Move.toUpper
           ? null
-          : onNoteUpperStaffClicked,
+          : () {
+              onNoteUpperStaffClicked(userSettings);
+            },
       onNoteLowerStaffClicked: candidate == null || candidate != Move.toLower
           ? null
-          : onNoteLowerStaffClicked,
+          : () {
+              onNoteLowerStaffClicked(userSettings);
+            },
     );
 
     return OrientationBuilder(
@@ -457,7 +457,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
               notes: notes,
               selectClef: selectClef,
               noteName: _noteName,
-              splitPoint: splitPoint,
+              splitPoint: userSettings.splitPoint,
               orientation: orientation,
               constraints: constraints,
             );
