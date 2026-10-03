@@ -9,7 +9,7 @@ import 'package:window_manager/window_manager.dart';
 import 'pianoscope.dart';
 
 import 'l10n/app_localizations.dart';
-import 'src/providers/locale_provider.dart';
+import 'src/providers/user_settings_provider.dart';
 import 'src/routes.dart';
 import 'src/style.dart';
 
@@ -40,29 +40,31 @@ Future<void> main() async {
 
   final userSettings = UserSettingsProvider();
   await userSettings.init();
-  runApp(ChangeNotifierProvider.value(value: provider, child: NanoApp(userSettings: userSettings,)));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: provider),
+        ChangeNotifierProvider.value(value: userSettings),
+      ],
+      child: const NanoApp(),
+    ),
+  );
 }
 
 class NanoApp extends StatelessWidget {
-  final UserSettingsProvider userSettings;
-  const NanoApp({super.key, required this.userSettings});
+  const NanoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: userSettings,
-      child: Consumer<UserSettingsProvider>(
-        builder: (context, localeProvider, child) {
-          return MaterialApp.router(
-            title: 'Pianoscope',
-            locale: localeProvider.locale,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            theme: AppTheme.lightTheme,
-            routerConfig: router,
-          );
-        },
-      ),
+    final localeProvider = context.watch<UserSettingsProvider>();
+
+    return MaterialApp.router(
+      title: 'Pianoscope',
+      locale: localeProvider.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: AppTheme.lightTheme,
+      routerConfig: router,
     );
   }
 }

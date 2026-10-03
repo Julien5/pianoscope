@@ -5,7 +5,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../../pianoscope.dart';
 import '../notation/grand_staff_parameters.dart';
-import '../providers/locale_provider.dart';
+import '../providers/user_settings_provider.dart';
 import '../routes.dart';
 import '../rust/api/event.dart';
 import 'package:provider/provider.dart';

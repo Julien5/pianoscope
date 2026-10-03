@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../pianoscope.dart';
-import '../providers/locale_provider.dart';
+import '../providers/user_settings_provider.dart';
 import '../style.dart';
 
 class KeyTile extends StatelessWidget {
@@ -19,8 +19,11 @@ class KeyTile extends StatelessWidget {
     );
   }
 
-  void setKeySignature(UserSettingsProvider userSettings, KeySignature keySignature) async {
-     await userSettings.setKeySignature(keySignature);
+  void setKeySignature(
+    UserSettingsProvider userSettings,
+    KeySignature keySignature,
+  ) async {
+    await userSettings.setKeySignature(keySignature);
   }
 
   @override

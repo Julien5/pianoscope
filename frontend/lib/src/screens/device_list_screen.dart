@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/locale_provider.dart';
+import '../providers/user_settings_provider.dart';
 import '../routes.dart';
 import '../rust/api/bridge.dart';
 import 'package:provider/provider.dart';

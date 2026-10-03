@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/locale_provider.dart';
+import '../providers/user_settings_provider.dart';
 import '../routes.dart';
 
 class SettingsDrawer extends StatelessWidget {
