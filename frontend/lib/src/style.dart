@@ -27,6 +27,11 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w200,
     color: AppColors.text,
   );
+  static const TextStyle noteName = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w800,
+    color: AppColors.text,
+  );
 }
 
 abstract class AppTheme {

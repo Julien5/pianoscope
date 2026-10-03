@@ -14,5 +14,7 @@
   "sharp": "{noteName} sharp",
   "flat": "{noteName} flat",
 
-  "microphone": "Microphone"
+  "microphone": "Microphone",
+
+  "languages": "Languages"
 }

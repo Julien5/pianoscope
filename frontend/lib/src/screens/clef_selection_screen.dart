@@ -71,8 +71,12 @@ class _KeyTilesState extends State<KeyTiles> {
       children.add(
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [KeyTile(keySignature: key, current: current)], //
+          children: [
+            Padding(
+              padding: EdgeInsetsGeometry.all(0),
+              child: KeyTile(keySignature: key, current: current),
+            ),
+          ], //
         ),
       );
     }
@@ -82,17 +86,17 @@ class _KeyTilesState extends State<KeyTiles> {
         if (isLandscape) {
           return GridView.count(
             crossAxisCount: 3,
-            mainAxisSpacing: 1,
+            mainAxisSpacing: 5,
             childAspectRatio: 1.7,
-            crossAxisSpacing: 0,
+            crossAxisSpacing: 5,
             children: children,
           );
         }
         return GridView.count(
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
           crossAxisCount: 2,
-          mainAxisSpacing: 1,
           childAspectRatio: 1.7,
-          crossAxisSpacing: 1,
           children: children,
         );
       },
@@ -172,6 +176,7 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
                   Tab(text: 'Flats'),
                 ],
               ),
+              SizedBox(height: 10),
               Expanded(
                 child: TabBarView(controller: _tabController, children: pages),
               ),
@@ -199,7 +204,6 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
                 ),
               ),
             ),
-            const VerticalDivider(thickness: 1, width: 1),
             Expanded(
               child: TabBarView(controller: _tabController, children: pages),
             ),

@@ -7,14 +7,15 @@ import '../l10n/app_localizations.dart';
 import 'providers/input_provider.dart';
 import 'screens/clef_selection_screen.dart';
 import 'screens/device_list_screen.dart';
+import 'screens/languages_screen.dart';
 import 'screens/midi_signal_screen.dart';
 import 'widgets/settings_drawer.dart';
 
 String _shellTitle(BuildContext context, GoRouterState state) {
   switch (state.uri.path) {
-    case '/':
+    case Routes.devices:
       return AppLocalizations.of(context)!.selectInput;
-    case '/note':
+    case Routes.note:
       // Defensive: `/note` is only reachable after a successful connect(), so
       // there should always be a device. Render something rather than throw if
       // that ever stops holding. Not localized, unlike the other titles, because
@@ -24,15 +25,17 @@ String _shellTitle(BuildContext context, GoRouterState state) {
           ? device.localizedPortName(context)
           : "unknown";
       return title;
-    case '/note/clef':
+    case Routes.clefs:
       return AppLocalizations.of(context)!.selectClef;
+    case Routes.languages:
+      return AppLocalizations.of(context)!.languages;
   }
   return 'Pianoscope';
 }
 
 Widget _noAppBarScaffold(Widget child) {
   return Scaffold(
-    drawer: const SettingsDrawer(),
+    drawer: const SettingsDrawer(smallHeader: true),
     body: Builder(
       builder: (context) {
         return Stack(
@@ -57,12 +60,26 @@ Widget _noAppBarScaffold(Widget child) {
 Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
   final isLandscape =
       MediaQuery.of(context).orientation == Orientation.landscape;
-  if (state.uri.path == "/note" && isLandscape) {
+  if (state.uri.path == Routes.note && isLandscape) {
     return _noAppBarScaffold(child);
+  }
+  if (state.uri.path == Routes.languages || state.uri.path == Routes.clefs) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => GoRouter.of(context).pop(),
+        ),
+        title: Text(_shellTitle(context, state)),
+      ),
+      body: child,
+    );
   }
   return Scaffold(
     appBar: AppBar(title: Text(_shellTitle(context, state))),
-    drawer: const SettingsDrawer(), // Available across all routes in this shell
+    drawer: SettingsDrawer(
+      smallHeader: isLandscape,
+    ), // Available across all routes in this shell
     body: child,
   );
 }
@@ -71,6 +88,7 @@ class Routes {
   static const String devices = "/devices";
   static const String note = "/note";
   static const String clefs = "/clefs";
+  static const String languages = "/languages";
 }
 
 final router = GoRouter(
@@ -93,6 +111,10 @@ final router = GoRouter(
         GoRoute(
           path: Routes.clefs,
           builder: (context, state) => const ClefSelectionScreen(),
+        ),
+        GoRoute(
+          path: Routes.languages,
+          builder: (context, state) => const LanguageSelectionScreen(),
         ),
       ],
     ),

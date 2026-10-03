@@ -1,89 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-
-import '../providers/user_settings_provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../routes.dart';
 
 class SettingsDrawer extends StatelessWidget {
-  const SettingsDrawer({super.key});
-
-  void _setLocale(UserSettingsProvider userSettings, String value) async {
-    await userSettings.setLocale(value);
-  }
+  final bool smallHeader;
+  const SettingsDrawer({super.key, required this.smallHeader});
 
   @override
   Widget build(BuildContext context) {
-    final localeProvider = Provider.of<UserSettingsProvider>(
-      context,
-      listen: true,
+    Widget header = const DrawerHeader(
+      decoration: BoxDecoration(color: Colors.blue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            'Pianoscope',
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+        ],
+      ),
     );
-
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Drawer Header / Title section
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  'Language',
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              ],
-            ),
-          ),
-
+          smallHeader == false ? header : SizedBox(height: 80, child: header),
           ListTile(
             leading: const Icon(Icons.device_hub),
-            title: const Text('Devices'),
+            title: Text(AppLocalizations.of(context)!.selectInput),
             onTap: () {
               Scaffold.of(context).closeDrawer();
               GoRouter.of(context).go(Routes.devices);
             },
           ),
 
+          /*
           ListTile(
             leading: const Icon(Icons.music_note),
-            title: const Text('Clef'),
+            title: Text(AppLocalizations.of(context)!.selectClef),
             onTap: () {
               Scaffold.of(context).closeDrawer();
               GoRouter.of(context).push(Routes.clefs);
             },
-          ),
-
-          ListTile(title: const Divider()),
-
-          ListTile(title: const Text("Languages")),
-
+          ),*/
           ListTile(
             leading: const Icon(Icons.flag),
-            title: const Text('English'),
+            title: Text(AppLocalizations.of(context)!.languages),
             onTap: () {
-              _setLocale(localeProvider, 'en');
               Scaffold.of(context).closeDrawer();
-            },
-          ),
-
-          ListTile(
-            leading: const Icon(Icons.flag),
-            title: const Text('Francais'),
-            onTap: () {
-              _setLocale(localeProvider, 'fr');
-              Scaffold.of(context).closeDrawer();
-            },
-          ),
-
-          ListTile(
-            leading: const Icon(Icons.flag),
-            title: const Text('Deutsch'),
-            onTap: () {
-              _setLocale(localeProvider, 'de');
-              Scaffold.of(context).closeDrawer();
+              GoRouter.of(context).push(Routes.languages);
             },
           ),
         ],

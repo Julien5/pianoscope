@@ -14,5 +14,7 @@
   "sharp": "{noteName} dièse",
   "flat": "{noteName} bémol",
 
-  "microphone": "Microphone"
+  "microphone": "Microphone",
+
+  "languages": "Langues"
 }

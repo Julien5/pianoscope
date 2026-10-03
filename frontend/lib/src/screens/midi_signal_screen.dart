@@ -480,6 +480,10 @@ class NoteNameText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String title = localizeNote(noteName, AppLocalizations.of(context)!);
-    return Text(title, style: AppTextStyles.title, textAlign: TextAlign.center);
+    return Text(
+      title,
+      style: AppTextStyles.noteName,
+      textAlign: TextAlign.center,
+    );
   }
 }

@@ -183,6 +183,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Microphone'**
   String get microphone;
+
+  /// No description provided for @languages.
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get languages;
 }
 
 class _AppLocalizationsDelegate

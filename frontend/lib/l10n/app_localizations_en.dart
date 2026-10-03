@@ -53,4 +53,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get microphone => 'Microphone';
+
+  @override
+  String get languages => 'Languages';
 }
