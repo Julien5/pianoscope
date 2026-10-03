@@ -194,15 +194,8 @@ class MainContentLandscape extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          callbacks.openClefSelectionClicked();
-                        },
-                        child: Icon(Icons.menu),
-                      ),
-
                       SizedBox(
-                        width: 50,
+                        width: 100,
                         child: NoteNameText(noteName: data.noteName),
                       ),
                     ],
@@ -213,8 +206,7 @@ class MainContentLandscape extends StatelessWidget {
             ],
           ),
         ),
-
-        const SizedBox(width: 20),
+        const SizedBox(width: 50),
         Expanded(
           flex: 4,
           child: GrandStaffPanel(data: data, callbacks: callbacks),
@@ -488,6 +480,6 @@ class NoteNameText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String title = localizeNote(noteName, AppLocalizations.of(context)!);
-    return Text(title, style: AppTextStyles.normal);
+    return Text(title, style: AppTextStyles.title, textAlign: TextAlign.center);
   }
 }

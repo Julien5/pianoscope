@@ -30,11 +30,35 @@ String _shellTitle(BuildContext context, GoRouterState state) {
   return 'Pianoscope';
 }
 
+Widget _noAppBarScaffold(Widget child) {
+  return Scaffold(
+    drawer: const SettingsDrawer(),
+    body: Builder(
+      builder: (context) {
+        return Stack(
+          children: [
+            child,
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 8,
+              child: FloatingActionButton.small(
+                heroTag: 'settings',
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                child: const Icon(Icons.menu),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
 Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
   final isLandscape =
       MediaQuery.of(context).orientation == Orientation.landscape;
   if (state.uri.path == "/note" && isLandscape) {
-    return Scaffold(drawer: const SettingsDrawer(), body: child);
+    return _noAppBarScaffold(child);
   }
   return Scaffold(
     appBar: AppBar(title: Text(_shellTitle(context, state))),
