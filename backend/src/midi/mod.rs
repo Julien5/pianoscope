@@ -1,7 +1,9 @@
 use midir::{MidiInput, MidiInputConnection, MidiInputPort};
 use std::ops::Deref;
+use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError, SyncSender};
 use std::sync::Mutex;
-use std::thread::JoinHandle;
+use std::thread::{spawn, JoinHandle};
+use std::time::Duration;
 mod filter;
 mod midi_simulation;
 
@@ -36,12 +38,19 @@ impl MidiPort {
     }
 }
 
+struct MidiDevice {
+    pub input: MidiInputConnection<()>,
+    pub consumer_thread: JoinHandle<()>,
+}
+
+struct MidiSimulation {
+    pub thread: JoinHandle<()>,
+}
+
 enum Connection {
     None,
-    Simulation(JoinHandle<()>),
-    // Stored for its RAII side effect: dropping the connection stops the midir thread.
-    #[allow(dead_code)]
-    Device(MidiInputConnection<()>),
+    Simulation(MidiSimulation),
+    Device(MidiDevice),
 }
 
 #[derive(Clone)]
@@ -80,7 +89,6 @@ impl Midi {
     }
 
     pub fn connect(&self) -> Result<Input, String> {
-        // no op
         Ok(self.input.clone())
     }
 
@@ -108,7 +116,7 @@ impl Midi {
 
     pub fn stream_done(&self) -> bool {
         match self.connection.lock().unwrap().deref() {
-            Connection::Simulation(handle) => handle.is_finished(),
+            Connection::Simulation(handle) => handle.thread.is_finished(),
             Connection::Device(_) => false,
             Connection::None => false,
         }
@@ -123,15 +131,16 @@ impl Midi {
     ) {
         let handle =
             midi_simulation::start_stream(&spec, event_sender, error_sender, debug_handle.clone());
-        *self.connection.lock().unwrap() = Connection::Simulation(handle);
+        *self.connection.lock().unwrap() =
+            Connection::Simulation(MidiSimulation { thread: handle });
     }
 
     fn start_device_stream(
         &self,
         wanted_port: &MidiPort,
-        event_sender: event::EventSender,
+        _event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: Option<DebugServerHandle>,
+        _debug_handle: Option<DebugServerHandle>,
     ) {
         if wanted_port.name.is_empty() {
             error_sender(format!("port name is empty"));
@@ -158,32 +167,22 @@ impl Midi {
 
         let in_port = in_port.unwrap();
 
-        // "The 15 ms choice strikes a sweet spot balancing human perception against
-        //  mechanical/electrical switch dynamics."
-        // says Gemini.
-        let mut filter = filter::MidiFilter::new(15);
+        // High channel capacity to accommodate continuous streams without blocking
+        let (sender, receiver) = sync_channel::<Vec<u8>>(4096);
 
-        let callback_sender = event_sender.clone();
-        let callback = move |_timestamp: u64, bytes: &[u8], _data: &mut ()| {
-            // 1. Filter out MIDI Real-time / Sensing bytes (0xF8 - 0xFF)
-            if !filter.should_forward(bytes) {
-                log::trace!("ignore bytes: {:?}", bytes);
-                return;
-            }
+        let send_closure = Self::make_send_closure(sender);
+        let consumer_thread = spawn(Self::make_consumer_closure(
+            receiver,
+            _event_sender,
+            _debug_handle,
+        ));
 
-            if let Some(event) = MidiEvent::from_midi(bytes) {
-                log::trace!("forward event: {:?}", event);
-                if let Some(debugger) = &debug_handle {
-                    debugger
-                        .stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
-                }
-                callback_sender(event);
-            }
-        };
-
-        match midi_in.connect(&in_port, "nano", callback, ()) {
+        match midi_in.connect(&in_port, "nano", send_closure, ()) {
             Ok(conn) => {
-                *self.connection.lock().unwrap() = Connection::Device(conn);
+                *self.connection.lock().unwrap() = Connection::Device(MidiDevice {
+                    input: conn,
+                    consumer_thread,
+                });
             }
             Err(e) => {
                 log::trace!("error: {:?}", e);
@@ -192,37 +191,158 @@ impl Midi {
         }
     }
 
+    fn make_send_closure(
+        sender: SyncSender<Vec<u8>>,
+    ) -> impl FnMut(u64, &[u8], &mut ()) + Send + 'static {
+        let mut note_count = 0;
+        let mut total_bytes = 0;
+        let mut dropped_count = 0;
+        let mut last_note_msg: Vec<u8> = Vec::new();
+
+        move |_timestamp: u64, bytes: &[u8], _data: &mut ()| {
+            let mut offset = 0;
+
+            while offset < bytes.len() {
+                let status = bytes[offset];
+
+                // 1. Skip Real-Time single-byte messages (0xF8..=0xFF)
+                if status >= 0xF8 {
+                    offset += 1;
+                    continue;
+                }
+
+                let msg_len = Self::get_message_length_fast(status, &bytes[offset..]);
+                let msg = &bytes[offset..offset + msg_len];
+                let status_nibble = status & 0xF0;
+
+                // 2. Process Note On (0x90) and Note Off (0x80) events
+                if status_nibble == 0x80 || status_nibble == 0x90 {
+                    let is_duplicate = msg == last_note_msg.as_slice();
+
+                    if !is_duplicate {
+                        if sender.try_send(msg.to_vec()).is_ok() {
+                            last_note_msg = msg.to_vec();
+                            note_count += 1;
+                            total_bytes += msg_len;
+
+                            if note_count % 1_000 == 0 {
+                                log::trace!(
+                                    "sent {} k-notes ({} KiB)",
+                                    note_count / 1000,
+                                    total_bytes / 1024
+                                );
+                            }
+                        } else {
+                            dropped_count += 1;
+                            if dropped_count % 1_000 == 0 {
+                                log::warn!(
+                                    "midi queue full, dropped {} note messages",
+                                    dropped_count
+                                );
+                            }
+                        }
+                    }
+                }
+
+                offset += msg_len;
+            }
+        }
+    }
+
+    /// Determines message length for complete MIDI slices starting at slice[0].
+    fn get_message_length_fast(status: u8, slice: &[u8]) -> usize {
+        let status_nibble = status & 0xF0;
+
+        match status_nibble {
+            0x80 | 0x90 | 0xA0 | 0xB0 | 0xE0 => 3, // Note Off, Note On, Poly Touch, CC, Pitch Bend
+            0xC0 | 0xD0 => 2,                      // Program Change, Channel Pressure
+            0xF0 => match status {
+                0xF1 | 0xF3 => 2, // MTC Quarter Frame, Song Select
+                0xF2 => 3,        // Song Position Pointer
+                0xF0 => {
+                    // SysEx: find End of SysEx (0xF7)
+                    slice
+                        .iter()
+                        .position(|&b| b == 0xF7)
+                        .map_or(1, |idx| idx + 1)
+                }
+                _ => 1, // Tune Request (0xF6), etc.
+            },
+            _ => 1,
+        }
+    }
+
+    fn make_consumer_closure(
+        receiver: Receiver<Vec<u8>>,
+        event_sender: event::EventSender,
+        debug_handle: Option<DebugServerHandle>,
+    ) -> impl FnMut() {
+        let mut filter = filter::MidiFilter::new();
+        let callback_sender = event_sender.clone();
+        move || loop {
+            match receiver.recv_timeout(Duration::from_secs_f64(0.250)) {
+                Ok(bytes) => {
+                    Self::dispatch_event(&bytes, &mut filter, &callback_sender, &debug_handle);
+                }
+                Err(RecvTimeoutError::Timeout) => {}
+                // The midir connection was dropped: nothing left to filter.
+                Err(RecvTimeoutError::Disconnected) => break,
+            }
+        }
+    }
+
+    /// Parses a complete raw MIDI slice into a MidiEvent, checks filters, and forwards it.
+    fn dispatch_event(
+        msg: &[u8],
+        filter: &mut filter::MidiFilter,
+        callback_sender: &event::EventSender,
+        debug_handle: &Option<DebugServerHandle>,
+    ) {
+        if let Some(event) = MidiEvent::from_midi(msg) {
+            if !filter.should_forward(msg) {
+                // Skip event according to filter rules
+            } else {
+                log::trace!("send event: {:?}", event);
+                if let Some(debugger) = debug_handle {
+                    debugger
+                        .stream_data(&EventDebugPacket::from_event(&event).as_json().as_bytes());
+                }
+                callback_sender(event);
+                log::trace!("send event done");
+            }
+        } else {
+            log::trace!("unrecognized midi bytes: {:?}", msg);
+        }
+    }
+
     pub fn disconnect(&self) {
+        log::trace!("disconnect: start");
         if crate::simulation::enabled() {
             midi_simulation::disconnect_midi();
         }
         let conn = std::mem::replace(&mut *self.connection.lock().unwrap(), Connection::None);
         match conn {
             Connection::Device(connection) => {
-                // midir's Android backend has no `Drop` impl: merely dropping the
-                // connection would detach the reader thread, which keeps our
-                // event-sender `Arc` (and with it the FRB `StreamSink`) alive
-                // forever, so Dart would never receive `close_stream`. `close()`
-                // stops and joins the thread, dropping the callback and releasing
-                // the sink.
                 #[cfg(target_os = "android")]
                 {
                     crate::init::android::with_attached_jvm(|| {
-                        let _ = connection.close();
+                        let _ = connection.input.close();
                     });
                 }
                 #[cfg(not(target_os = "android"))]
                 {
-                    let _ = connection.close();
+                    log::trace!("close connection");
+                    let _ = connection.input.close();
                 }
+                log::trace!("join thread");
+                let _ = connection.consumer_thread.join();
             }
             Connection::Simulation(handle) => {
-                // Stop flag set above; join so the sink is dropped and
-                // `close_stream` is posted before disconnect returns.
-                let _ = handle.join();
+                let _ = handle.thread.join();
             }
             Connection::None => {}
         }
+        log::trace!("disconnect: done");
     }
 }
 

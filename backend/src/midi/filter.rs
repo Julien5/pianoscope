@@ -1,22 +1,19 @@
-use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::collections::BTreeSet;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MidiNote {
     pub channel: u8,
     pub note_number: u8,
 }
 
 pub struct MidiFilter {
-    active_notes: HashMap<MidiNote, Instant>,
-    debounce_duration: Duration,
+    active_notes: BTreeSet<MidiNote>,
 }
 
 impl MidiFilter {
-    pub fn new(debounce_ms: u64) -> Self {
+    pub fn new() -> Self {
         Self {
-            active_notes: HashMap::new(),
-            debounce_duration: Duration::from_millis(debounce_ms),
+            active_notes: BTreeSet::new(),
         }
     }
 
@@ -47,43 +44,34 @@ impl MidiFilter {
             channel,
             note_number,
         };
-        let now = Instant::now();
-
         match msg_type {
             // Note On (0x90 / 144)
             0x90 => {
                 if velocity > 0 {
                     // Check if note is already active or in debounce window
-                    if let Some(&last_time) = self.active_notes.get(&note) {
-                        if now.duration_since(last_time) < self.debounce_duration {
-                            return false; // Drop rapid hardware chatter
-                        }
+                    if self.active_notes.contains(&note) {
                         return false; // Drop duplicate NoteOn (already active)
                     }
 
                     // First NoteOn -> Register active state and timestamp
-                    self.active_notes.insert(note, now);
+                    self.active_notes.insert(note);
                     true
                 } else {
                     // Velocity 0 is standard MIDI for Note Off
-                    self.handle_note_off(note, now)
+                    self.handle_note_off(note)
                 }
             }
 
             // Note Off (0x80 / 128)
-            0x80 => self.handle_note_off(note, now),
+            0x80 => self.handle_note_off(note),
 
             // Pass Control Change (0xB0), Pitch Bend (0xE0), etc.
             _ => true,
         }
     }
 
-    fn handle_note_off(&mut self, note: MidiNote, now: Instant) -> bool {
-        if let Some(pressed_at) = self.active_notes.remove(&note) {
-            // Optional: Drop NoteOff if it happened unnaturally fast (< debounce threshold)
-            if now.duration_since(pressed_at) < self.debounce_duration {
-                return false;
-            }
+    fn handle_note_off(&mut self, note: MidiNote) -> bool {
+        if self.active_notes.remove(&note) {
             true // Forward legitimate NoteOff
         } else {
             false // Drop redundant / duplicate NoteOff
