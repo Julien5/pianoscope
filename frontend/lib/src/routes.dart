@@ -35,7 +35,7 @@ String _shellTitle(BuildContext context, GoRouterState state) {
 
 Widget _noAppBarScaffold(Widget child) {
   return Scaffold(
-    drawer: const SettingsDrawer(smallHeader: true),
+    drawer: const SettingsDrawer(hasSmallHeader: true),
     body: Builder(
       builder: (context) {
         return Stack(
@@ -78,7 +78,7 @@ Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
   return Scaffold(
     appBar: AppBar(title: Text(_shellTitle(context, state))),
     drawer: SettingsDrawer(
-      smallHeader: isLandscape,
+      hasSmallHeader: isLandscape,
     ), // Available across all routes in this shell
     body: child,
   );

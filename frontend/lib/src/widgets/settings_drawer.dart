@@ -4,12 +4,12 @@ import '../../l10n/app_localizations.dart';
 import '../routes.dart';
 
 class SettingsDrawer extends StatelessWidget {
-  final bool smallHeader;
-  const SettingsDrawer({super.key, required this.smallHeader});
+  final bool hasSmallHeader;
+  const SettingsDrawer({super.key, required this.hasSmallHeader});
 
   @override
   Widget build(BuildContext context) {
-    Widget header = const DrawerHeader(
+    Widget normalHeader = DrawerHeader(
       decoration: BoxDecoration(color: Colors.blue),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,11 +22,30 @@ class SettingsDrawer extends StatelessWidget {
         ],
       ),
     );
+
+    Widget smallHeader = SizedBox(
+      height: 80,
+      child: DrawerHeader(
+        decoration: BoxDecoration(color: Colors.blue),
+        margin: EdgeInsetsGeometry.all(0),
+        padding: EdgeInsetsGeometry.all(0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pianoscope',
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+          ],
+        ),
+      ),
+    );
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          smallHeader == false ? header : SizedBox(height: 80, child: header),
+          hasSmallHeader ? smallHeader : normalHeader,
           ListTile(
             leading: const Icon(Icons.device_hub),
             title: Text(AppLocalizations.of(context)!.selectInput),
