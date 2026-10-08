@@ -35,22 +35,20 @@ class ScreenCallbacks {
 
 class ScreenData {
   final int signalVelocity;
-  final Set<Note> keyboardNotes;
   final KeySignature? keySignature;
   final List<Note> notes;
   final String selectClef;
-  final String noteName;
+  final List<String> noteNames;
   final int splitPoint;
   final Orientation orientation;
   final BoxConstraints constraints;
 
   ScreenData({
     required this.signalVelocity,
-    required this.keyboardNotes,
     required this.keySignature,
     required this.notes,
     required this.selectClef,
-    required this.noteName,
+    required this.noteNames,
     required this.splitPoint,
     required this.orientation,
     required this.constraints,
@@ -100,14 +98,14 @@ class MainContentTightPortrait extends StatelessWidget {
             spacing: 10,
             children: [
               KeyboardWidget(
-                pressedNotes: data.keyboardNotes,
+                pressedNotes: data.notes,
                 whiteHeight: 150,
                 whiteWidth: 40,
                 pressedDotRadius: 5,
                 pressedDotColor: Colors.blue,
               ),
 
-              NoteNameText(noteName: data.noteName),
+              NoteNameText(noteNames: data.noteNames),
             ],
           ),
         ),
@@ -144,14 +142,14 @@ class MainContentPortrait extends StatelessWidget {
             spacing: 10,
             children: [
               KeyboardWidget(
-                pressedNotes: data.keyboardNotes,
+                pressedNotes: data.notes,
                 whiteHeight: 150,
                 whiteWidth: 40,
                 pressedDotRadius: 5,
                 pressedDotColor: Colors.blue,
               ),
 
-              NoteNameText(noteName: data.noteName),
+              NoteNameText(noteNames: data.noteNames),
             ],
           ),
         ),
@@ -182,7 +180,7 @@ class MainContentLandscape extends StatelessWidget {
             children: [
               Expanded(child: SizedBox(width: 10)),
               KeyboardWidget(
-                pressedNotes: data.keyboardNotes,
+                pressedNotes: data.notes,
                 whiteHeight: 200,
                 whiteWidth: 50,
                 pressedDotRadius: 5,
@@ -196,7 +194,7 @@ class MainContentLandscape extends StatelessWidget {
                     children: [
                       SizedBox(
                         width: 100,
-                        child: NoteNameText(noteName: data.noteName),
+                        child: NoteNameText(noteNames: data.noteNames),
                       ),
                     ],
                   ),
@@ -300,8 +298,6 @@ class GrandStaffPanel extends StatelessWidget {
 enum Move { toUpper, toLower }
 
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
-  String _noteName = '---';
-
   final Map<int, MidiEvent> _activeEvents = {};
   MidiEvent? _lastEvent;
 
@@ -335,7 +331,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   void _onEvent(MidiEvent event) {
     setState(() {
       _lastEvent = event;
-      _noteName = event.noteName;
       if (event.status == Status.noteOn) {
         _activeEvents[event.note] = event;
       } else if (event.status == Status.noteOff) {
@@ -400,6 +395,21 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     userSettings.setSplitPoint(note.pitch.midiNumber + 1);
   }
 
+  List<String> noteNames() {
+    /*if (_lastEvent != null && _lastEvent!.status == Status.noteOn) {
+      return [_lastEvent!.noteName];
+    }*/
+    final notes = currentNotes();
+    notes.sort(
+      (note1, note2) =>
+          note1.pitch.midiNumber.compareTo(note2.pitch.midiNumber),
+    );
+    if (notes.isNotEmpty) {
+      return notes.map((note) => note.pitch.noteName.name).toList();
+    }
+    return [];
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_inputProvider == null) {
@@ -409,15 +419,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     context.watch<InputProvider>();
     final signalVelocity = (_lastEvent?.velocity ?? 0).clamp(0, 127);
     final String selectClef = AppLocalizations.of(context)!.selectClef;
-    // note name without digits
-    final String simpleNoteName = _noteName.replaceAll(RegExp(r'[0-9-]'), '');
-
     final notes = currentNotes();
-
-    Set<Note> keyboardNotes = {};
-    if (simpleNoteName.isNotEmpty) {
-      keyboardNotes = notes.toSet();
-    }
     final userSettings = context.watch<UserSettingsProvider>();
     KeySignature? keySignature = userSettings.keySignature;
 
@@ -444,11 +446,10 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
           builder: (context, constraints) {
             final data = ScreenData(
               signalVelocity: signalVelocity,
-              keyboardNotes: keyboardNotes,
               keySignature: keySignature,
               notes: notes,
               selectClef: selectClef,
-              noteName: _noteName,
+              noteNames: noteNames(),
               splitPoint: userSettings.splitPoint,
               orientation: orientation,
               constraints: constraints,
@@ -475,11 +476,14 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
 }
 
 class NoteNameText extends StatelessWidget {
-  final String noteName;
-  const NoteNameText({super.key, required this.noteName});
+  final List<String> noteNames;
+  const NoteNameText({super.key, required this.noteNames});
   @override
   Widget build(BuildContext context) {
-    final String title = localizeNote(noteName, AppLocalizations.of(context)!);
+    final localized = noteNames
+        .map((name) => localizeNote(name, AppLocalizations.of(context)!))
+        .toList();
+    final String title = localized.join(",");
     return Text(
       title,
       style: AppTextStyles.noteName,

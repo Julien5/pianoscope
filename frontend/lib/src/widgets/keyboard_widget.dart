@@ -104,7 +104,7 @@ class KeyboardWidget extends StatelessWidget {
   });
 
   /// Notes currently held down. Order and duplicates don't matter.
-  final Set<Note> pressedNotes;
+  final List<Note> pressedNotes;
 
   /// Width of a single white key, in logical pixels, at natural (1:1) scale.
   final double whiteWidth;
@@ -175,7 +175,7 @@ class _KeyboardPainter extends CustomPainter {
     required this.pressedDotColor,
   });
 
-  final Set<Note> pressedNotes;
+  final List<Note> pressedNotes;
   final double whiteWidth;
   final double whiteHeight;
   final double blackWidthRatio;
