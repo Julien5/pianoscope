@@ -38,7 +38,6 @@ class ScreenData {
   final KeySignature? keySignature;
   final List<Note> notes;
   final String selectClef;
-  final List<String> noteNames;
   final int splitPoint;
   final Orientation orientation;
   final BoxConstraints constraints;
@@ -48,7 +47,6 @@ class ScreenData {
     required this.keySignature,
     required this.notes,
     required this.selectClef,
-    required this.noteNames,
     required this.splitPoint,
     required this.orientation,
     required this.constraints,
@@ -105,7 +103,7 @@ class MainContentTightPortrait extends StatelessWidget {
                 pressedDotColor: Colors.blue,
               ),
 
-              NoteNameText(noteNames: data.noteNames),
+              NoteNameText(noteNames: data.notes),
             ],
           ),
         ),
@@ -149,7 +147,7 @@ class MainContentPortrait extends StatelessWidget {
                 pressedDotColor: Colors.blue,
               ),
 
-              NoteNameText(noteNames: data.noteNames),
+              NoteNameText(noteNames: data.notes),
             ],
           ),
         ),
@@ -194,7 +192,7 @@ class MainContentLandscape extends StatelessWidget {
                     children: [
                       SizedBox(
                         width: 100,
-                        child: NoteNameText(noteNames: data.noteNames),
+                        child: NoteNameText(noteNames: data.notes),
                       ),
                     ],
                   ),
@@ -395,21 +393,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     userSettings.setSplitPoint(note.pitch.midiNumber + 1);
   }
 
-  List<String> noteNames() {
-    /*if (_lastEvent != null && _lastEvent!.status == Status.noteOn) {
-      return [_lastEvent!.noteName];
-    }*/
-    final notes = currentNotes();
-    notes.sort(
-      (note1, note2) =>
-          note1.pitch.midiNumber.compareTo(note2.pitch.midiNumber),
-    );
-    if (notes.isNotEmpty) {
-      return notes.map((note) => note.pitch.noteName.name).toList();
-    }
-    return [];
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_inputProvider == null) {
@@ -449,7 +432,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
               keySignature: keySignature,
               notes: notes,
               selectClef: selectClef,
-              noteNames: noteNames(),
               splitPoint: userSettings.splitPoint,
               orientation: orientation,
               constraints: constraints,
@@ -476,7 +458,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
 }
 
 class NoteNameText extends StatelessWidget {
-  final List<String> noteNames;
+  final List<Note> noteNames;
   const NoteNameText({super.key, required this.noteNames});
   @override
   Widget build(BuildContext context) {

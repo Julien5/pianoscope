@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import '../pianoscope.dart';
 
 /// Cleans up raw OS MIDI port names into user-friendly display labels.
 String formatMidiPortNameDefault(String rawName) {
@@ -175,24 +176,21 @@ String formatMidiPortName(String rawName) {
   return ret;
 }
 
-String localizeNote(String note, AppLocalizations localizations) {
-  Map<String, String> locales = {};
-  locales["C"] = localizations.noteC;
-  locales["D"] = localizations.noteD;
-  locales["E"] = localizations.noteE;
-  locales["F"] = localizations.noteF;
-  locales["G"] = localizations.noteG;
-  locales["A"] = localizations.noteA;
-  locales["B"] = localizations.noteB;
-  String naturalName = note;
-  for (String n in ["C", "D", "E", "F", "G", "A", "B"]) {
-    if (note.toUpperCase().contains(n)) {
-      naturalName = locales[n]!;
-    }
+String localizeNote(Note note, AppLocalizations localizations) {
+  Map<NoteName, String> locales = {};
+  locales[NoteName.C] = localizations.noteC;
+  locales[NoteName.D] = localizations.noteD;
+  locales[NoteName.E] = localizations.noteE;
+  locales[NoteName.F] = localizations.noteF;
+  locales[NoteName.G] = localizations.noteG;
+  locales[NoteName.A] = localizations.noteA;
+  locales[NoteName.B] = localizations.noteB;
+  String naturalName = locales[note.pitch.noteName]!;
+  if (note.pitch.accidental == Accidental.sharp) {
+    return localizations.sharp(naturalName);
   }
-  String ret = naturalName;
-  if (note.toUpperCase().contains("#")) {
-    ret = localizations.sharp(naturalName);
+  if (note.pitch.accidental == Accidental.flat) {
+    return localizations.flat(naturalName);
   }
-  return ret;
+  return naturalName;
 }
