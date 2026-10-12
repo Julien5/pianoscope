@@ -98,6 +98,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Envoyer une capture d\'écran de l\'écran actuel';
 
   @override
+  String get feedbackSent => 'Retour envoyé. Merci !';
+
+  @override
+  String get feedbackQueued =>
+      'Retour enregistré et envoyé plus tard, dès que le serveur est joignable.';
+
+  @override
+  String get feedbackNotSaved => 'Le retour n\'a pas pu être enregistré.';
+
+  @override
   String get feedbackCancel => 'Annuler';
 
   @override

@@ -244,6 +244,24 @@ abstract class AppLocalizations {
   /// **'Send a screenshot of the current screen'**
   String get feedbackScreenshot;
 
+  /// No description provided for @feedbackSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback sent. Thank you!'**
+  String get feedbackSent;
+
+  /// No description provided for @feedbackQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback saved and sent later, when the server is reachable.'**
+  String get feedbackQueued;
+
+  /// No description provided for @feedbackNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback could not be saved.'**
+  String get feedbackNotSaved;
+
   /// No description provided for @feedbackCancel.
   ///
   /// In en, this message translates to:

@@ -62,6 +62,44 @@ Future<bool> uploadReport(String filename) async {
   }
 }
 
+/// Where a submitted feedback ended up.
+class FeedbackOutcome {
+  /// Name of the file in the cache directory.
+  final String filename;
+
+  /// False when the server could not be reached. The file then stays on disk
+  /// and is offered again on the next launch.
+  final bool uploaded;
+
+  const FeedbackOutcome({required this.filename, required this.uploaded});
+}
+
+/// Writes the feedback to the cache, then immediately tries to send it.
+/// Returns null when it could not be written at all.
+Future<FeedbackOutcome?> submitFeedback({
+  required String email,
+  required String message,
+  Uint8List? screenshot,
+}) async {
+  final feedback = Feedback(
+    email: email,
+    message: message,
+    screenshot: screenshot ?? Uint8List(0),
+  );
+  final String filename;
+  try {
+    filename = saveFeedback(feedback: feedback);
+  } catch (e) {
+    debugPrint("feedback not saved: $e");
+    return null;
+  }
+  debugPrint("feedback saved as $filename");
+  return FeedbackOutcome(
+    filename: filename,
+    uploaded: await uploadReport(filename),
+  );
+}
+
 void setupReportHandlers() {
   final presentError = FlutterError.onError;
   FlutterError.onError = (details) {

@@ -35,12 +35,18 @@ pub fn write_report(report: CrashReport) -> String {
     }
 }
 
+/// Stores the feedback in the cache and returns the file name it was given,
+/// so the caller can upload exactly that file. Unlike the other functions in
+/// this module this one returns a [Result] rather than using the
+/// empty-string-means-success convention, because the name and an error
+/// message would otherwise be indistinguishable.
 #[flutter_rust_bridge::frb(sync)]
-pub fn save_feedback(feedback: Feedback) -> String {
-    match backend::report::save_feedback(feedback) {
-        Ok(_) => String::new(),
-        Err(err) => err,
-    }
+pub fn save_feedback(feedback: Feedback) -> Result<String, String> {
+    backend::report::save_feedback(feedback).map(|path| {
+        path.file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default()
+    })
 }
 
 /// Sorted names of the reports and feedback still waiting to be uploaded.

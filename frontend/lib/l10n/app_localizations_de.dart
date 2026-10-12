@@ -98,6 +98,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Einen Screenshot des aktuellen Bildschirms senden';
 
   @override
+  String get feedbackSent => 'Rückmeldung gesendet. Vielen Dank!';
+
+  @override
+  String get feedbackQueued =>
+      'Rückmeldung gespeichert und später gesendet, sobald der Server erreichbar ist.';
+
+  @override
+  String get feedbackNotSaved =>
+      'Die Rückmeldung konnte nicht gespeichert werden.';
+
+  @override
   String get feedbackCancel => 'Abbrechen';
 
   @override

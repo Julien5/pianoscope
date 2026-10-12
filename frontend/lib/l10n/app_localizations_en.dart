@@ -95,6 +95,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackScreenshot => 'Send a screenshot of the current screen';
 
   @override
+  String get feedbackSent => 'Feedback sent. Thank you!';
+
+  @override
+  String get feedbackQueued =>
+      'Feedback saved and sent later, when the server is reachable.';
+
+  @override
+  String get feedbackNotSaved => 'Feedback could not be saved.';
+
+  @override
   String get feedbackCancel => 'Cancel';
 
   @override
