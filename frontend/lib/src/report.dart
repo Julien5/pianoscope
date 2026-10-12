@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'rust/api/init.dart';
+import 'rust/api/report.dart';
 
 const reportDirName = 'reports';
 
@@ -54,9 +54,12 @@ void setupReportHandlers() {
 void writeDartReport({required String errorMessage, StackTrace? stack}) {
   try {
     final error = writeReport(
-      location: _location(stack) ?? 'unknown',
-      errorMessage: errorMessage,
-      stacktrace: stack?.toString() ?? '',
+      report: CrashReport(
+        datetime: reportDatetime(),
+        location: _location(stack) ?? 'unknown',
+        errorMessage: errorMessage,
+        stacktrace: stack?.toString() ?? '',
+      ),
     );
     if (error.isNotEmpty) {
       debugPrint("crash report not written: $error");
@@ -64,6 +67,12 @@ void writeDartReport({required String errorMessage, StackTrace? stack}) {
   } catch (e) {
     debugPrint("crash report not written: $e");
   }
+}
+
+/// RFC 3339 in UTC with second precision, matching what Rust writes in
+/// `backend/src/report.rs`. Pinned by `report_datetime_test.dart`.
+String reportDatetime() {
+  return '${DateTime.now().toUtc().toIso8601String().substring(0, 19)}Z';
 }
 
 String? _location(StackTrace? stack) {

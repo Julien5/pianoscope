@@ -39,22 +39,6 @@ pub fn init_app() {
     ensure_android_context();
 }
 
-#[flutter_rust_bridge::frb(sync)]
-pub fn set_report_dir(dir: String) -> String {
-    match backend::report::set_report_dir(&dir) {
-        Ok(()) => String::new(),
-        Err(err) => err,
-    }
-}
-
-#[flutter_rust_bridge::frb(sync)]
-pub fn write_report(location: String, error_message: String, stacktrace: String) -> String {
-    match backend::report::write_report(&location, &error_message, &stacktrace) {
-        Ok(_) => String::new(),
-        Err(err) => err,
-    }
-}
-
 #[cfg(target_os = "android")]
 fn ensure_android_context() {
     backend::init::android::ensure_context();
