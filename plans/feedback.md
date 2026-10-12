@@ -102,9 +102,9 @@ pub fn reports_list() -> Vec<String>
 ```
 exposed to the frontend (in "frontend/rust/..../report.rs").
 
-Then, the frontend will trigger the data upload one by one, implemented in task 7 and task 8.
+Then, the frontend will trigger the data upload one by one, implemented in task 6 and task 7.
 
-Task 7: upload function on the backend side, with frontend exposure:
+Task 6: upload function on the backend side, with frontend exposure:
 ```
 pub fn upload(filename:&String) -> Result<String, String>
 ```
@@ -112,45 +112,8 @@ This is a first draft, the error is converted to a string with "{:?}".
 
 Then, the frontend will trigger the data upload one by one: Task 8.
 
-Task 8: Right after initialization, check the count of reports to be sent. If count>0, open the feedback dialog in crash report mode. For each file, (1) display "uploading crash #n..." or "uploading feedback #n..." depending on the filename (if it contains "feedback", this is a feedback, otherwise this is a crash report) in the text field, and (2) trigger the upload function. In this first version, the user has no possibility to cancel the upload: submit and cancel buttons are disabled.
+Task 7: Right after initialization, check the count of reports to be sent. If count>0, open the feedback dialog in crash report mode. For each file, (1) display "uploading crash #n..." or "uploading feedback #n..." depending on the filename (if it contains "feedback", this is a feedback, otherwise this is a crash report) in the text field, and (2) trigger the upload function. In this first version, the user has no possibility to cancel the upload: submit and cancel buttons are disabled.
 
+Now implementing the feedback upload for the submit button is easy.
 
-Now we need a shared definition of feedback and crash report.
-On the backend side:
-```
-#[derive(Serialize)]
-struct Feedback {
-    datetime: String,
-	email: String,
-    message: String,
-    screenshot: Vec<u8>, // png bytes.
-}
-```
-
-- /home/julien/projects/pianoscope/frontend/rust/src/api/report.rs
-
-Task 6: Add a rust backend function to retrieve the pending reports and feedbacks.
-```
-```
-
-At application startup, 
-
-
- and implement the submit callback that sends the submit request. 
-
-- When the user presses the feedback button, a ping/health http request is sent to the server to check it is reachable. 
-
-- If the server is not available, a message is shown that the feedback will be stored locally and sent automatically when the ser
-ver gets reachable. Then, the feedback is stored in a local json file stored in the application *cache*. 
-
-- The feedback dialog has three field:
-  * user email (remembered as user settings, not mandatory)
-  * a free text message 
-  * a checkbox to send a screenshot of the current screen.
-  
-- When the user clicks on the submit button, the `submit` http request is sent. 
-
-
-
-
-- Task 4: Send the crash report. When the flutter application starts up, it checks if json report files exists. If so, it asks the user for approval to send them. It sends one submit request per file. 
+Task 8: When the user clicks on submit, write the report in the cache (which return the filename). Then upload the filement using the `upload` (which autonomously deletes the file in the cache).
