@@ -40,10 +40,8 @@ pub fn setup_panic_hook() {
             let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let (location, error_message) = describe_panic(info);
                 let stacktrace = std::backtrace::Backtrace::force_capture().to_string();
-                if let Some(path) = write_report(&location, &error_message, &stacktrace) {
-                    log::error!("nano: crash report written to {}", path.display());
-                } else {
-                    log::error!("nano: crash report not written (no report directory)");
+                if let Err(err) = write_report(&location, &error_message, &stacktrace) {
+                    log::error!("nano: crash report not written: {}", err);
                 }
             }));
             previous(info);
@@ -68,19 +66,27 @@ fn describe_panic(info: &PanicHookInfo<'_>) -> (String, String) {
     (location, error_message)
 }
 
-fn write_report(location: &str, error_message: &str, stacktrace: &str) -> Option<PathBuf> {
-    let dir = report_dir()?;
+pub fn write_report(
+    location: &str,
+    error_message: &str,
+    stacktrace: &str,
+) -> Result<PathBuf, String> {
+    let dir = report_dir().ok_or("report directory is not set")?;
     let report = CrashReport {
         datetime: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         location: location.to_string(),
         error_message: error_message.to_string(),
         stacktrace: stacktrace.to_string(),
     };
-    let json = serde_json::to_string_pretty(&report).ok()?;
-    let (path, mut file) = create_report_file(dir)?;
-    file.write_all(json.as_bytes()).ok()?;
-    file.flush().ok()?;
-    Some(path)
+    let json = serde_json::to_string_pretty(&report)
+        .map_err(|err| format!("cannot serialize report: {}", err))?;
+    let (path, mut file) = create_report_file(dir).ok_or("cannot create report file")?;
+    file.write_all(json.as_bytes())
+        .map_err(|err| format!("cannot write report: {}", err))?;
+    file.flush()
+        .map_err(|err| format!("cannot flush report: {}", err))?;
+    log::error!("nano: crash report written to {}", path.display());
+    Ok(path)
 }
 
 fn create_report_file(dir: &Path) -> Option<(PathBuf, std::fs::File)> {
