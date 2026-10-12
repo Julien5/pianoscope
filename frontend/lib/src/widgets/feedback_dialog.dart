@@ -29,22 +29,37 @@ class FeedbackDialog extends StatefulWidget {
   final FeedbackMode mode;
   final int crashReportCount;
 
+  /// When set, submitting runs this instead of closing the dialog. The dialog
+  /// then stays open with both actions disabled and [reportProgress] updates
+  /// the text shown in place of the inputs.
+  final Future<void> Function(void Function(String reportProgress))? onApproved;
+
   const FeedbackDialog({
     super.key,
     required this.mode,
     this.crashReportCount = 0,
+    this.onApproved,
   });
 
-  /// Returns the user's answer, or null if the dialog was cancelled.
+  /// Returns the user's answer, or null if the dialog was cancelled. With
+  /// [onApproved] the dialog closes by itself once the work is done and the
+  /// result is always null.
   static Future<FeedbackRequest?> show(
     BuildContext context, {
     required FeedbackMode mode,
     int crashReportCount = 0,
+    Future<void> Function(void Function(String reportProgress))? onApproved,
   }) {
     return showDialog<FeedbackRequest>(
       context: context,
-      builder: (context) =>
-          FeedbackDialog(mode: mode, crashReportCount: crashReportCount),
+      // Uploads cannot be interrupted, so the dialog must not be dismissible
+      // while it is open.
+      barrierDismissible: onApproved == null,
+      builder: (context) => FeedbackDialog(
+        mode: mode,
+        crashReportCount: crashReportCount,
+        onApproved: onApproved,
+      ),
     );
   }
 
@@ -57,6 +72,8 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
   late final TextEditingController _email;
   final _message = TextEditingController();
   bool _withScreenshot = false;
+  bool _busy = false;
+  String _progress = '';
 
   bool get _isCrashReport => widget.mode == FeedbackMode.crashReport;
 
@@ -76,6 +93,25 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
   }
 
   Future<void> _submit() async {
+    final onApproved = widget.onApproved;
+    if (onApproved != null) {
+      setState(() => _busy = true);
+      Object? failure;
+      StackTrace? failureStack;
+      try {
+        await onApproved((text) {
+          if (mounted) setState(() => _progress = text);
+        });
+      } catch (e, s) {
+        failure = e;
+        failureStack = s;
+      }
+      // Close even on failure: leaving both actions disabled would trap the
+      // user in a dialog they cannot close.
+      if (mounted) Navigator.of(context).pop();
+      if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
+      return;
+    }
     final isValid = _isCrashReport || _formKey.currentState?.validate() == true;
     if (!isValid) return;
     final settings = context.read<UserSettingsProvider>();
@@ -154,20 +190,33 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
     );
   }
 
+  Widget _progressView() {
+    return Text(_progress, style: AppTextStyles.normal);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final Widget content;
+    if (_busy) {
+      content = _progressView();
+    } else if (_isCrashReport) {
+      content = _crashReportNotice(l10n);
+    } else {
+      content = _feedbackFields(l10n);
+    }
     return AlertDialog(
       title: Text(_isCrashReport ? l10n.crashReportTitle : l10n.feedbackTitle),
-      content: _isCrashReport
-          ? _crashReportNotice(l10n)
-          : _feedbackFields(l10n),
+      content: content,
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
           child: Text(l10n.feedbackCancel),
         ),
-        ElevatedButton(onPressed: _submit, child: Text(l10n.feedbackSubmit)),
+        ElevatedButton(
+          onPressed: _busy ? null : _submit,
+          child: Text(l10n.feedbackSubmit),
+        ),
       ],
     );
   }

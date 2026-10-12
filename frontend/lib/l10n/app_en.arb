@@ -28,5 +28,8 @@
   "feedbackMessageHint": "Tell us what happened",
   "feedbackScreenshot": "Send a screenshot of the current screen",
   "feedbackCancel": "Cancel",
+  "uploadingCrashReport": "Uploading crash report #{index}…",
+  "uploadingFeedback": "Uploading feedback #{index}…",
+  "uploadSummary": "{sent} sent, {failed} failed",
   "feedbackSubmit": "Send"
 }

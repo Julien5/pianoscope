@@ -101,5 +101,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get feedbackCancel => 'Annuler';
 
   @override
+  String uploadingCrashReport(Object index) {
+    return 'Envoi du rapport de plantage n°$index…';
+  }
+
+  @override
+  String uploadingFeedback(Object index) {
+    return 'Envoi du retour n°$index…';
+  }
+
+  @override
+  String uploadSummary(Object failed, Object sent) {
+    return '$sent envoyés, $failed en échec';
+  }
+
+  @override
   String get feedbackSubmit => 'Envoyer';
 }

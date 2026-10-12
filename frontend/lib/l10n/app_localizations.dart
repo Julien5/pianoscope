@@ -250,6 +250,24 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get feedbackCancel;
 
+  /// No description provided for @uploadingCrashReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading crash report #{index}…'**
+  String uploadingCrashReport(Object index);
+
+  /// No description provided for @uploadingFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading feedback #{index}…'**
+  String uploadingFeedback(Object index);
+
+  /// No description provided for @uploadSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{sent} sent, {failed} failed'**
+  String uploadSummary(Object failed, Object sent);
+
   /// No description provided for @feedbackSubmit.
   ///
   /// In en, this message translates to:

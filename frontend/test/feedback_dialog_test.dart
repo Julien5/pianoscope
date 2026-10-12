@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/l10n/app_localizations.dart';
@@ -17,6 +19,7 @@ Future<OpenDialog> openDialog(
   WidgetTester tester,
   FeedbackMode mode, {
   int crashReportCount = 0,
+  Future<void> Function(void Function(String reportProgress))? onApproved,
 }) async {
   SharedPreferencesAsyncPlatform.instance =
       InMemorySharedPreferencesAsync.empty();
@@ -36,6 +39,7 @@ Future<OpenDialog> openDialog(
                 context,
                 mode: mode,
                 crashReportCount: crashReportCount,
+                onApproved: onApproved,
               ),
               child: const Text('open'),
             ),
@@ -177,5 +181,99 @@ void main() {
     expect(request!.email, isEmpty);
     expect(request.message, isEmpty);
     expect(request.withScreenshot, isFalse);
+  });
+
+  testWidgets('onApproved disables both actions until it completes', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    var started = false;
+    await openDialog(
+      tester,
+      FeedbackMode.crashReport,
+      crashReportCount: 2,
+      onApproved: (reportProgress) {
+        started = true;
+        return gate.future;
+      },
+    );
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
+    await tester.pump();
+    expect(started, isTrue);
+    expect(find.byType(FeedbackDialog), findsOneWidget);
+
+    expect(
+      tester
+          .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Send'))
+          .onPressed,
+      isNull,
+      reason: 'submit must be disabled while uploading',
+    );
+    expect(
+      tester
+          .widget<TextButton>(find.widgetWithText(TextButton, 'Cancel'))
+          .onPressed,
+      isNull,
+      reason: 'cancel must be disabled while uploading',
+    );
+
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(FeedbackDialog), findsNothing);
+  });
+
+  testWidgets('onApproved progress replaces the crash notice', (tester) async {
+    await openDialog(
+      tester,
+      FeedbackMode.crashReport,
+      crashReportCount: 2,
+      onApproved: (reportProgress) async {
+        reportProgress('Uploading crash report #1');
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        reportProgress('Uploading feedback #2');
+      },
+    );
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
+    await tester.pump();
+    expect(find.text('Uploading crash report #1'), findsOneWidget);
+    expect(
+      find.textContaining('could be sent'),
+      findsNothing,
+      reason: 'the notice is replaced by the progress',
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byType(FeedbackDialog), findsNothing);
+  });
+
+  testWidgets('a failing onApproved still closes the dialog', (tester) async {
+    final errors = <Object>[];
+    var closed = false;
+
+    // The dialog rethrows whatever onApproved failed with, and nobody awaits
+    // the tap, so the error has to be caught in a zone of its own.
+    await runZonedGuarded(() async {
+      await openDialog(
+        tester,
+        FeedbackMode.crashReport,
+        onApproved: (reportProgress) async => throw StateError('upload broke'),
+      );
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
+      await tester.pumpAndSettle();
+      closed = find.byType(FeedbackDialog).evaluate().isEmpty;
+    }, (error, stack) => errors.add(error));
+
+    expect(
+      closed,
+      isTrue,
+      reason: 'the user must not be trapped with disabled actions',
+    );
+    expect(
+      errors.single,
+      isStateError,
+      reason: 'and the failure is rethrown so it reaches the crash reporter',
+    );
   });
 }

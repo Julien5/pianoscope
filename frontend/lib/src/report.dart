@@ -36,6 +36,32 @@ Future<void> initReportDir() async {
   }
 }
 
+/// Names of the reports and feedback still waiting to be sent.
+Future<List<String>> pendingReportNames() async {
+  try {
+    return await reportsList();
+  } catch (e) {
+    debugPrint("pending reports not listed: $e");
+    return [];
+  }
+}
+
+/// Sends one pending file. False means it failed and stays on disk for the
+/// next launch.
+Future<bool> uploadReport(String filename) async {
+  try {
+    final error = await upload(filename: filename);
+    if (error.isNotEmpty) {
+      debugPrint("upload of $filename failed: $error");
+      return false;
+    }
+    return true;
+  } catch (e) {
+    debugPrint("upload of $filename failed: $e");
+    return false;
+  }
+}
+
 void setupReportHandlers() {
   final presentError = FlutterError.onError;
   FlutterError.onError = (details) {

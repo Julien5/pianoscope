@@ -28,5 +28,8 @@
   "feedbackMessageHint": "Beschreiben Sie, was passiert ist",
   "feedbackScreenshot": "Einen Screenshot des aktuellen Bildschirms senden",
   "feedbackCancel": "Abbrechen",
+  "uploadingCrashReport": "Absturzbericht #{index} wird gesendet…",
+  "uploadingFeedback": "Rückmeldung #{index} wird gesendet…",
+  "uploadSummary": "{sent} gesendet, {failed} fehlgeschlagen",
   "feedbackSubmit": "Senden"
 }

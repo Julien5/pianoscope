@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import 'providers/input_provider.dart';
+import 'report_upload.dart';
 import 'screens/clef_selection_screen.dart';
 import 'screens/device_list_screen.dart';
 import 'screens/languages_screen.dart';
@@ -59,7 +60,21 @@ Widget _noAppBarScaffold(Widget child) {
   );
 }
 
+bool _uploadPromptShown = false;
+
+/// Offers to send the reports left in the cache. Runs once per app start, on
+/// the first frame, because `main` has no [BuildContext] of its own before
+/// `runApp` and the shell builder must not open a dialog while it builds.
+void _scheduleUploadPrompt(BuildContext context) {
+  if (_uploadPromptShown) return;
+  _uploadPromptShown = true;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    flushPendingReports(context);
+  });
+}
+
 Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
+  _scheduleUploadPrompt(context);
   final isLandscape =
       MediaQuery.of(context).orientation == Orientation.landscape;
   if (state.uri.path == Routes.note && isLandscape) {

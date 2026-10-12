@@ -98,5 +98,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackCancel => 'Cancel';
 
   @override
+  String uploadingCrashReport(Object index) {
+    return 'Uploading crash report #$index…';
+  }
+
+  @override
+  String uploadingFeedback(Object index) {
+    return 'Uploading feedback #$index…';
+  }
+
+  @override
+  String uploadSummary(Object failed, Object sent) {
+    return '$sent sent, $failed failed';
+  }
+
+  @override
   String get feedbackSubmit => 'Send';
 }
