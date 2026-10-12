@@ -9,6 +9,7 @@ import 'screens/clef_selection_screen.dart';
 import 'screens/device_list_screen.dart';
 import 'screens/languages_screen.dart';
 import 'screens/midi_signal_screen.dart';
+import 'widgets/feedback_hero_button.dart';
 import 'widgets/settings_drawer.dart';
 
 String _shellTitle(BuildContext context, GoRouterState state) {
@@ -36,6 +37,7 @@ String _shellTitle(BuildContext context, GoRouterState state) {
 Widget _noAppBarScaffold(Widget child) {
   return Scaffold(
     drawer: const SettingsDrawer(hasSmallHeader: true),
+    floatingActionButton: const FeedbackHeroButton(),
     body: Builder(
       builder: (context) {
         return Stack(
@@ -72,6 +74,7 @@ Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
         ),
         title: Text(_shellTitle(context, state)),
       ),
+      floatingActionButton: const FeedbackHeroButton(),
       body: child,
     );
   }
@@ -80,6 +83,7 @@ Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
     drawer: SettingsDrawer(
       hasSmallHeader: isLandscape,
     ), // Available across all routes in this shell
+    floatingActionButton: const FeedbackHeroButton(),
     body: child,
   );
 }
