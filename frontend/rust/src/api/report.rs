@@ -42,3 +42,18 @@ pub fn save_feedback(feedback: Feedback) -> String {
         Err(err) => err,
     }
 }
+
+/// Sorted names of the reports and feedback still waiting to be uploaded.
+pub fn reports_list() -> Vec<String> {
+    backend::report::reports_list()
+}
+
+/// Upload one pending file, returning an empty string on success or a
+/// readable error. Deliberately *not* `#[frb(sync)]`: that would run the
+/// blocking HTTP call on the platform thread and freeze the UI.
+pub async fn upload(filename: String) -> String {
+    match backend::report::upload(filename).await {
+        Ok(()) => String::new(),
+        Err(err) => err,
+    }
+}

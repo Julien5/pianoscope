@@ -91,7 +91,7 @@ Feedback {
 ```
 Sharing the definition of crash reports will make things easier to read.
 
-* Task 5: create the Feedback struct in `backend/src/report.rs` and expose it to the frontend side, probably in a separate frontend module ("report.rs"). Expose the `CrashReport` struct too and replace the parameters of `write_report` (location, error_message, ..) with that CrashReport struct. 
+Task 5: create the Feedback struct in `backend/src/report.rs` and expose it to the frontend side, probably in a separate frontend module ("report.rs"). Expose the `CrashReport` struct too and replace the parameters of `write_report` (location, error_message, ..) with that CrashReport struct. 
 
 The frontend will show a progress dialog when data still in the `reports` cache (i.e. not sent yet) is sent to the server. The uploads will be triggered one-by-one by the frontend. I needs to get a list of filenames to send.
 
@@ -104,7 +104,7 @@ exposed to the frontend (in "frontend/rust/..../report.rs").
 
 Then, the frontend will trigger the data upload one by one, implemented in task 6 and task 7.
 
-Task 6: upload function on the backend side, with frontend exposure:
+Task 7: upload function on the backend side, with frontend exposure:
 ```
 pub fn upload(filename:&String) -> Result<String, String>
 ```
@@ -112,8 +112,8 @@ This is a first draft, the error is converted to a string with "{:?}".
 
 Then, the frontend will trigger the data upload one by one: Task 8.
 
-Task 7: Right after initialization, check the count of reports to be sent. If count>0, open the feedback dialog in crash report mode. For each file, (1) display "uploading crash #n..." or "uploading feedback #n..." depending on the filename (if it contains "feedback", this is a feedback, otherwise this is a crash report) in the text field, and (2) trigger the upload function. In this first version, the user has no possibility to cancel the upload: submit and cancel buttons are disabled.
+Task 8: Right after initialization, check the count of reports to be sent. If count>0, open the feedback dialog in crash report mode. For each file, (1) display "uploading crash #n..." or "uploading feedback #n..." depending on the filename (if it contains "feedback", this is a feedback, otherwise this is a crash report) in the text field, and (2) trigger the upload function. In this first version, the user has no possibility to cancel the upload: submit and cancel buttons are disabled.
 
 Now implementing the feedback upload for the submit button is easy.
 
-Task 8: When the user clicks on submit, write the report in the cache (which return the filename). Then upload the filement using the `upload` (which autonomously deletes the file in the cache).
+Task 9: When the user clicks on submit, write the report in the cache (which return the filename). Then upload the filement using the `upload` (which autonomously deletes the file in the cache).
