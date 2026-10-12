@@ -38,6 +38,14 @@ pub fn init_app() {
     ensure_android_context();
 }
 
+#[flutter_rust_bridge::frb(sync)]
+pub fn set_report_dir(dir: String) -> String {
+    match backend::report::set_report_dir(&dir) {
+        Ok(()) => String::new(),
+        Err(err) => err,
+    }
+}
+
 #[cfg(target_os = "android")]
 fn ensure_android_context() {
     backend::init::android::ensure_context();

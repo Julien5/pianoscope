@@ -10,6 +10,7 @@ import 'pianoscope.dart';
 
 import 'l10n/app_localizations.dart';
 import 'src/providers/user_settings_provider.dart';
+import 'src/report.dart';
 import 'src/routes.dart';
 import 'src/style.dart';
 
@@ -34,6 +35,7 @@ Future<void> main() async {
     );
   }
   await RustLib.init();
+  await initReportDir();
   final provider = InputProvider();
   await provider.init();
   debugPrint("provided init done");

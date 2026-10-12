@@ -4,4 +4,5 @@ pub mod event;
 pub mod init;
 pub mod microphone;
 pub mod midi;
+pub mod report;
 pub mod simulation;
