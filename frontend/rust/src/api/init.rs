@@ -34,6 +34,7 @@ pub fn setup() {
 pub fn init_app() {
     flutter_rust_bridge::setup_default_user_utils();
     setup();
+    backend::report::setup_panic_hook();
     #[cfg(target_os = "android")]
     ensure_android_context();
 }
