@@ -24,6 +24,7 @@ const Size landscape_pixel6a = Size(412, 915);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setupReportHandlers();
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await windowManager.ensureInitialized();
     await windowManager.waitUntilReadyToShow(
