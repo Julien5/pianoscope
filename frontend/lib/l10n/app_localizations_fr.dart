@@ -56,4 +56,50 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get languages => 'Langues';
+
+  @override
+  String get feedbackTitle => 'Retour';
+
+  @override
+  String get crashReportTitle => 'Rapports de plantage';
+
+  @override
+  String crashReportNotice(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count rapports de plantage pourraient être envoyés pour améliorer l\'application.',
+      one:
+          'Un rapport de plantage pourrait être envoyé pour améliorer l\'application.',
+      zero: 'Aucun rapport de plantage ne pourrait être envoyé.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get feedbackEmail => 'Votre adresse e-mail (facultatif)';
+
+  @override
+  String get feedbackEmailInvalid =>
+      'Cela ne ressemble pas à une adresse e-mail';
+
+  @override
+  String get feedbackMessage => 'Votre message';
+
+  @override
+  String get feedbackMessageRequired => 'Veuillez décrire le problème';
+
+  @override
+  String get feedbackMessageHint => 'Dites-nous ce qui s\'est passé';
+
+  @override
+  String get feedbackScreenshot =>
+      'Envoyer une capture d\'écran de l\'écran actuel';
+
+  @override
+  String get feedbackCancel => 'Annuler';
+
+  @override
+  String get feedbackSubmit => 'Envoyer';
 }

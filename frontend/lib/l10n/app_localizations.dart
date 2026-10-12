@@ -189,6 +189,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Languages'**
   String get languages;
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get feedbackTitle;
+
+  /// No description provided for @crashReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reports'**
+  String get crashReportTitle;
+
+  /// No description provided for @crashReportNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No crash report could be sent.} =1{One crash report could be sent to help improve the application.} other{{count} crash reports could be sent to help improve the application.}}'**
+  String crashReportNotice(num count);
+
+  /// No description provided for @feedbackEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email (optional)'**
+  String get feedbackEmail;
+
+  /// No description provided for @feedbackEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This does not look like an email address'**
+  String get feedbackEmailInvalid;
+
+  /// No description provided for @feedbackMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message'**
+  String get feedbackMessage;
+
+  /// No description provided for @feedbackMessageRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please describe the problem'**
+  String get feedbackMessageRequired;
+
+  /// No description provided for @feedbackMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what happened'**
+  String get feedbackMessageHint;
+
+  /// No description provided for @feedbackScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a screenshot of the current screen'**
+  String get feedbackScreenshot;
+
+  /// No description provided for @feedbackCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get feedbackCancel;
+
+  /// No description provided for @feedbackSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get feedbackSubmit;
 }
 
 class _AppLocalizationsDelegate

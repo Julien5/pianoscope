@@ -16,5 +16,17 @@
 
   "microphone": "Mikrofon",
 
-  "languages": "Sprachen"
+  "languages": "Sprachen",
+
+  "feedbackTitle": "Rückmeldung",
+  "crashReportTitle": "Absturzberichte",
+  "crashReportNotice": "{count, plural, =0{Es konnte kein Absturzbericht gesendet werden.} =1{Ein Absturzbericht könnte gesendet werden, um die Anwendung zu verbessern.} other{{count} Absturzberichte könnten gesendet werden, um die Anwendung zu verbessern.}}",
+  "feedbackEmail": "Ihre E-Mail-Adresse (optional)",
+  "feedbackEmailInvalid": "Dies sieht nicht nach einer E-Mail-Adresse aus",
+  "feedbackMessage": "Ihre Nachricht",
+  "feedbackMessageRequired": "Bitte beschreiben Sie das Problem",
+  "feedbackMessageHint": "Beschreiben Sie, was passiert ist",
+  "feedbackScreenshot": "Einen Screenshot des aktuellen Bildschirms senden",
+  "feedbackCancel": "Abbrechen",
+  "feedbackSubmit": "Senden"
 }

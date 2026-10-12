@@ -16,5 +16,17 @@
 
   "microphone": "Microphone",
 
-  "languages": "Languages"
+  "languages": "Languages",
+
+  "feedbackTitle": "Feedback",
+  "crashReportTitle": "Crash reports",
+  "crashReportNotice": "{count, plural, =0{No crash report could be sent.} =1{One crash report could be sent to help improve the application.} other{{count} crash reports could be sent to help improve the application.}}",
+  "feedbackEmail": "Your email (optional)",
+  "feedbackEmailInvalid": "This does not look like an email address",
+  "feedbackMessage": "Your message",
+  "feedbackMessageRequired": "Please describe the problem",
+  "feedbackMessageHint": "Tell us what happened",
+  "feedbackScreenshot": "Send a screenshot of the current screen",
+  "feedbackCancel": "Cancel",
+  "feedbackSubmit": "Send"
 }
