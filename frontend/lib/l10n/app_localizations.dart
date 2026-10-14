@@ -202,11 +202,11 @@ abstract class AppLocalizations {
   /// **'Crash reports'**
   String get crashReportTitle;
 
-  /// No description provided for @crashReportNotice.
+  /// No description provided for @reportsNotice.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{No crash report could be sent.} =1{One crash report could be sent to help improve the application.} other{{count} crash reports could be sent to help improve the application.}}'**
-  String crashReportNotice(num count);
+  /// **'{count, plural, =0{No report could be sent.} =1{One report could be sent to help improve the application.} other{{count} reports could be sent to help improve the application.}}'**
+  String reportsNotice(num count);
 
   /// No description provided for @feedbackEmail.
   ///

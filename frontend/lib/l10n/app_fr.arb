@@ -20,7 +20,7 @@
 
   "feedbackTitle": "Retour",
   "crashReportTitle": "Rapports de plantage",
-  "crashReportNotice": "{count, plural, =0{Aucun rapport de plantage ne pourrait être envoyé.} =1{Un rapport de plantage pourrait être envoyé pour améliorer l'application.} other{{count} rapports de plantage pourraient être envoyés pour améliorer l'application.}}",
+  "reportsNotice": "{count, plural, =0{Aucun rapport de plantage ne pourrait être envoyé.} =1{Un rapport pourrait être envoyé pour améliorer l'application.} other{{count} rapports pourraient être envoyés pour améliorer l'application.}}",
   "feedbackEmail": "Votre adresse e-mail (facultatif)",
   "feedbackEmailInvalid": "Cela ne ressemble pas à une adresse e-mail",
   "feedbackMessage": "Votre message",

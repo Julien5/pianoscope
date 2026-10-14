@@ -20,7 +20,7 @@
 
   "feedbackTitle": "Rückmeldung",
   "crashReportTitle": "Absturzberichte",
-  "crashReportNotice": "{count, plural, =0{Es konnte kein Absturzbericht gesendet werden.} =1{Ein Absturzbericht könnte gesendet werden, um die Anwendung zu verbessern.} other{{count} Absturzberichte könnten gesendet werden, um die Anwendung zu verbessern.}}",
+  "reportsNotice": "{count, plural, =0{Es konnte kein Bericht gesendet werden.} =1{Ein Bericht könnte gesendet werden, um die Anwendung zu verbessern.} other{{count} Berichte könnten gesendet werden, um die Anwendung zu verbessern.}}",
   "feedbackEmail": "Ihre E-Mail-Adresse (optional)",
   "feedbackEmailInvalid": "Dies sieht nicht nach einer E-Mail-Adresse aus",
   "feedbackMessage": "Ihre Nachricht",

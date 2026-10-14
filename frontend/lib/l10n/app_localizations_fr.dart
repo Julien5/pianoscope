@@ -64,14 +64,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get crashReportTitle => 'Rapports de plantage';
 
   @override
-  String crashReportNotice(num count) {
+  String reportsNotice(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other:
-          '$count rapports de plantage pourraient être envoyés pour améliorer l\'application.',
-      one:
-          'Un rapport de plantage pourrait être envoyé pour améliorer l\'application.',
+          '$count rapports pourraient être envoyés pour améliorer l\'application.',
+      one: 'Un rapport pourrait être envoyé pour améliorer l\'application.',
       zero: 'Aucun rapport de plantage ne pourrait être envoyé.',
     );
     return '$_temp0';

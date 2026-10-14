@@ -18,7 +18,7 @@ typedef OpenDialog = ({
 Future<OpenDialog> openDialog(
   WidgetTester tester,
   FeedbackMode mode, {
-  int crashReportCount = 0,
+  required List<String> filenames,
   Future<void> Function(void Function(String reportProgress))? onApproved,
 }) async {
   SharedPreferencesAsyncPlatform.instance =
@@ -38,7 +38,7 @@ Future<OpenDialog> openDialog(
               onPressed: () => result = FeedbackDialog.show(
                 context,
                 mode: mode,
-                crashReportCount: crashReportCount,
+                filenames: filenames,
                 onApproved: onApproved,
               ),
               child: const Text('open'),
@@ -54,10 +54,11 @@ Future<OpenDialog> openDialog(
 }
 
 void main() {
+  List<String> filenames = ["a", "b"];
   testWidgets('feedback mode shows the three inputs and both actions', (
     tester,
   ) async {
-    await openDialog(tester, FeedbackMode.feedback);
+    await openDialog(tester, filenames: filenames, FeedbackMode.feedback);
 
     expect(find.byType(TextFormField), findsNWidgets(2));
     expect(find.byType(CheckboxListTile), findsOneWidget);
@@ -67,7 +68,7 @@ void main() {
   });
 
   testWidgets('feedback mode rejects an empty message', (tester) async {
-    await openDialog(tester, FeedbackMode.feedback);
+    await openDialog(tester, filenames: filenames, FeedbackMode.feedback);
 
     await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
     await tester.pumpAndSettle();
@@ -77,7 +78,7 @@ void main() {
   });
 
   testWidgets('feedback mode rejects a malformed email', (tester) async {
-    await openDialog(tester, FeedbackMode.feedback);
+    await openDialog(tester, filenames: filenames, FeedbackMode.feedback);
 
     await tester.enterText(find.byType(TextFormField).first, 'not-an-email');
     await tester.enterText(
@@ -96,7 +97,11 @@ void main() {
   testWidgets('submitting returns the request and remembers the email', (
     tester,
   ) async {
-    final dialog = await openDialog(tester, FeedbackMode.feedback);
+    final dialog = await openDialog(
+      tester,
+      filenames: filenames,
+      FeedbackMode.feedback,
+    );
 
     await tester.enterText(find.byType(TextFormField).first, 'me@example.com');
     await tester.enterText(
@@ -118,7 +123,11 @@ void main() {
   });
 
   testWidgets('an empty email is accepted', (tester) async {
-    final dialog = await openDialog(tester, FeedbackMode.feedback);
+    final dialog = await openDialog(
+      tester,
+      filenames: filenames,
+      FeedbackMode.feedback,
+    );
 
     await tester.enterText(find.byType(TextFormField).last, 'hello');
     await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
@@ -133,7 +142,11 @@ void main() {
   testWidgets('cancel returns nothing and keeps the stored email', (
     tester,
   ) async {
-    final dialog = await openDialog(tester, FeedbackMode.feedback);
+    final dialog = await openDialog(
+      tester,
+      filenames: filenames,
+      FeedbackMode.feedback,
+    );
 
     await tester.enterText(find.byType(TextFormField).first, 'me@example.com');
     await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
@@ -145,7 +158,7 @@ void main() {
   });
 
   testWidgets('crash report mode hides the inputs', (tester) async {
-    await openDialog(tester, FeedbackMode.crashReport, crashReportCount: 3);
+    await openDialog(tester, filenames: filenames, FeedbackMode.crashReport);
 
     expect(find.byType(TextFormField), findsNothing);
     expect(find.byType(CheckboxListTile), findsNothing);
@@ -160,7 +173,7 @@ void main() {
   testWidgets('crash report mode uses the singular notice for one report', (
     tester,
   ) async {
-    await openDialog(tester, FeedbackMode.crashReport, crashReportCount: 1);
+    await openDialog(tester, filenames: filenames, FeedbackMode.crashReport);
 
     expect(
       find.textContaining('One crash report could be sent'),
@@ -171,7 +184,11 @@ void main() {
   testWidgets('crash report mode returns an empty request on submit', (
     tester,
   ) async {
-    final dialog = await openDialog(tester, FeedbackMode.crashReport);
+    final dialog = await openDialog(
+      tester,
+      filenames: filenames,
+      FeedbackMode.crashReport,
+    );
 
     await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
     await tester.pumpAndSettle();
@@ -191,7 +208,7 @@ void main() {
     await openDialog(
       tester,
       FeedbackMode.crashReport,
-      crashReportCount: 2,
+      filenames: filenames,
       onApproved: (reportProgress) {
         started = true;
         return gate.future;
@@ -227,7 +244,7 @@ void main() {
     await openDialog(
       tester,
       FeedbackMode.crashReport,
-      crashReportCount: 2,
+      filenames: filenames,
       onApproved: (reportProgress) async {
         reportProgress('Uploading crash report #1');
         await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -258,6 +275,7 @@ void main() {
       await openDialog(
         tester,
         FeedbackMode.crashReport,
+        filenames: filenames,
         onApproved: (reportProgress) async => throw StateError('upload broke'),
       );
       await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));

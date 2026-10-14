@@ -95,6 +95,7 @@ abstract class AppTheme {
       appBarTheme: _appBarTheme,
       scaffoldBackgroundColor: AppColors.background,
       elevatedButtonTheme: ElevatedButtonThemeData(style: _elevatedButtonStyle),
+      textButtonTheme: TextButtonThemeData(style: _elevatedButtonStyle),
       listTileTheme: _listTileTheme,
       cardTheme: _cardTheme,
     );

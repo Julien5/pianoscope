@@ -15,6 +15,7 @@ class FeedbackHeroButton extends StatelessWidget {
     final request = await FeedbackDialog.show(
       context,
       mode: FeedbackMode.feedback,
+      filenames: [],
     );
     if (request == null || !context.mounted) return;
 

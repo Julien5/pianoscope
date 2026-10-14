@@ -27,7 +27,8 @@ class FeedbackRequest {
 
 class FeedbackDialog extends StatefulWidget {
   final FeedbackMode mode;
-  final int crashReportCount;
+  final List<String> filenames;
+  final int feedbackCount;
 
   /// When set, submitting runs this instead of closing the dialog. The dialog
   /// then stays open with both actions disabled and [reportProgress] updates
@@ -37,7 +38,8 @@ class FeedbackDialog extends StatefulWidget {
   const FeedbackDialog({
     super.key,
     required this.mode,
-    this.crashReportCount = 0,
+    required this.filenames,
+    this.feedbackCount = 0,
     this.onApproved,
   });
 
@@ -47,7 +49,7 @@ class FeedbackDialog extends StatefulWidget {
   static Future<FeedbackRequest?> show(
     BuildContext context, {
     required FeedbackMode mode,
-    int crashReportCount = 0,
+    required List<String> filenames,
     Future<void> Function(void Function(String reportProgress))? onApproved,
   }) {
     return showDialog<FeedbackRequest>(
@@ -57,7 +59,7 @@ class FeedbackDialog extends StatefulWidget {
       barrierDismissible: onApproved == null,
       builder: (context) => FeedbackDialog(
         mode: mode,
-        crashReportCount: crashReportCount,
+        filenames: filenames,
         onApproved: onApproved,
       ),
     );
@@ -143,7 +145,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
     return Form(
       key: _formKey,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         spacing: 10,
         children: [
           TextFormField(
@@ -157,7 +159,8 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
             autofillHints: const [AutofillHints.email],
             validator: _validateEmail,
           ),
-          TextFormField(
+          Expanded(child:TextFormField(
+            expands: true,
             controller: _message,
             style: AppTextStyles.normal,
             decoration: InputDecoration(
@@ -165,10 +168,10 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
               hintText: l10n.feedbackMessageHint,
               border: const OutlineInputBorder(),
             ),
-            minLines: 3,
-            maxLines: 6,
             validator: _validateMessage,
-          ),
+            minLines: null,
+            maxLines: null,
+          )),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
@@ -183,9 +186,9 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
     );
   }
 
-  Widget _crashReportNotice(AppLocalizations l10n) {
+  Widget _reportsNotice(AppLocalizations l10n) {
     return Text(
-      l10n.crashReportNotice(widget.crashReportCount),
+      l10n.reportsNotice(widget.filenames.length),
       style: AppTextStyles.normal,
     );
   }
@@ -197,16 +200,24 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final Widget content;
+    Widget content;
     if (_busy) {
       content = _progressView();
     } else if (_isCrashReport) {
-      content = _crashReportNotice(l10n);
+      content = _reportsNotice(l10n);
     } else {
       content = _feedbackFields(l10n);
     }
+    if (!_isCrashReport) {
+      content=SizedBox(
+        width: MediaQuery.of(context).size.width, // Full screen width
+        height: MediaQuery.of(context).size.height,
+        child: content,
+      );
+    }
     return AlertDialog(
-      title: Text(_isCrashReport ? l10n.crashReportTitle : l10n.feedbackTitle),
+      title: Text(_isCrashReport ? l10n.crashReportTitle : l10n.feedbackTitle, style: AppTextStyles.header,),
+      insetPadding: EdgeInsets.all(5),
       content: content,
       actions: [
         TextButton(

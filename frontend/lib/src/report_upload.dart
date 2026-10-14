@@ -9,8 +9,8 @@ import 'widgets/feedback_dialog.dart';
 /// empty. Files that fail to upload stay on disk and will be offered again on
 /// the next launch.
 Future<void> flushPendingReports(BuildContext context) async {
-  final names = await pendingReportNames();
-  if (names.isEmpty || !context.mounted) {
+  final filenames = await pendingReportNames();
+  if (filenames.isEmpty || !context.mounted) {
     return;
   }
   final l10n = AppLocalizations.of(context)!;
@@ -20,10 +20,10 @@ Future<void> flushPendingReports(BuildContext context) async {
   await FeedbackDialog.show(
     context,
     mode: FeedbackMode.crashReport,
-    crashReportCount: names.length,
+    filenames: filenames,
     onApproved: (reportProgress) async {
-      for (var i = 0; i < names.length; i++) {
-        final name = names[i];
+      for (var i = 0; i < filenames.length; i++) {
+        final name = filenames[i];
         reportProgress(_progressText(l10n, name, i + 1));
         if (await uploadReport(name)) {
           debugPrint("good");
