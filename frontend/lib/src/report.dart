@@ -50,11 +50,7 @@ Future<List<String>> pendingReportNames() async {
 /// next launch.
 Future<bool> uploadReport(String filename) async {
   try {
-    final error = await upload(filename: filename);
-    if (error.isNotEmpty) {
-      debugPrint("upload of $filename failed: $error");
-      return false;
-    }
+    await upload(filename: filename);
     return true;
   } catch (e) {
     debugPrint("upload of $filename failed: $e");
@@ -88,7 +84,7 @@ Future<FeedbackOutcome?> submitFeedback({
   );
   final String filename;
   try {
-    filename = saveFeedback(feedback: feedback);
+    filename = writeFeedback(feedback: feedback);
   } catch (e) {
     debugPrint("feedback not saved: $e");
     return null;
@@ -117,7 +113,7 @@ void setupReportHandlers() {
 
 void writeDartReport({required String errorMessage, StackTrace? stack}) {
   try {
-    final error = writeReport(
+    writeCrashreport(
       report: CrashReport(
         datetime: reportDatetime(),
         location: _location(stack) ?? 'unknown',
@@ -125,9 +121,6 @@ void writeDartReport({required String errorMessage, StackTrace? stack}) {
         stacktrace: stack?.toString() ?? '',
       ),
     );
-    if (error.isNotEmpty) {
-      debugPrint("crash report not written: $error");
-    }
   } catch (e) {
     debugPrint("crash report not written: $e");
   }

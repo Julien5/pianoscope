@@ -59,8 +59,8 @@ fn now_rfc3339() -> String {
 }
 
 mod base64_bytes {
-    use base64::Engine;
     use base64::engine::general_purpose::STANDARD as BASE64;
+    use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
@@ -94,7 +94,7 @@ pub fn setup_panic_hook() {
                 let (location, error_message) = describe_panic(info);
                 let stacktrace = std::backtrace::Backtrace::force_capture().to_string();
                 let report = CrashReport::new(&location, &error_message, &stacktrace);
-                if let Err(err) = write_report(report) {
+                if let Err(err) = write_crashreport(report) {
                     log::error!("nano: crash report not written: {}", err);
                 }
             }));
@@ -120,7 +120,7 @@ fn describe_panic(info: &PanicHookInfo<'_>) -> (String, String) {
     (location, error_message)
 }
 
-pub fn write_report(report: CrashReport) -> Result<PathBuf, String> {
+pub fn write_crashreport(report: CrashReport) -> Result<PathBuf, String> {
     let dir = report_dir().ok_or("report directory is not set")?;
     let json = serde_json::to_string_pretty(&report)
         .map_err(|err| format!("cannot serialize report: {}", err))?;
@@ -134,7 +134,7 @@ pub fn write_report(report: CrashReport) -> Result<PathBuf, String> {
     Ok(path)
 }
 
-pub fn save_feedback(feedback: Feedback) -> Result<PathBuf, String> {
+pub fn write_feedback(feedback: Feedback) -> Result<PathBuf, String> {
     let dir = report_dir().ok_or("report directory is not set")?;
     let json = serde_json::to_string_pretty(&feedback)
         .map_err(|err| format!("cannot serialize feedback: {}", err))?;
@@ -396,7 +396,7 @@ mod tests {
                 message: message.to_string(),
                 screenshot: png.clone(),
             };
-            assert!(save_feedback(feedback).unwrap().is_file());
+            assert!(write_feedback(feedback).unwrap().is_file());
         }
 
         let crash_first = named(REPORT_FILE_PREFIX, 1);
@@ -479,13 +479,13 @@ mod tests {
         // The live upload needs the real server: both files must come back
         // deleted, which is what lets the next launch skip them.
         let upload_png = vec![0x89u8, 0x50, 0x4e, 0x47];
-        let feedback_path = save_feedback(Feedback {
+        let feedback_path = write_feedback(Feedback {
             email: "me@example.com".to_string(),
             message: "the staff is shifted".to_string(),
             screenshot: upload_png.clone(),
         })
         .unwrap();
-        let crash_path = write_report(CrashReport::new("a.rs:1", "boom", "trace")).unwrap();
+        let crash_path = write_crashreport(CrashReport::new("a.rs:1", "boom", "trace")).unwrap();
         assert_eq!(
             reports_list(),
             vec![

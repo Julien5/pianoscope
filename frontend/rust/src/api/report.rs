@@ -28,21 +28,18 @@ pub fn set_report_dir(dir: String) -> String {
 }
 
 #[flutter_rust_bridge::frb(sync)]
-pub fn write_report(report: CrashReport) -> String {
-    match backend::report::write_report(report) {
-        Ok(_) => String::new(),
-        Err(err) => err,
+pub fn write_crashreport(report: CrashReport) -> Result<String, String> {
+    match backend::report::write_crashreport(report) {
+        Ok(path) => Ok(path.to_string_lossy().into_owned()),
+        Err(err) => Err(err),
     }
 }
 
 /// Stores the feedback in the cache and returns the file name it was given,
-/// so the caller can upload exactly that file. Unlike the other functions in
-/// this module this one returns a [Result] rather than using the
-/// empty-string-means-success convention, because the name and an error
-/// message would otherwise be indistinguishable.
+/// so the caller can upload exactly that file.
 #[flutter_rust_bridge::frb(sync)]
-pub fn save_feedback(feedback: Feedback) -> Result<String, String> {
-    backend::report::save_feedback(feedback).map(|path| {
+pub fn write_feedback(feedback: Feedback) -> Result<String, String> {
+    backend::report::write_feedback(feedback).map(|path| {
         path.file_name()
             .map(|name| name.to_string_lossy().into_owned())
             .unwrap_or_default()
@@ -57,9 +54,6 @@ pub fn reports_list() -> Vec<String> {
 /// Upload one pending file, returning an empty string on success or a
 /// readable error. Deliberately *not* `#[frb(sync)]`: that would run the
 /// blocking HTTP call on the platform thread and freeze the UI.
-pub async fn upload(filename: String) -> String {
-    match backend::report::upload(filename).await {
-        Ok(()) => String::new(),
-        Err(err) => err,
-    }
+pub async fn upload(filename: String) -> Result<(), String> {
+    backend::report::upload(filename).await
 }

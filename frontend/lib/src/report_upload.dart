@@ -26,8 +26,10 @@ Future<void> flushPendingReports(BuildContext context) async {
         final name = names[i];
         reportProgress(_progressText(l10n, name, i + 1));
         if (await uploadReport(name)) {
+          debugPrint("good");
           sent++;
         } else {
+          debugPrint("bad");
           failed++;
         }
       }
@@ -40,7 +42,7 @@ Future<void> flushPendingReports(BuildContext context) async {
   debugPrint("reports uploaded: $sent sent, $failed failed");
   ScaffoldMessenger.of(
     context,
-  ).showSnackBar(SnackBar(content: Text(l10n.uploadSummary(sent, failed))));
+  ).showSnackBar(SnackBar(content: Text(l10n.uploadSummary(failed, sent))));
 }
 
 String _progressText(AppLocalizations l10n, String filename, int position) {
