@@ -22,6 +22,12 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: AppColors.text,
   );
+  static const TextStyle courier = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: AppColors.text,
+    fontFamily: "Courier",
+  );
   static const TextStyle small = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w200,
