@@ -125,5 +125,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String uploadStopped(Object sent) {
+    return '$sent envoyés, envoi arrêté';
+  }
+
+  @override
+  String get feedbackStopped =>
+      'Envoi arrêté. Votre retour est enregistré et partira avec le prochain lot.';
+
+  @override
   String get feedbackSubmit => 'Envoyer';
+
+  @override
+  String get uploadStop => 'Arrêter';
+
+  @override
+  String get feedbackSending => 'Envoi du retour…';
 }

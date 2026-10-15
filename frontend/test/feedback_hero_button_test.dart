@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/l10n/app_localizations.dart';
+import 'package:pianoscope/pianoscope.dart';
 import 'package:pianoscope/src/providers/user_settings_provider.dart';
 import 'package:pianoscope/src/routes.dart';
 import 'package:pianoscope/src/widgets/feedback_dialog.dart';
@@ -8,6 +9,8 @@ import 'package:pianoscope/src/widgets/feedback_hero_button.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+
+import 'helper.dart';
 
 Future<UserSettingsProvider> newSettings() async {
   SharedPreferencesAsyncPlatform.instance =
@@ -18,6 +21,9 @@ Future<UserSettingsProvider> newSettings() async {
 }
 
 void main() {
+  // Opening the feedback dialog builds an UploadSession, which lives in Rust.
+  RustLib.initMock(api: FakeRustLibApi());
+
   testWidgets('the hero button opens the dialog in feedback mode', (
     tester,
   ) async {

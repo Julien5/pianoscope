@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pianoscope/pianoscope.dart';
+import 'package:pianoscope/src/rust/api/report.dart';
 
 Future<void> loadFonts() async {
   const fontDir = 'assets/fonts';
@@ -51,4 +52,38 @@ Future<void> expectGoldenFromView(
     find.byKey(key),
     matchesGoldenFile('goldens/notation_$name.png'),
   );
+}
+
+/// Stands in for the Rust side, so a widget test can drive code that reaches
+/// [RustLib] without loading the native library. Nothing here talks to a real
+/// upload: the point is only that the boundary exists.
+class FakeUploadSession implements UploadSession {
+  @override
+  void dispose() {}
+
+  @override
+  bool get isDisposed => false;
+
+  @override
+  void cancel() {}
+
+  @override
+  Future<UploadOutcome> upload({required String filename}) async =>
+      const UploadOutcome(cancelled: false, error: '');
+}
+
+/// Install this once per test file, before any test touches [RustLib]:
+/// `RustLib.initMock(api: FakeRustLibApi())`.
+class FakeRustLibApi implements RustLibApi {
+  @override
+  UploadSession crateApiReportUploadSessionNew() => FakeUploadSession();
+
+  @override
+  Future<List<String>> crateApiReportReportsList() async => [];
+
+  // `BaseApi` is empty and nothing else is reached from a widget test. A
+  // missing method should fail loudly rather than silently return null.
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName} is not faked');
 }

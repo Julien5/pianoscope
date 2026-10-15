@@ -286,11 +286,35 @@ abstract class AppLocalizations {
   /// **'{sent} sent, {failed} failed'**
   String uploadSummary(Object failed, Object sent);
 
+  /// No description provided for @uploadStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'{sent} sent, upload stopped'**
+  String uploadStopped(Object sent);
+
+  /// No description provided for @feedbackStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload stopped. Your feedback is saved and goes out with the next batch.'**
+  String get feedbackStopped;
+
   /// No description provided for @feedbackSubmit.
   ///
   /// In en, this message translates to:
   /// **'Send'**
   String get feedbackSubmit;
+
+  /// No description provided for @uploadStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get uploadStop;
+
+  /// No description provided for @feedbackSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending feedback…'**
+  String get feedbackSending;
 }
 
 class _AppLocalizationsDelegate

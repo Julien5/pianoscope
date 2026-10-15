@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../providers/user_settings_provider.dart';
+import '../rust/api/report.dart';
 import '../style.dart';
 
 enum FeedbackMode { feedback, crashReport }
@@ -11,8 +12,8 @@ final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 /// The answer collected by [FeedbackDialog]. It is null when the user
 /// cancels. In [FeedbackMode.crashReport] the input fields are hidden, so
-/// [email] and [message] are empty and the caller is expected to read the
-/// pending report files itself.
+/// [email] and [message] are empty and the caller uploads the pending report
+/// files itself.
 class FeedbackRequest {
   final String email;
   final String message;
@@ -25,42 +26,56 @@ class FeedbackRequest {
   });
 }
 
+typedef ReportCallback = void Function(String);
+
+/// The work the dialog runs on submit, and the way to stop it.
+abstract class UploadHandler {
+  ReportCallback? reportCallback;
+  final UploadSession session;
+  UploadHandler({required this.session});
+
+  void setReportCallback(ReportCallback callback) {
+    reportCallback = callback;
+  }
+
+  Future<void> onSubmit(FeedbackRequest request);
+
+  void onCancel() {
+    session.cancel();
+  }
+}
+
 class FeedbackDialog extends StatefulWidget {
   final FeedbackMode mode;
   final List<String> filenames;
-  final int feedbackCount;
 
-  /// When set, submitting runs this instead of closing the dialog. The dialog
-  /// then stays open with both actions disabled and [reportProgress] updates
-  /// the text shown in place of the inputs.
-  final Future<void> Function(void Function(String reportProgress))? onApproved;
+  final UploadHandler uploadHandler;
 
   const FeedbackDialog({
     super.key,
     required this.mode,
     required this.filenames,
-    this.feedbackCount = 0,
-    this.onApproved,
+    required this.uploadHandler,
   });
 
-  /// Returns the user's answer, or null if the dialog was cancelled. With
-  /// [onApproved] the dialog closes by itself once the work is done and the
-  /// result is always null.
-  static Future<FeedbackRequest?> show(
+  /// Shows the dialog and returns once the work [UploadHandler.onSubmit] is
+  /// doing has settled -- the dialog closes by itself, with nothing to hand
+  /// back.
+  static Future<void> show(
     BuildContext context, {
     required FeedbackMode mode,
     required List<String> filenames,
-    Future<void> Function(void Function(String reportProgress))? onApproved,
+    required UploadHandler handler,
   }) {
-    return showDialog<FeedbackRequest>(
+    return showDialog<void>(
       context: context,
-      // Uploads cannot be interrupted, so the dialog must not be dismissible
-      // while it is open.
-      barrierDismissible: onApproved == null,
+      // The work runs while the dialog is up, so a stray tap outside must not
+      // dismiss it. Stopping is deliberate, through the stop button.
+      barrierDismissible: false,
       builder: (context) => FeedbackDialog(
         mode: mode,
         filenames: filenames,
-        onApproved: onApproved,
+        uploadHandler: handler,
       ),
     );
   }
@@ -94,40 +109,46 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    final onApproved = widget.onApproved;
-    if (onApproved != null) {
-      setState(() => _busy = true);
-      Object? failure;
-      StackTrace? failureStack;
-      try {
-        await onApproved((text) {
-          if (mounted) setState(() => _progress = text);
-        });
-      } catch (e, s) {
-        failure = e;
-        failureStack = s;
-      }
-      // Close even on failure: leaving both actions disabled would trap the
-      // user in a dialog they cannot close.
-      if (mounted) Navigator.of(context).pop();
-      if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
-      return;
+  /// Validates the inputs and remembers the email. Returns null when the form
+  /// is invalid, or once this State is gone; either way the caller must leave
+  /// the dialog open and not start any work.
+  Future<FeedbackRequest?> _collectRequest() async {
+    if (!_isCrashReport && _formKey.currentState?.validate() != true) {
+      return null;
     }
-    final isValid = _isCrashReport || _formKey.currentState?.validate() == true;
-    if (!isValid) return;
-    final settings = context.read<UserSettingsProvider>();
+    final email = _isCrashReport ? '' : _email.text.trim();
     if (!_isCrashReport) {
-      await settings.setEmail(_email.text.trim());
+      await context.read<UserSettingsProvider>().setEmail(email);
     }
-    if (!mounted) return;
-    Navigator.of(context).pop(
-      FeedbackRequest(
-        email: _isCrashReport ? '' : _email.text.trim(),
-        message: _isCrashReport ? '' : _message.text.trim(),
-        withScreenshot: !_isCrashReport && _withScreenshot,
-      ),
+    if (!mounted) return null;
+    return FeedbackRequest(
+      email: email,
+      message: _isCrashReport ? '' : _message.text.trim(),
+      withScreenshot: !_isCrashReport && _withScreenshot,
     );
+  }
+
+  Future<void> _submit() async {
+    final request = await _collectRequest();
+    if (request == null) return;
+    if (!mounted) return;
+    setState(() => _busy = true);
+    Object? failure;
+    StackTrace? failureStack;
+    try {
+      widget.uploadHandler.setReportCallback((text) {
+        if (mounted) setState(() => _progress = text);
+      });
+      await widget.uploadHandler.onSubmit(request);
+    } catch (e, s) {
+      failure = e;
+      failureStack = s;
+    }
+    // Close even on failure: leaving the dialog up with a disabled submit
+    // would trap the user in a dialog they cannot get out of. A stop is not a
+    // failure -- the caller handles it without throwing.
+    if (mounted) Navigator.of(context).pop();
+    if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
   }
 
   String? _validateEmail(String? value) {
@@ -159,19 +180,21 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
             autofillHints: const [AutofillHints.email],
             validator: _validateEmail,
           ),
-          Expanded(child:TextFormField(
-            expands: true,
-            controller: _message,
-            style: AppTextStyles.normal,
-            decoration: InputDecoration(
-              labelText: l10n.feedbackMessage,
-              hintText: l10n.feedbackMessageHint,
-              border: const OutlineInputBorder(),
+          Expanded(
+            child: TextFormField(
+              expands: true,
+              controller: _message,
+              style: AppTextStyles.normal,
+              decoration: InputDecoration(
+                labelText: l10n.feedbackMessage,
+                hintText: l10n.feedbackMessageHint,
+                border: const OutlineInputBorder(),
+              ),
+              validator: _validateMessage,
+              minLines: null,
+              maxLines: null,
             ),
-            validator: _validateMessage,
-            minLines: null,
-            maxLines: null,
-          )),
+          ),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
@@ -209,20 +232,25 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
       content = _feedbackFields(l10n);
     }
     if (!_isCrashReport) {
-      content=SizedBox(
+      content = SizedBox(
         width: MediaQuery.of(context).size.width, // Full screen width
         height: MediaQuery.of(context).size.height,
         child: content,
       );
     }
     return AlertDialog(
-      title: Text(_isCrashReport ? l10n.crashReportTitle : l10n.feedbackTitle, style: AppTextStyles.header,),
+      title: Text(
+        _isCrashReport ? l10n.crashReportTitle : l10n.feedbackTitle,
+        style: AppTextStyles.header,
+      ),
       insetPadding: EdgeInsets.all(5),
       content: content,
       actions: [
         TextButton(
-          onPressed: _busy ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.feedbackCancel),
+          onPressed: _busy
+              ? widget.uploadHandler.onCancel
+              : () => Navigator.of(context).pop(),
+          child: Text(_busy ? l10n.uploadStop : l10n.feedbackCancel),
         ),
         ElevatedButton(
           onPressed: _busy ? null : _submit,

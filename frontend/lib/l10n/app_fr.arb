@@ -34,5 +34,9 @@
   "uploadingCrashReport": "Envoi du rapport de plantage n°{index}…",
   "uploadingFeedback": "Envoi du retour n°{index}…",
   "uploadSummary": "{sent} envoyés, {failed} en échec",
-  "feedbackSubmit": "Envoyer"
+  "uploadStopped": "{sent} envoyés, envoi arrêté",
+  "feedbackStopped": "Envoi arrêté. Votre retour est enregistré et partira avec le prochain lot.",
+  "feedbackSubmit": "Envoyer",
+  "uploadStop": "Arrêter",
+  "feedbackSending": "Envoi du retour…"
 }

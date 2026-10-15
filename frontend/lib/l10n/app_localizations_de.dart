@@ -127,5 +127,20 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String uploadStopped(Object sent) {
+    return '$sent gesendet, Upload angehalten';
+  }
+
+  @override
+  String get feedbackStopped =>
+      'Upload angehalten. Die Rückmeldung ist gespeichert und geht mit dem nächsten Stapel raus.';
+
+  @override
   String get feedbackSubmit => 'Senden';
+
+  @override
+  String get uploadStop => 'Anhalten';
+
+  @override
+  String get feedbackSending => 'Rückmeldung wird gesendet…';
 }

@@ -34,5 +34,9 @@
   "uploadingCrashReport": "Uploading crash report #{index}…",
   "uploadingFeedback": "Uploading feedback #{index}…",
   "uploadSummary": "{sent} sent, {failed} failed",
-  "feedbackSubmit": "Send"
+  "uploadStopped": "{sent} sent, upload stopped",
+  "feedbackStopped": "Upload stopped. Your feedback is saved and goes out with the next batch.",
+  "feedbackSubmit": "Send",
+  "uploadStop": "Stop",
+  "feedbackSending": "Sending feedback…"
 }

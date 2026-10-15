@@ -46,15 +46,25 @@ Future<List<String>> pendingReportNames() async {
   }
 }
 
-/// Sends one pending file. False means it failed and stays on disk for the
-/// next launch.
-Future<bool> uploadReport(String filename) async {
+/// [UploadOutcome] comes from the Rust side; this adds the one thing the UI
+/// asks most often, which is whether the server took the file.
+extension UploadOutcomeX on UploadOutcome {
+  /// True when the server accepted the file and it was deleted from the cache.
+  bool get sent => !cancelled && error.isEmpty;
+}
+
+/// Sends one pending file through [session], mapping a transport failure to the
+/// same three-way outcome the Rust side uses. A file that was not sent stays on
+/// disk, which is what lets the next launch offer it again.
+Future<UploadOutcome> uploadReport(
+  UploadSession session,
+  String filename,
+) async {
   try {
-    await upload(filename: filename);
-    return true;
+    return await session.upload(filename: filename);
   } catch (e) {
     debugPrint("upload of $filename failed: $e");
-    return false;
+    return UploadOutcome(cancelled: false, error: '$e');
   }
 }
 
@@ -67,15 +77,27 @@ class FeedbackOutcome {
   /// and is offered again on the next launch.
   final bool uploaded;
 
-  const FeedbackOutcome({required this.filename, required this.uploaded});
+  /// True when the user stopped the upload. The file stays on disk, like when
+  /// the server is unreachable, but for a different reason.
+  final bool cancelled;
+
+  const FeedbackOutcome({
+    required this.filename,
+    required this.uploaded,
+    this.cancelled = false,
+  });
 }
 
-/// Writes the feedback to the cache, then immediately tries to send it.
+/// Stores the feedback in the cache, then tries to send it on [session].
 /// Returns null when it could not be written at all.
+///
+/// [screenshot] is still always null: the dialog collects the intent to send
+/// one, but nothing captures the screen yet.
 Future<FeedbackOutcome?> submitFeedback({
   required String email,
   required String message,
   Uint8List? screenshot,
+  required UploadSession session,
 }) async {
   final feedback = Feedback(
     email: email,
@@ -90,9 +112,11 @@ Future<FeedbackOutcome?> submitFeedback({
     return null;
   }
   debugPrint("feedback saved as $filename");
+  final outcome = await uploadReport(session, filename);
   return FeedbackOutcome(
     filename: filename,
-    uploaded: await uploadReport(filename),
+    uploaded: outcome.sent,
+    cancelled: outcome.cancelled,
   );
 }
 

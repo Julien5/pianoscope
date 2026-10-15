@@ -122,5 +122,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String uploadStopped(Object sent) {
+    return '$sent sent, upload stopped';
+  }
+
+  @override
+  String get feedbackStopped =>
+      'Upload stopped. Your feedback is saved and goes out with the next batch.';
+
+  @override
   String get feedbackSubmit => 'Send';
+
+  @override
+  String get uploadStop => 'Stop';
+
+  @override
+  String get feedbackSending => 'Sending feedback…';
 }

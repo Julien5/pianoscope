@@ -34,5 +34,9 @@
   "uploadingCrashReport": "Absturzbericht #{index} wird gesendet…",
   "uploadingFeedback": "Rückmeldung #{index} wird gesendet…",
   "uploadSummary": "{sent} gesendet, {failed} fehlgeschlagen",
-  "feedbackSubmit": "Senden"
+  "uploadStopped": "{sent} gesendet, Upload angehalten",
+  "feedbackStopped": "Upload angehalten. Die Rückmeldung ist gespeichert und geht mit dem nächsten Stapel raus.",
+  "feedbackSubmit": "Senden",
+  "uploadStop": "Anhalten",
+  "feedbackSending": "Rückmeldung wird gesendet…"
 }

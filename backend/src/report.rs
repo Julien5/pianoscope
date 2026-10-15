@@ -4,6 +4,7 @@ use std::panic::PanicHookInfo;
 use std::path::{Path, PathBuf};
 use std::sync::{Once, OnceLock};
 use std::time::Duration;
+use tokio_util::sync::CancellationToken;
 
 const REPORT_FILE_PREFIX: &str = "report-";
 const FEEDBACK_FILE_PREFIX: &str = "feedback-";
@@ -20,6 +21,7 @@ const MAX_REPORT_BYTES: usize = 1_000_000;
 
 static REPORT_DIR: OnceLock<PathBuf> = OnceLock::new();
 static PANIC_HOOK: Once = Once::new();
+static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
 
 /// A crash, as stored in `report-NNNN.json` and uploaded to the monitoring
 /// server. The Dart side builds the same shape (see `lib/src/report.dart`);
@@ -181,9 +183,9 @@ fn last_index(dir: &Path, prefix: &str) -> Option<u32> {
 }
 
 /// True for `report-<digits>.json` and `feedback-<digits>.json` only. This is
-/// also the guard that makes `dir.join(name)` safe in [upload]: anything with
-/// a separator, a `..` or a different extension is rejected before it can
-/// reach the filesystem.
+/// also the guard that makes `dir.join(name)` safe in
+/// [UploadSession::upload]: anything with a separator, a `..` or a different
+/// extension is rejected before it can reach the filesystem.
 pub fn is_report_name(name: &str) -> bool {
     [REPORT_FILE_PREFIX, FEEDBACK_FILE_PREFIX]
         .iter()
@@ -198,57 +200,161 @@ fn report_index(name: &str, prefix: &str) -> Option<u32> {
         .ok()
 }
 
-/// Upload one report or feedback file and delete it once the server has
-/// accepted it. Safe to call concurrently with the rest of the report
-/// machinery; the file is only removed after a 2xx response, so a failure
-/// leaves it on disk to be retried on the next run.
+/// What became of one file handed to [UploadSession::upload].
 ///
-/// Blocking work is pushed onto the blocking pool so that the async runtime
-/// thread is not held for the whole request.
-pub async fn upload(filename: String) -> Result<(), String> {
-    tokio::task::spawn_blocking(move || upload_blocking(&filename))
-        .await
-        .map_err(|err| format!("upload task failed: {}", err))?
+/// Cancellation is a field of its own rather than an error message, so that a
+/// user-requested stop can never be read as a failed upload: the caller stops
+/// the batch and says so, instead of retrying and blaming the server.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UploadOutcome {
+    /// True when the user stopped the batch before the server accepted the
+    /// file. The file is still on disk.
+    pub cancelled: bool,
+
+    /// Empty when the upload was accepted. Otherwise the reason it was not.
+    /// Never set while `cancelled` is true.
+    pub error: String,
 }
 
-fn upload_blocking(filename: &str) -> Result<(), String> {
-    if !is_report_name(filename) {
-        return Err(format!("invalid report name: {}", filename));
-    }
-    let dir = report_dir().ok_or("report directory is not set")?;
-    let path = dir.join(filename);
-    let content = std::fs::read_to_string(&path)
-        .map_err(|err| format!("cannot read {}: {}", path.display(), err))?;
-
-    let body = build_submit_body(filename, &content)?;
-    let mut screenshot: &[u8] = body.screenshot.as_deref().unwrap_or(&[]);
-    let mut form = ureq::unversioned::multipart::Form::new()
-        .text("message", &body.message)
-        .text("application_id", SERVER_APP_ID)
-        .text("application_version", env!("CARGO_PKG_VERSION"))
-        .text("platform", std::env::consts::OS)
-        .text("report", &body.report);
-    if !screenshot.is_empty() {
-        let part = ureq::unversioned::multipart::Part::reader(&mut screenshot)
-            .file_name("screenshot.png")
-            .mime_str("image/png")
-            .map_err(|err| format!("invalid screenshot mime type: {}", err))?;
-        form = form.part("screenshot", part);
+impl UploadOutcome {
+    fn sent() -> Self {
+        Self {
+            cancelled: false,
+            error: String::new(),
+        }
     }
 
-    let agent = build_agent();
-    let url = format!("{}{}", SERVER_BASE_URL, "submit");
-    log::trace!("url={}", url);
-    agent
-        .post(&url)
-        .header("X-App-ID", SERVER_APP_ID)
-        .send(form)
-        .map_err(|err| describe_ureq_error(&err))?;
+    fn cancelled() -> Self {
+        Self {
+            cancelled: true,
+            error: String::new(),
+        }
+    }
 
-    std::fs::remove_file(&path)
-        .map_err(|err| format!("cannot delete {}: {}", path.display(), err))?;
-    log::info!("nano: {} uploaded and deleted", filename);
-    Ok(())
+    fn failed(message: String) -> Self {
+        Self {
+            cancelled: false,
+            error: message,
+        }
+    }
+
+    /// True when the server accepted the file and it was deleted.
+    pub fn is_sent(&self) -> bool {
+        !self.cancelled && self.error.is_empty()
+    }
+}
+
+/// A cancellable run of uploads.
+///
+/// The Dart side holds one for the length of a batch and calls [Self::cancel]
+/// to stop it. Cancellation covers the request that is in flight as well as the
+/// ones still queued on the caller's loop, and the token dies with the handle,
+/// so there is no global state to reset between batches.
+pub struct UploadSession {
+    token: CancellationToken,
+}
+
+impl UploadSession {
+    pub fn new() -> Self {
+        Self {
+            token: CancellationToken::new(),
+        }
+    }
+
+    /// Stops this session. Safe to call at any time, including when nothing is
+    /// uploading: a later [Self::upload] then returns a cancelled outcome
+    /// without touching the disk or the network.
+    pub fn cancel(&self) {
+        self.token.cancel();
+    }
+
+    /// Uploads one report or feedback file and deletes it once the server has
+    /// accepted it. Safe to call concurrently with the rest of the report
+    /// machinery; the file is only removed after a 2xx response, so a failure
+    /// -- and a cancellation -- leave it on disk to be retried on the next run.
+    pub async fn upload(&self, filename: String) -> UploadOutcome {
+        if self.token.is_cancelled() {
+            return UploadOutcome::cancelled();
+        }
+        if !is_report_name(&filename) {
+            return UploadOutcome::failed(format!("invalid report name: {}", filename));
+        }
+        let Some(dir) = report_dir() else {
+            return UploadOutcome::failed("report directory is not set".to_string());
+        };
+        let path = dir.join(&filename);
+        let content = match tokio::fs::read_to_string(&path).await {
+            Ok(content) => content,
+            Err(err) => {
+                return UploadOutcome::failed(format!("cannot read {}: {}", path.display(), err));
+            }
+        };
+
+        let body = build_submit_body(&filename, &content);
+        let mut form = reqwest::multipart::Form::new()
+            .text("message", body.message)
+            .text("application_id", SERVER_APP_ID)
+            .text("application_version", env!("CARGO_PKG_VERSION"))
+            .text("platform", std::env::consts::OS)
+            .text("report", body.report);
+        if let Some(screenshot) = body.screenshot {
+            let part = match reqwest::multipart::Part::bytes(screenshot)
+                .file_name("screenshot.png")
+                .mime_str("image/png")
+            {
+                Ok(part) => part,
+                Err(err) => {
+                    return UploadOutcome::failed(format!("invalid screenshot mime type: {err}"));
+                }
+            };
+            form = form.part("screenshot", part);
+        }
+
+        let url = format!("{}{}", SERVER_BASE_URL, "submit");
+        log::trace!("url={}", url);
+        let send = client()
+            .post(&url)
+            .header("X-App-ID", SERVER_APP_ID)
+            .multipart(form)
+            .send();
+
+        // `select!` drops `send` to stop, which tears the request down at the
+        // socket instead of leaving it to run to completion. The body upload is
+        // part of the same future, so a long screenshot is cut short too.
+        // `biased` makes the token win over a response that arrives in the same
+        // poll; without it the pick would be random and the same race would
+        // report "sent" on one launch and "cancelled" on the next.
+        let response = tokio::select! {
+            biased;
+            _ = self.token.cancelled() => return UploadOutcome::cancelled(),
+            response = send => response,
+        };
+
+        let response = match response {
+            Ok(response) => response,
+            Err(err) => return UploadOutcome::failed(describe_reqwest_error(&err)),
+        };
+        if !response.status().is_success() {
+            return UploadOutcome::failed(format!("server answered {}", response.status()));
+        }
+        // Cancellation can land while the response is in flight, and the server
+        // has already stored the file by then. Leaving it on disk is the safe
+        // direction: the next launch offers it again rather than losing it.
+        if self.token.is_cancelled() {
+            return UploadOutcome::cancelled();
+        }
+        if let Err(err) = tokio::fs::remove_file(&path).await {
+            return UploadOutcome::failed(format!("cannot delete {}: {}", path.display(), err));
+        }
+        log::info!("nano: {} uploaded and deleted", filename);
+        UploadOutcome::sent()
+    }
+}
+
+impl Default for UploadSession {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// The pieces of one submit request, kept apart from the multipart encoding
@@ -262,7 +368,7 @@ struct SubmitBody {
 /// The `message` part is mandatory server side and must not be blank, so
 /// crash reports get a synthesised one (they carry no user message) while
 /// feedback uses the text the user typed.
-fn build_submit_body(filename: &str, content: &str) -> Result<SubmitBody, String> {
+fn build_submit_body(filename: &str, content: &str) -> SubmitBody {
     let feedback = parse_feedback(filename, content);
     let message = match feedback.as_ref() {
         None => format!("Pianoscope crash report ({})", filename),
@@ -278,11 +384,11 @@ fn build_submit_body(filename: &str, content: &str) -> Result<SubmitBody, String
     let screenshot = feedback
         .filter(|feedback| !feedback.screenshot.is_empty())
         .map(|feedback| feedback.screenshot);
-    Ok(SubmitBody {
+    SubmitBody {
         message,
         report: truncate_utf8(content, MAX_REPORT_BYTES),
         screenshot,
-    })
+    }
 }
 
 /// Decodes a `feedback-NNNN.json` payload; crash reports never carry one.
@@ -293,17 +399,24 @@ fn parse_feedback(filename: &str, content: &str) -> Option<Feedback> {
     serde_json::from_str(content).ok()
 }
 
-fn build_agent() -> ureq::Agent {
-    ureq::Agent::config_builder()
-        .timeout_global(Some(SERVER_TIMEOUT))
-        .user_agent(SERVER_APP_ID)
-        .tls_config(
-            ureq::tls::TlsConfig::builder()
-                .disable_verification(true)
-                .build(),
-        )
-        .build()
-        .into()
+/// One shared client for the whole process: it owns a connection pool and a TLS
+/// session cache, so building it per request would cost a handshake every time.
+///
+/// Certificate verification is off because the monitoring server presents a
+/// self-signed certificate. That is safe only because [SERVER_BASE_URL] is a
+/// constant: this client must not be reused for a host the user can choose.
+fn client() -> &'static reqwest::Client {
+    CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .timeout(SERVER_TIMEOUT)
+            .user_agent(SERVER_APP_ID)
+            .danger_accept_invalid_certs(true)
+            .build()
+            .unwrap_or_else(|err| {
+                log::error!("nano: cannot build the http client: {}", err);
+                reqwest::Client::new()
+            })
+    })
 }
 
 /// Cuts `text` to at most `max_bytes` without splitting a UTF-8 character.
@@ -318,9 +431,9 @@ fn truncate_utf8(text: &str, max_bytes: usize) -> String {
     text[..end].to_string()
 }
 
-/// ureq's `Debug` output is a multi-line dump of the whole error chain, so
+/// reqwest's `Debug` output is a multi-line dump of the whole error chain, so
 /// flatten it to one readable line instead.
-fn describe_ureq_error(err: &ureq::Error) -> String {
+fn describe_reqwest_error(err: &reqwest::Error) -> String {
     let mut message = err.to_string();
     let mut source = std::error::Error::source(err);
     while let Some(cause) = source {
@@ -360,13 +473,13 @@ mod tests {
         std::env::temp_dir().join(format!("pianoscope-report-test-{}", std::process::id()))
     }
 
-    /// Walks the whole lifecycle: panic -> numbered file -> listed -> uploaded
-    /// and deleted. Everything that touches the report directory has to live in
-    /// a single test, because `REPORT_DIR` is a process-wide `OnceLock`: a
-    /// second test running in parallel would share the same directory and
-    /// clobber this one's files.
-    #[test]
-    fn reports_are_written_listed_and_deleted_after_upload() {
+    /// Walks the whole lifecycle: panic -> numbered file -> listed -> cancelled
+    /// batch, then uploaded and deleted. Everything that touches the report
+    /// directory has to live in a single test, because `REPORT_DIR` is a
+    /// process-wide `OnceLock`: a second test running in parallel would share
+    /// the same directory and clobber this one's files.
+    #[tokio::test]
+    async fn reports_are_written_listed_cancelled_and_deleted_after_upload() {
         let _ = env_logger::try_init();
         let dir = temp_dir();
         let _ = std::fs::remove_dir_all(&dir);
@@ -476,6 +589,24 @@ mod tests {
         }
         std::fs::remove_dir(dir.join("report-0006.json")).unwrap();
 
+        // A session cancelled up front touches neither the network nor the disk,
+        // and the file it was pointed at is still there for the next launch.
+        let stopped = UploadSession::new();
+        stopped.cancel();
+        let kept = named(REPORT_FILE_PREFIX, 1);
+        let kept_name = kept.file_name().unwrap().to_str().unwrap().to_string();
+        let outcome = stopped.upload(kept_name).await;
+        assert!(outcome.cancelled, "got {outcome:?}");
+        assert!(
+            outcome.error.is_empty(),
+            "a stop is not a failure: {outcome:?}"
+        );
+        assert!(
+            kept.is_file(),
+            "a cancelled upload must not delete {}",
+            kept.display()
+        );
+
         // The live upload needs the real server: both files must come back
         // deleted, which is what lets the next launch skip them.
         let upload_png = vec![0x89u8, 0x50, 0x4e, 0x47];
@@ -498,9 +629,11 @@ mod tests {
             ]
         );
 
+        let session = UploadSession::new();
         for path in [&feedback_path, &crash_path] {
-            let name = path.file_name().unwrap().to_str().unwrap();
-            upload_blocking(name).unwrap_or_else(|err| panic!("upload of {name} failed: {err}"));
+            let name = path.file_name().unwrap().to_str().unwrap().to_string();
+            let outcome = session.upload(name.clone()).await;
+            assert!(outcome.is_sent(), "upload of {name} gave {outcome:?}");
         }
 
         for path in [&feedback_path, &crash_path] {
@@ -546,10 +679,18 @@ mod tests {
         }
     }
 
-    #[test]
-    fn upload_rejects_invalid_names_before_touching_disk_or_network() {
-        let error = upload_blocking("../../etc/passwd").unwrap_err();
-        assert!(error.contains("invalid report name"), "got {error}");
+    #[tokio::test]
+    async fn upload_rejects_invalid_names_before_touching_disk_or_network() {
+        // Rejected before the report directory is even consulted, so this needs
+        // no set-up and is safe to run next to the lifecycle test.
+        let outcome = UploadSession::new()
+            .upload("../../etc/passwd".to_string())
+            .await;
+        assert!(!outcome.cancelled, "a bad name is not a stop: {outcome:?}");
+        assert!(
+            outcome.error.contains("invalid report name"),
+            "got {outcome:?}"
+        );
     }
 
     #[test]
@@ -572,7 +713,7 @@ mod tests {
     #[test]
     fn crash_submit_body_synthesises_a_non_empty_message() {
         let content = "{\"datetime\":\"2026-10-12T05:00:00Z\"}";
-        let body = build_submit_body("report-0007.json", content).unwrap();
+        let body = build_submit_body("report-0007.json", content);
 
         assert!(!body.message.trim().is_empty());
         assert!(body.message.contains("report-0007.json"));
@@ -589,7 +730,7 @@ mod tests {
             screenshot: png.clone(),
         };
         let content = serde_json::to_string(&feedback).unwrap();
-        let body = build_submit_body("feedback-0002.json", &content).unwrap();
+        let body = build_submit_body("feedback-0002.json", &content);
 
         assert_eq!(body.message, "the staff is shifted");
         assert_eq!(body.report, content);
@@ -604,7 +745,7 @@ mod tests {
             screenshot: Vec::new(),
         })
         .unwrap();
-        let body = build_submit_body("feedback-0003.json", &content).unwrap();
+        let body = build_submit_body("feedback-0003.json", &content);
 
         assert!(!body.message.trim().is_empty());
         assert!(body.message.contains("feedback-0003.json"));
@@ -613,7 +754,7 @@ mod tests {
 
     #[test]
     fn feedback_submit_body_survives_a_corrupt_payload() {
-        let body = build_submit_body("feedback-0004.json", "not json at all").unwrap();
+        let body = build_submit_body("feedback-0004.json", "not json at all");
         assert!(!body.message.trim().is_empty());
         assert!(body.screenshot.is_none());
         assert_eq!(body.report, "not json at all");
