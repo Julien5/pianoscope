@@ -20,6 +20,7 @@ class _UploadHandler extends UploadHandler {
       email: request.email,
       message: request.message,
       session: super.session,
+      screenshot: request.withScreenshot ? request.screenshot : null,
     );
   }
 }

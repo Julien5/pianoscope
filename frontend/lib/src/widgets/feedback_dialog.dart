@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../providers/user_settings_provider.dart';
 import '../rust/api/report.dart';
+import '../screenshot_capture.dart';
 import '../style.dart';
 
 enum FeedbackMode { feedback, crashReport }
@@ -18,12 +21,14 @@ class FeedbackRequest {
   final String email;
   final String message;
   final bool withScreenshot;
+  final Uint8List screenshot;
 
-  const FeedbackRequest({
+  FeedbackRequest({
     required this.email,
     required this.message,
     required this.withScreenshot,
-  });
+    Uint8List? screenshot,
+  }) : screenshot = screenshot ?? Uint8List(0);
 }
 
 typedef ReportCallback = void Function(String);
@@ -89,6 +94,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
   late final TextEditingController _email;
   final _message = TextEditingController();
   bool _withScreenshot = false;
+  Uint8List _screenshot = Uint8List(0);
   bool _busy = false;
   String _progress = '';
 
@@ -125,6 +131,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
       email: email,
       message: _isCrashReport ? '' : _message.text.trim(),
       withScreenshot: !_isCrashReport && _withScreenshot,
+      screenshot: _withScreenshot ? _screenshot : Uint8List(0),
     );
   }
 
@@ -200,8 +207,21 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
             controlAffinity: ListTileControlAffinity.leading,
             title: Text(l10n.feedbackScreenshot, style: AppTextStyles.normal),
             value: _withScreenshot,
-            onChanged: (value) {
-              setState(() => _withScreenshot = value ?? false);
+            onChanged: (value) async {
+              final enabled = value ?? false;
+              setState(() => _withScreenshot = enabled);
+
+              if (!enabled) {
+                _screenshot = Uint8List(0);
+                return;
+              }
+
+              final screenshot =
+                  await FeedbackScreenCapture.captureCurrentScreen();
+              if (!mounted || !_withScreenshot) {
+                return;
+              }
+              setState(() => _screenshot = screenshot ?? Uint8List(0));
             },
           ),
         ],

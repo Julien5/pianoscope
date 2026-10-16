@@ -10,6 +10,7 @@ import 'screens/clef_selection_screen.dart';
 import 'screens/device_list_screen.dart';
 import 'screens/languages_screen.dart';
 import 'screens/midi_signal_screen.dart';
+import 'screenshot_capture.dart';
 import 'widgets/feedback_hero_button.dart';
 import 'widgets/settings_drawer.dart';
 
@@ -36,7 +37,7 @@ String _shellTitle(BuildContext context, GoRouterState state) {
 }
 
 Widget _noAppBarScaffold(Widget child) {
-  return Scaffold(
+  final scaffold = Scaffold(
     drawer: const SettingsDrawer(hasSmallHeader: true),
     floatingActionButton: const FeedbackHeroButton(),
     body: Builder(
@@ -58,6 +59,10 @@ Widget _noAppBarScaffold(Widget child) {
       },
     ),
   );
+  return RepaintBoundary(
+    key: FeedbackScreenCapture.rootKey,
+    child: scaffold,
+  );
 }
 
 bool _uploadPromptShown = false;
@@ -77,29 +82,34 @@ Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
   _scheduleUploadPrompt(context);
   final isLandscape =
       MediaQuery.of(context).orientation == Orientation.landscape;
+
   if (state.uri.path == Routes.note && isLandscape) {
     return _noAppBarScaffold(child);
   }
-  if (state.uri.path == Routes.languages || state.uri.path == Routes.clefs) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => GoRouter.of(context).pop(),
-        ),
-        title: Text(_shellTitle(context, state)),
-      ),
-      floatingActionButton: const FeedbackHeroButton(),
-      body: child,
-    );
-  }
-  return Scaffold(
-    appBar: AppBar(title: Text(_shellTitle(context, state))),
-    drawer: SettingsDrawer(
-      hasSmallHeader: isLandscape,
-    ), // Available across all routes in this shell
-    floatingActionButton: const FeedbackHeroButton(),
-    body: child,
+  final scaffold = state.uri.path == Routes.languages || state.uri.path == Routes.clefs
+      ? Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => GoRouter.of(context).pop(),
+            ),
+            title: Text(_shellTitle(context, state)),
+          ),
+          floatingActionButton: const FeedbackHeroButton(),
+          body: child,
+        )
+      : Scaffold(
+          appBar: AppBar(title: Text(_shellTitle(context, state))),
+          drawer: SettingsDrawer(
+            hasSmallHeader: isLandscape,
+          ), // Available across all routes in this shell
+          floatingActionButton: const FeedbackHeroButton(),
+          body: child,
+        );
+
+  return RepaintBoundary(
+    key: FeedbackScreenCapture.rootKey,
+    child: scaffold,
   );
 }
 
