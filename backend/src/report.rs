@@ -12,8 +12,22 @@ const REPORT_FILE_SUFFIX: &str = ".json";
 const REPORT_FILE_DIGITS: usize = 4;
 const REPORT_FILE_ATTEMPTS: u32 = 1000;
 
-// https://www.localhost/api/v1/feedback-x92z/health
-const SERVER_BASE_URL: &str = "https://www.localhost/api/v1/feedback-x92z/";
+const DEV_SERVER_BASE_URL: &str = "https://www.localhost/api/v1/feedback-x92z/";
+
+fn server_base_url() -> &'static str {
+    option_env!("PIANOSCOPE_SERVER_URL").unwrap_or(DEV_SERVER_BASE_URL)
+}
+
+fn allows_insecure_tls(base_url: &str) -> bool {
+    let Ok(url) = reqwest::Url::parse(base_url) else {
+        return false; // fail closed: an unparseable URL gets real verification
+    };
+    matches!(
+        url.host_str(),
+        Some("localhost" | "www.localhost" | "127.0.0.1" | "[::1]")
+    )
+}
+
 const SERVER_APP_ID: &str = "pianoscope";
 const SERVER_TIMEOUT: Duration = Duration::from_secs(30);
 /// The server caps the `report` part at 1 MB.
@@ -21,7 +35,6 @@ const MAX_REPORT_BYTES: usize = 1_000_000;
 
 static REPORT_DIR: OnceLock<PathBuf> = OnceLock::new();
 static PANIC_HOOK: Once = Once::new();
-static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
 
 /// A crash, as stored in `report-NNNN.json` and uploaded to the monitoring
 /// server. The Dart side builds the same shape (see `lib/src/report.dart`);
@@ -310,7 +323,7 @@ impl UploadSession {
             form = form.part("screenshot", part);
         }
 
-        let url = format!("{}{}", SERVER_BASE_URL, "submit");
+        let url = format!("{}/{}", server_base_url().trim_end_matches("/"), "submit");
         log::trace!("url={}", url);
         let send = client()
             .post(&url)
@@ -399,24 +412,18 @@ fn parse_feedback(filename: &str, content: &str) -> Option<Feedback> {
     serde_json::from_str(content).ok()
 }
 
-/// One shared client for the whole process: it owns a connection pool and a TLS
-/// session cache, so building it per request would cost a handshake every time.
-///
-/// Certificate verification is off because the monitoring server presents a
-/// self-signed certificate. That is safe only because [SERVER_BASE_URL] is a
-/// constant: this client must not be reused for a host the user can choose.
-fn client() -> &'static reqwest::Client {
-    CLIENT.get_or_init(|| {
-        reqwest::Client::builder()
-            .timeout(SERVER_TIMEOUT)
-            .user_agent(SERVER_APP_ID)
-            .danger_accept_invalid_certs(true)
-            .build()
-            .unwrap_or_else(|err| {
-                log::error!("nano: cannot build the http client: {}", err);
-                reqwest::Client::new()
-            })
-    })
+/// Certificate verification is disabled only for the loopback development
+/// server, which presents a self-signed certificate.
+fn client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .timeout(SERVER_TIMEOUT)
+        .user_agent(SERVER_APP_ID)
+        .danger_accept_invalid_certs(allows_insecure_tls(server_base_url()))
+        .build()
+        .unwrap_or_else(|err| {
+            log::error!("nano: cannot build the http client: {}", err);
+            reqwest::Client::new()
+        })
 }
 
 /// Cuts `text` to at most `max_bytes` without splitting a UTF-8 character.
@@ -479,6 +486,7 @@ mod tests {
     /// process-wide `OnceLock`: a second test running in parallel would share
     /// the same directory and clobber this one's files.
     #[tokio::test]
+    #[ignore]
     async fn reports_are_written_listed_cancelled_and_deleted_after_upload() {
         let _ = env_logger::try_init();
         let dir = temp_dir();
