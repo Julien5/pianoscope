@@ -8,14 +8,9 @@ use tokio_util::sync::CancellationToken;
 
 const REPORT_FILE_PREFIX: &str = "report-";
 const FEEDBACK_FILE_PREFIX: &str = "feedback-";
-const REPORT_FILE_SUFFIX: &str = ".json";
-const REPORT_FILE_DIGITS: usize = 4;
-const REPORT_FILE_ATTEMPTS: u32 = 1000;
-
-const DEV_SERVER_BASE_URL: &str = "https://www.localhost/api/v1/feedback-x92z/";
 
 fn server_base_url() -> &'static str {
-    option_env!("PIANOSCOPE_SERVER_URL").unwrap_or(DEV_SERVER_BASE_URL)
+    option_env!("MONITORING_SERVER_URL").unwrap_or("https://www.localhost/api/v1/feedback-x92z/")
 }
 
 fn allows_insecure_tls(base_url: &str) -> bool {
@@ -92,7 +87,7 @@ pub fn set_report_dir(dir: &str) -> Result<(), String> {
     let path = PathBuf::from(dir);
     std::fs::create_dir_all(&path)
         .map_err(|err| format!("cannot create report directory {}: {}", path.display(), err))?;
-    log::info!("nano: report directory set to {}", path.display());
+    log::info!("report directory set to {}", path.display());
     REPORT_DIR.get_or_init(|| path);
     Ok(())
 }
@@ -110,12 +105,12 @@ pub fn setup_panic_hook() {
                 let stacktrace = std::backtrace::Backtrace::force_capture().to_string();
                 let report = CrashReport::new(&location, &error_message, &stacktrace);
                 if let Err(err) = write_crashreport(report) {
-                    log::error!("nano: crash report not written: {}", err);
+                    log::error!("crash report not written: {}", err);
                 }
             }));
             previous(info);
         }));
-        log::info!("nano: panic hook installed");
+        log::info!("panic hook installed");
     });
 }
 
@@ -145,7 +140,7 @@ pub fn write_crashreport(report: CrashReport) -> Result<PathBuf, String> {
         .map_err(|err| format!("cannot write report: {}", err))?;
     file.flush()
         .map_err(|err| format!("cannot flush report: {}", err))?;
-    log::error!("nano: crash report written to {}", path.display());
+    log::error!("crash report written to {}", path.display());
     Ok(path)
 }
 
@@ -159,16 +154,14 @@ pub fn write_feedback(feedback: Feedback) -> Result<PathBuf, String> {
         .map_err(|err| format!("cannot write feedback: {}", err))?;
     file.flush()
         .map_err(|err| format!("cannot flush feedback: {}", err))?;
-    log::info!("nano: feedback saved to {}", path.display());
+    log::info!("feedback saved to {}", path.display());
     Ok(path)
 }
 
 fn create_indexed_file(dir: &Path, prefix: &str) -> Option<(PathBuf, std::fs::File)> {
     let first = last_index(dir, prefix).unwrap_or(0) + 1;
-    for index in first..first + REPORT_FILE_ATTEMPTS {
-        let path = dir.join(format!(
-            "{prefix}{index:0REPORT_FILE_DIGITS$}{REPORT_FILE_SUFFIX}"
-        ));
+    for index in first..first + 1000 {
+        let path = dir.join(format!("{prefix}{index:04}.json"));
         match std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -177,12 +170,12 @@ fn create_indexed_file(dir: &Path, prefix: &str) -> Option<(PathBuf, std::fs::Fi
             Ok(file) => return Some((path, file)),
             Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => continue,
             Err(err) => {
-                log::error!("nano: cannot create file {}: {}", path.display(), err);
+                log::error!("cannot create file {}: {}", path.display(), err);
                 return None;
             }
         }
     }
-    log::error!("nano: no free file name for {} after {}", prefix, first);
+    log::error!("no free file name for {} after {}", prefix, first);
     None
 }
 
@@ -208,7 +201,7 @@ pub fn is_report_name(name: &str) -> bool {
 
 fn report_index(name: &str, prefix: &str) -> Option<u32> {
     name.strip_prefix(prefix)?
-        .strip_suffix(REPORT_FILE_SUFFIX)?
+        .strip_suffix(".json")?
         .parse::<u32>()
         .ok()
 }
@@ -331,12 +324,10 @@ impl UploadSession {
             .multipart(form)
             .send();
 
-        // `select!` drops `send` to stop, which tears the request down at the
-        // socket instead of leaving it to run to completion. The body upload is
-        // part of the same future, so a long screenshot is cut short too.
-        // `biased` makes the token win over a response that arrives in the same
-        // poll; without it the pick would be random and the same race would
-        // report "sent" on one launch and "cancelled" on the next.
+        // If the user cancels the upload midway, the code immediately drops the connection
+        // to stop it. Because of how Rust's asynchronous futures work, the special "biased"
+        // rule ensures that cancellation requests always take priority over a server response
+        // arriving at the exact same millisecond, preventing random, unpredictable bugs.
         let response = tokio::select! {
             biased;
             _ = self.token.cancelled() => return UploadOutcome::cancelled(),
@@ -359,7 +350,7 @@ impl UploadSession {
         if let Err(err) = tokio::fs::remove_file(&path).await {
             return UploadOutcome::failed(format!("cannot delete {}: {}", path.display(), err));
         }
-        log::info!("nano: {} uploaded and deleted", filename);
+        log::info!("{} uploaded and deleted", filename);
         UploadOutcome::sent()
     }
 }
@@ -421,7 +412,7 @@ fn client() -> reqwest::Client {
         .danger_accept_invalid_certs(allows_insecure_tls(server_base_url()))
         .build()
         .unwrap_or_else(|err| {
-            log::error!("nano: cannot build the http client: {}", err);
+            log::error!("cannot build the http client: {}", err);
             reqwest::Client::new()
         })
 }
