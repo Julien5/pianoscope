@@ -37,68 +37,6 @@ String _stripInterfaceTerms(String input, RegExp interfaceTerm) {
       .trim();
 }
 
-/// Cleans up raw OS MIDI port names into user-friendly display labels.
-String formatMidiPortNameDefault(String rawName) {
-  debugPrint("rawName: $rawName");
-  if (rawName.trim().isEmpty) return _unknownDevice;
-
-  String cleaned = rawName;
-
-  // 1. Remove common OS/Driver clutter and redundant prefixes/suffixes
-  final clutterPatterns = [
-    RegExp(r'\b(IN|OUT)\b', caseSensitive: false), // Standalone IN/OUT
-    RegExp(
-      r'\bMIDI\s*(Port|Interface|Device)?\b',
-      caseSensitive: false,
-    ), // Redundant 'MIDI' terms
-    RegExp(r'\bUSB\s*MIDI\b', caseSensitive: false), // 'USB MIDI'
-    RegExp(r'\(?\bCoreMIDI\b\)?', caseSensitive: false), // macOS CoreMIDI tags
-    _bracketed, // Anything inside square brackets
-  ];
-
-  for (final pattern in clutterPatterns) {
-    cleaned = cleaned.replaceAll(pattern, '');
-  }
-
-  // 2. Strip hardware interface/index patterns (e.g., "1:", "Port 1", "0", "hw:0,0")
-  cleaned = cleaned.replaceAll(
-    RegExp(r'\b(hw|port|bus|dev)\s*:?\s*\d+([,-]\d+)?\b', caseSensitive: false),
-    '',
-  );
-  cleaned = cleaned.replaceAll(
-    RegExp(r'^\d+\s*:\s*'),
-    '',
-  ); // Leading "1: " style prefixes
-
-  // 3. Normalize punctuation and separators
-  cleaned = cleaned
-      .replaceAll(RegExp(r'[-_]{2,}'), ' ') // Multiple dashes/underscores
-      .replaceAll(RegExp(r'[():,]'), ' ') // Stripped parens/colons
-      .replaceAll(RegExp(r'\s+'), ' ') // Collapsed spaces
-      .trim();
-
-  if (cleaned.isEmpty) return 'Generic MIDI Device';
-
-  // 4. Standardize Title Case (preserving known acronyms like USB, DIN)
-  return _toTitleCase(cleaned);
-}
-
-String _toTitleCase(String input) {
-  final acronyms = {'usb', 'din', 'ble', 'rtp', 'asio'};
-
-  return input
-      .split(' ')
-      .map((word) {
-        if (word.isEmpty) return '';
-        final lower = word.toLowerCase();
-        if (acronyms.contains(lower)) {
-          return lower.toUpperCase();
-        }
-        return word[0].toUpperCase() + word.substring(1).toLowerCase();
-      })
-      .join(' ');
-}
-
 /// Cleans ALSA/OS MIDI port names into concise, readable device labels.
 String formatMidiPortNameAlsa(String rawName) {
   if (rawName.trim().isEmpty) return _unknownDevice;
