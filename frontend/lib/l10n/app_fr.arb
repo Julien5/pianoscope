@@ -1,6 +1,6 @@
 {
   "selectClef": "Changer la clef",
-  "selectInput": "Choisir une entrée",
+  "selectInput": "Microphone/MIDI",
   "noteC":"Do",
   "noteD":"Ré",
   "noteE":"Mi",
@@ -17,7 +17,7 @@
   "microphone": "Microphone",
 
   "languages": "Langues",
-  "sendFeedback":"Contacter le développeur",
+  "sendFeedback": "Contacter le développeur",
 
   "feedbackTitle": "Retour",
   "crashReportTitle": "Rapports de plantage",

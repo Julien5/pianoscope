@@ -12,7 +12,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectClef => 'Changer la clef';
 
   @override
-  String get selectInput => 'Choisir une entrée';
+  String get selectInput => 'Microphone/MIDI';
 
   @override
   String get noteC => 'Do';
