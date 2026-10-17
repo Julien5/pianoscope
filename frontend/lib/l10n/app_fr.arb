@@ -17,6 +17,7 @@
   "microphone": "Microphone",
 
   "languages": "Langues",
+  "sendFeedback":"Contacter le développeur",
 
   "feedbackTitle": "Retour",
   "crashReportTitle": "Rapports de plantage",

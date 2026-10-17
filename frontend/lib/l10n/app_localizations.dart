@@ -190,6 +190,12 @@ abstract class AppLocalizations {
   /// **'Languages'**
   String get languages;
 
+  /// No description provided for @sendFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback to the developer'**
+  String get sendFeedback;
+
   /// No description provided for @feedbackTitle.
   ///
   /// In en, this message translates to:

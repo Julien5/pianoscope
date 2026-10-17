@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../routes.dart';
 import '../style.dart';
+import 'feedback_hero_button.dart';
 
 class SettingsDrawer extends StatelessWidget {
   final bool hasSmallHeader;
@@ -89,6 +90,14 @@ class SettingsDrawer extends StatelessWidget {
                   onTap: () {
                     Scaffold.of(context).closeDrawer();
                     GoRouter.of(context).push(Routes.languages);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.feedback),
+                  title: Text(AppLocalizations.of(context)!.sendFeedback),
+                  onTap: () {
+                    Scaffold.of(context).closeDrawer();
+                    showFeedbackDialog(context);
                   },
                 ),
               ],

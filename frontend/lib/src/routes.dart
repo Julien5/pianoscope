@@ -12,7 +12,6 @@ import 'screens/languages_screen.dart';
 import 'screens/midi_signal_screen.dart';
 import 'screenshot_capture.dart';
 import 'style.dart';
-import 'widgets/feedback_hero_button.dart';
 import 'widgets/settings_drawer.dart';
 
 String _shellTitle(BuildContext context, GoRouterState state) {
@@ -20,15 +19,9 @@ String _shellTitle(BuildContext context, GoRouterState state) {
     case Routes.devices:
       return AppLocalizations.of(context)!.selectInput;
     case Routes.note:
-      // Defensive: `/note` is only reachable after a successful connect(), so
-      // there should always be a device. Render something rather than throw if
-      // that ever stops holding. Not localized, unlike the other titles, because
-      // the branch should be unreachable.
       final device = context.read<InputProvider>().currentDevice();
-      final title = device != null
-          ? device.localizedPortName(context)
-          : "unknown";
-      return title;
+      assert(device != null);
+      return device!.localizedPortName(context);
     case Routes.clefs:
       return AppLocalizations.of(context)!.selectClef;
     case Routes.languages:
@@ -40,7 +33,6 @@ String _shellTitle(BuildContext context, GoRouterState state) {
 Widget _noAppBarScaffold(Widget child) {
   final scaffold = Scaffold(
     drawer: const SettingsDrawer(hasSmallHeader: true),
-    floatingActionButton: const FeedbackHeroButton(),
     body: Builder(
       builder: (context) {
         return Stack(
@@ -101,15 +93,11 @@ Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
             ),
             title: Text(_shellTitle(context, state)),
           ),
-          floatingActionButton: const FeedbackHeroButton(),
           body: child,
         )
       : Scaffold(
           appBar: AppBar(title: Text(_shellTitle(context, state))),
-          drawer: SettingsDrawer(
-            hasSmallHeader: isLandscape,
-          ), // Available across all routes in this shell
-          floatingActionButton: const FeedbackHeroButton(),
+          drawer: SettingsDrawer(hasSmallHeader: isLandscape),
           body: child,
         );
 

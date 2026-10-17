@@ -58,6 +58,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get languages => 'Sprachen';
 
   @override
+  String get sendFeedback => 'Feedback an den Entwickler';
+
+  @override
   String get feedbackTitle => 'Rückmeldung';
 
   @override
