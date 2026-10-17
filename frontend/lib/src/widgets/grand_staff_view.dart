@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../pianoscope.dart';
 import '../notation/grand_staff_parameters.dart';
 import '../notation/grand_staff_painter.dart';
+import '../style.dart';
 
 class GrandStaffView extends StatelessWidget {
   final GrandStaffParameters params;
@@ -59,8 +60,8 @@ class KeySignatureTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 100,
-      width: 120,
+      height: AppClefStyle.keyTileHeight,
+      width: AppClefStyle.keyTileWidth,
       child: CustomPaint(
         painter: KeyTilePainter(keySignature: keySignature),
         size: Size.infinite,

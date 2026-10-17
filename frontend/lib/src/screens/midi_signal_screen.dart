@@ -75,7 +75,7 @@ class MainContentTightPortrait extends StatelessWidget {
         Expanded(
           flex: 1,
           child: Padding(
-            padding: EdgeInsetsGeometry.all(5),
+            padding: const EdgeInsets.all(AppSpacing.xs),
             child: GrandStaffView(
               keySignature: data.keySignature ?? KeySignature.cMajor,
               notes: data.notes,
@@ -85,25 +85,22 @@ class MainContentTightPortrait extends StatelessWidget {
           ),
         ),
         Expanded(
-          flex: 0,
-          child: Padding(
-            padding: EdgeInsetsGeometry.fromLTRB(0, 10, 0, 10),
-            child: HorizontalVelocityIndicator(velocity: data.signalVelocity),
-          ),
-        ),
-        Expanded(
-          child: Column(
-            spacing: 10,
+          child: Row(
             children: [
-              KeyboardWidget(
-                pressedNotes: data.notes,
-                whiteHeight: 150,
-                whiteWidth: 40,
-                pressedDotRadius: 5,
-                pressedDotColor: Colors.blue,
-              ),
+              Expanded(
+                child: Column(
+                  spacing: AppSpacing.md,
+                  children: [
+                    _KeyboardPanel(notes: data.notes),
 
-              NoteNameText(noteNames: data.notes),
+                    NoteNameText(noteNames: data.notes),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: VelocityIndicator(velocity: data.signalVelocity),
+              ),
             ],
           ),
         ),
@@ -130,22 +127,16 @@ class MainContentPortrait extends StatelessWidget {
         Expanded(
           flex: 1,
           child: Padding(
-            padding: EdgeInsetsGeometry.fromLTRB(5, 0, 5, 0),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: GrandStaffPanel(data: data, callbacks: callbacks),
           ),
         ),
 
         Expanded(
           child: Column(
-            spacing: 10,
+            spacing: AppSpacing.md,
             children: [
-              KeyboardWidget(
-                pressedNotes: data.notes,
-                whiteHeight: 150,
-                whiteWidth: 40,
-                pressedDotRadius: 5,
-                pressedDotColor: Colors.blue,
-              ),
+              _KeyboardPanel(notes: data.notes),
 
               NoteNameText(noteNames: data.notes),
             ],
@@ -171,18 +162,16 @@ class MainContentLandscape extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(child: SizedBox(height: 20)),
+        const Expanded(child: SizedBox(height: AppSpacing.xl)),
         Expanded(
           flex: 2,
           child: Column(
             children: [
-              Expanded(child: SizedBox(width: 10)),
+              const Expanded(child: SizedBox(width: AppSpacing.md)),
               KeyboardWidget(
                 pressedNotes: data.notes,
-                whiteHeight: 200,
-                whiteWidth: 50,
-                pressedDotRadius: 5,
-                pressedDotColor: Colors.blue,
+                whiteHeight: AppKeyboardStyle.landscapeWhiteHeight,
+                whiteWidth: AppKeyboardStyle.landscapeWhiteWidth,
               ),
               SizedBox(
                 height: 50,
@@ -198,7 +187,7 @@ class MainContentLandscape extends StatelessWidget {
                   ),
                 ),
               ),
-              Expanded(child: SizedBox(width: 10)),
+              const Expanded(child: SizedBox(width: AppSpacing.md)),
             ],
           ),
         ),
@@ -208,7 +197,7 @@ class MainContentLandscape extends StatelessWidget {
           child: GrandStaffPanel(data: data, callbacks: callbacks),
         ),
 
-        const Expanded(child: SizedBox(height: 20)),
+        const Expanded(child: SizedBox(height: AppSpacing.xl)),
       ],
     );
   }
@@ -285,7 +274,7 @@ class GrandStaffPanel extends StatelessWidget {
         ),
 
         Padding(
-          padding: EdgeInsetsGeometry.fromLTRB(10, 0, 10, 0),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: VelocityIndicator(velocity: data.signalVelocity),
         ),
       ],
@@ -453,6 +442,30 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
           },
         );
       },
+    );
+  }
+}
+
+/// The keyboard is an opaque white object sitting on the tinted page, so give
+/// it the same card treatment as the device list instead of letting it float.
+class _KeyboardPanel extends StatelessWidget {
+  const _KeyboardPanel({required this.notes});
+
+  final List<Note> notes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: KeyboardWidget(
+          pressedNotes: notes,
+          whiteHeight: AppKeyboardStyle.compactWhiteHeight,
+          whiteWidth: AppKeyboardStyle.compactWhiteWidth,
+        ),
+      ),
     );
   }
 }

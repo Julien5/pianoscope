@@ -174,15 +174,12 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.max,
-        spacing: 10,
+        spacing: AppSpacing.md,
         children: [
           TextFormField(
             controller: _email,
             style: AppTextStyles.normal,
-            decoration: InputDecoration(
-              labelText: l10n.feedbackEmail,
-              border: const OutlineInputBorder(),
-            ),
+            decoration: InputDecoration(labelText: l10n.feedbackEmail),
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
             validator: _validateEmail,
@@ -195,7 +192,6 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
               decoration: InputDecoration(
                 labelText: l10n.feedbackMessage,
                 hintText: l10n.feedbackMessageHint,
-                border: const OutlineInputBorder(),
               ),
               validator: _validateMessage,
               minLines: null,
@@ -263,7 +259,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
         _isCrashReport ? l10n.crashReportTitle : l10n.feedbackTitle,
         style: AppTextStyles.header,
       ),
-      insetPadding: EdgeInsets.all(5),
+      insetPadding: const EdgeInsets.all(AppSpacing.sm),
       content: content,
       actions: [
         TextButton(
@@ -273,6 +269,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
           child: Text(_busy ? l10n.uploadStop : l10n.feedbackCancel),
         ),
         ElevatedButton(
+          style: AppTheme.filledButtonStyle,
           onPressed: _busy ? null : _submit,
           child: Text(l10n.feedbackSubmit),
         ),

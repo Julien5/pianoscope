@@ -34,7 +34,7 @@ class NoteheadRenderer {
     canvas.drawOval(rect, paint);
     // debug
     // canvas.drawCircle(rect.center,rect.width/2,paint);
-    
+
     canvas.restore();
   }
 }

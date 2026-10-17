@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../pianoscope.dart';
+import '../style.dart';
 
 Note makeNote(NoteName name, Accidental accidental) {
   return Note(
@@ -93,14 +94,14 @@ class KeyboardWidget extends StatelessWidget {
   const KeyboardWidget({
     super.key,
     required this.pressedNotes,
-    this.whiteWidth = 55.0,
-    this.whiteHeight = 200.0,
-    this.blackWidthRatio = 0.6,
-    this.blackHeightRatio = 0.65,
-    this.whiteSpace = 2.0,
-    this.pressedDotOffset = 20.0,
-    this.pressedDotRadius = 3.0,
-    this.pressedDotColor = const Color(0xFFF0C419),
+    this.whiteWidth = AppKeyboardStyle.whiteWidth,
+    this.whiteHeight = AppKeyboardStyle.whiteHeight,
+    this.blackWidthRatio = AppKeyboardStyle.blackWidthRatio,
+    this.blackHeightRatio = AppKeyboardStyle.blackHeightRatio,
+    this.whiteSpace = AppKeyboardStyle.whiteSpace,
+    this.pressedDotOffset = AppKeyboardStyle.pressedDotOffset,
+    this.pressedDotRadius = AppKeyboardStyle.pressedDotRadius,
+    this.pressedDotColor = AppKeyboardStyle.pressedDotColor,
   });
 
   /// Notes currently held down. Order and duplicates don't matter.
@@ -198,12 +199,12 @@ class _KeyboardPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final whiteFill = Paint()..color = Colors.white;
+    final whiteFill = Paint()..color = AppKeyboardStyle.whiteKeyFill;
     final whiteStroke = Paint()
-      ..color = Colors.black26
+      ..color = AppKeyboardStyle.whiteKeyStroke
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    final blackFill = Paint()..color = Colors.black;
+    final blackFill = Paint()..color = AppKeyboardStyle.blackKeyFill;
     final dotPaint = Paint()..color = pressedDotColor;
 
     // White keys.
@@ -223,7 +224,10 @@ class _KeyboardPainter extends CustomPainter {
         _blackHeight,
       );
       canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(2)),
+        RRect.fromRectAndRadius(
+          rect,
+          const Radius.circular(AppKeyboardStyle.blackKeyRadius),
+        ),
         blackFill,
       );
     }

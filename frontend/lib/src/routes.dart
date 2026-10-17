@@ -11,6 +11,7 @@ import 'screens/device_list_screen.dart';
 import 'screens/languages_screen.dart';
 import 'screens/midi_signal_screen.dart';
 import 'screenshot_capture.dart';
+import 'style.dart';
 import 'widgets/feedback_hero_button.dart';
 import 'widgets/settings_drawer.dart';
 
@@ -45,13 +46,20 @@ Widget _noAppBarScaffold(Widget child) {
         return Stack(
           children: [
             child,
+            // This layout drops the AppBar so the staff gets the full height,
+            // which means the drawer toggle has to be positioned over the body.
+            // Give it the AppBar's leading slot and button style so it is
+            // pixel-for-pixel the menu the other orientations show.
             Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              left: 8,
-              child: FloatingActionButton.small(
-                heroTag: 'settings',
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                child: const Icon(Icons.menu),
+              top: MediaQuery.of(context).padding.top,
+              left: 0,
+              child: SizedBox.square(
+                dimension: AppHeights.appBar,
+                child: IconButton(
+                  style: AppTheme.overlayIconButtonStyle,
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  icon: const Icon(Icons.menu),
+                ),
               ),
             ),
           ],
@@ -59,10 +67,7 @@ Widget _noAppBarScaffold(Widget child) {
       },
     ),
   );
-  return RepaintBoundary(
-    key: FeedbackScreenCapture.rootKey,
-    child: scaffold,
-  );
+  return RepaintBoundary(key: FeedbackScreenCapture.rootKey, child: scaffold);
 }
 
 bool _uploadPromptShown = false;
@@ -86,7 +91,8 @@ Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
   if (state.uri.path == Routes.note && isLandscape) {
     return _noAppBarScaffold(child);
   }
-  final scaffold = state.uri.path == Routes.languages || state.uri.path == Routes.clefs
+  final scaffold =
+      state.uri.path == Routes.languages || state.uri.path == Routes.clefs
       ? Scaffold(
           appBar: AppBar(
             leading: IconButton(
@@ -107,10 +113,7 @@ Widget _scaffold(BuildContext context, GoRouterState state, Widget child) {
           body: child,
         );
 
-  return RepaintBoundary(
-    key: FeedbackScreenCapture.rootKey,
-    child: scaffold,
-  );
+  return RepaintBoundary(key: FeedbackScreenCapture.rootKey, child: scaffold);
 }
 
 class Routes {

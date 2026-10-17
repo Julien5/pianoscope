@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 
-class VelocityIndicator extends StatelessWidget {
-  final int velocity;
+import '../style.dart';
 
+/// Vertical velocity meter: a rounded track whose fill grows from the bottom
+/// up. Always vertical, so it reads the same way beside the staff and beside
+/// the keyboard.
+class VelocityIndicator extends StatelessWidget {
   const VelocityIndicator({super.key, required this.velocity});
+
+  /// MIDI velocity, 0-127.
+  final int velocity;
 
   @override
   Widget build(BuildContext context) {
-    final safeVelocity = velocity.clamp(0, 127);
-    final signalLevel = safeVelocity / 127.0;
+    final signalLevel = velocity.clamp(0, 127) / 127.0;
 
     return SizedBox(
-      width: 10,
-      height: 150,
+      width: AppMeterStyle.thickness,
+      height: AppMeterStyle.length,
       child: Stack(
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(color: Colors.grey.shade400),
+              color: AppMeterStyle.trackColor,
+              borderRadius: AppMeterStyle.borderRadius,
+              border: Border.all(color: AppMeterStyle.trackBorderColor),
             ),
           ),
           Align(
@@ -29,58 +34,8 @@ class VelocityIndicator extends StatelessWidget {
               heightFactor: signalLevel,
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.blueGrey, Colors.blueGrey, Colors.blueGrey],
-                  ),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-class HorizontalVelocityIndicator extends StatelessWidget {
-  final int velocity;
-
-  const HorizontalVelocityIndicator({super.key, required this.velocity});
-
-  @override
-  Widget build(BuildContext context) {
-    final safeVelocity = velocity.clamp(0, 127);
-    final signalLevel = safeVelocity / 127.0;
-
-    return SizedBox(
-      width: 200,
-      height: 10,
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(color: Colors.grey.shade400),
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FractionallySizedBox(
-              widthFactor: signalLevel,
-              heightFactor: 1,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.blueGrey, Colors.blueGrey, Colors.blueGrey],
-                  ),
-                  borderRadius: BorderRadius.circular(3),
+                  gradient: AppMeterStyle.fillGradient,
+                  borderRadius: AppMeterStyle.borderRadius,
                 ),
               ),
             ),

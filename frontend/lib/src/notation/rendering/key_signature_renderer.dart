@@ -14,7 +14,7 @@ class KeySignatureRenderer {
   final ClefType clefType;
   final Color color;
 
-  static double horizontalShrink=1;
+  static double horizontalShrink = 1;
 
   const KeySignatureRenderer({
     required this.box,
@@ -31,8 +31,6 @@ class KeySignatureRenderer {
     final glyphCode = keySignature.usesSharps
         ? GlyphProvider.sharp
         : GlyphProvider.flat;
-
-    
 
     final size = StaffUnits.accidentalSize() * horizontalShrink;
     final spacing = StaffUnits(horizontalShrink);

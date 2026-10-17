@@ -11,12 +11,9 @@ class KeyTile extends StatelessWidget {
   const KeyTile({super.key, required this.keySignature, required this.current});
 
   ButtonStyle _getBorderStyle(bool isSelected) {
-    return ElevatedButton.styleFrom(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-      side: isSelected
-          ? const BorderSide(color: AppColors.text, width: 2.0) // Selected
-          : const BorderSide(color: AppColors.border, width: 1.0), // Unselected
-    );
+    return isSelected
+        ? AppTheme.selectedButtonStyle
+        : AppTheme.tonalButtonStyle;
   }
 
   void setKeySignature(
@@ -68,35 +65,25 @@ class _KeyTilesState extends State<KeyTiles> {
     List<Widget> children = [];
     for (int k = 0; k < widget.keySignatures.length; k++) {
       KeySignature key = widget.keySignatures[k];
-      children.add(
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Padding(
-              padding: EdgeInsetsGeometry.all(0),
-              child: KeyTile(keySignature: key, current: current),
-            ),
-          ], //
-        ),
-      );
+      children.add(KeyTile(keySignature: key, current: current));
     }
     return OrientationBuilder(
       builder: (context, orientation) {
         final isLandscape = orientation == Orientation.landscape;
         if (isLandscape) {
           return GridView.count(
-            crossAxisCount: 3,
-            mainAxisSpacing: 5,
-            childAspectRatio: 1.7,
-            crossAxisSpacing: 5,
+            crossAxisCount: AppClefStyle.landscapeColumns,
+            mainAxisSpacing: AppClefStyle.gridSpacing,
+            childAspectRatio: AppClefStyle.childAspectRatio,
+            crossAxisSpacing: AppClefStyle.gridSpacing,
             children: children,
           );
         }
         return GridView.count(
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          crossAxisCount: 2,
-          childAspectRatio: 1.7,
+          mainAxisSpacing: AppClefStyle.gridSpacing,
+          crossAxisSpacing: AppClefStyle.gridSpacing,
+          crossAxisCount: AppClefStyle.portraitColumns,
+          childAspectRatio: AppClefStyle.childAspectRatio,
           children: children,
         );
       },
@@ -176,7 +163,7 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
                   Tab(text: 'Flats'),
                 ],
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.md),
               Expanded(
                 child: TabBarView(controller: _tabController, children: pages),
               ),
@@ -188,7 +175,7 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
         return Row(
           children: [
             Container(
-              width: 80,
+              width: AppClefStyle.tabRailWidth,
               alignment: Alignment.center,
               child: RotatedBox(
                 quarterTurns: -1,

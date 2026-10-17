@@ -72,7 +72,5 @@ class NoteRenderer {
       position: position,
       showAccidental: showAccidental,
     );
-
-    
   }
 }

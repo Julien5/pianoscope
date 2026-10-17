@@ -102,7 +102,7 @@ class InputProvider extends ChangeNotifier {
   Bridge? _bridge;
   List<InputDevice> _inputDevices = [];
   String? _error;
-  
+
   InputDevice? _inputDevice;
   StreamSink? _streamSink;
 
