@@ -4,10 +4,43 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../pianoscope.dart';
 
+/// Shown when the raw name carries nothing usable.
+const String _unknownDevice = 'Unknown MIDI Device';
+
+/// Shown when Android reports only a generic peripheral.
+const String _androidGenericDevice = 'USB MIDI Device';
+
+/// Interface nouns that stop being informative once the device is identified:
+/// ALSA reports "Port", Android also reports "Device", "Input" and "Output".
+final RegExp _alsaInterfaceTerm = RegExp(
+  r'\bPort[-_]?\d*\b',
+  caseSensitive: false,
+);
+
+final RegExp _androidInterfaceTerm = RegExp(
+  r'\b(Port|Input|Output|Device)[-_]?\d*\b',
+  caseSensitive: false,
+);
+
+/// Bracketed metadata, e.g. "[id=3]" or "[0-1]".
+final RegExp _bracketed = RegExp(r'\[.*?\]');
+
+/// Drops the OS words that carry no information once the device is identified
+/// ("MIDI", "Port-0", "Device"), then tidies the spacing left behind. Shared by
+/// [formatMidiPortNameAlsa] and [formatMidiPortNameAndroid], which differ only
+/// in which interface nouns they report.
+String _stripInterfaceTerms(String input, RegExp interfaceTerm) {
+  return input
+      .replaceAll(RegExp(r'\bMIDI\b', caseSensitive: false), 'MIDI')
+      .replaceAll(interfaceTerm, '')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+}
+
 /// Cleans up raw OS MIDI port names into user-friendly display labels.
 String formatMidiPortNameDefault(String rawName) {
   debugPrint("rawName: $rawName");
-  if (rawName.trim().isEmpty) return 'Unknown MIDI Device';
+  if (rawName.trim().isEmpty) return _unknownDevice;
 
   String cleaned = rawName;
 
@@ -20,7 +53,7 @@ String formatMidiPortNameDefault(String rawName) {
     ), // Redundant 'MIDI' terms
     RegExp(r'\bUSB\s*MIDI\b', caseSensitive: false), // 'USB MIDI'
     RegExp(r'\(?\bCoreMIDI\b\)?', caseSensitive: false), // macOS CoreMIDI tags
-    RegExp(r'\[.*?\]'), // Anything inside square brackets
+    _bracketed, // Anything inside square brackets
   ];
 
   for (final pattern in clutterPatterns) {
@@ -68,7 +101,7 @@ String _toTitleCase(String input) {
 
 /// Cleans ALSA/OS MIDI port names into concise, readable device labels.
 String formatMidiPortNameAlsa(String rawName) {
-  if (rawName.trim().isEmpty) return 'Unknown MIDI Device';
+  if (rawName.trim().isEmpty) return _unknownDevice;
 
   String cleaned = rawName;
 
@@ -92,11 +125,7 @@ String formatMidiPortNameAlsa(String rawName) {
   }
 
   // 3. Remove redundant words ("MIDI", "Port-0", "Port", etc.)
-  cleaned = cleaned
-      .replaceAll(RegExp(r'\bMIDI\b', caseSensitive: false), '')
-      .replaceAll(RegExp(r'\bPort[-_]?\d*\b', caseSensitive: false), '')
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
+  cleaned = _stripInterfaceTerms(cleaned, _alsaInterfaceTerm);
 
   // If cleaning reduced it to empty (e.g., "Midi Through:Midi Through Port-0"), restore client
   if (cleaned.isEmpty && rawName.contains(':')) {
@@ -108,7 +137,7 @@ String formatMidiPortNameAlsa(String rawName) {
 
 /// Cleans raw Android/AMidi device and port strings into clean labels.
 String formatMidiPortNameAndroid(String rawName) {
-  if (rawName.trim().isEmpty) return 'Unknown MIDI Device';
+  if (rawName.trim().isEmpty) return _unknownDevice;
 
   String cleaned = rawName;
 
@@ -129,7 +158,8 @@ String formatMidiPortNameAndroid(String rawName) {
     }
   }
 
-  // 3. Strip Android system wrappers (e.g., "UsbMidiDevice [...]", "Bluetooth MIDI Device")
+  // 3. Strip Android system wrappers (e.g., "UsbMidiDevice [...]",
+  //    "Bluetooth MIDI Device") and any leftover bracketed metadata like [id=3]
   cleaned = cleaned
       .replaceAll(
         RegExp(r'^UsbMidiDevice\s*(\[.*\])?', caseSensitive: false),
@@ -139,30 +169,20 @@ String formatMidiPortNameAndroid(String rawName) {
         RegExp(r'^Bluetooth\s*MIDI\s*Device\s*[-–]?\s*', caseSensitive: false),
         '',
       )
-      .replaceAll(
-        RegExp(r'\[.*?\]'),
-        '',
-      ); // Strip leftover bracketed metadata like [id=3]
+      .replaceAll(_bracketed, '');
 
   // 4. Clean generic system fallbacks
   if (RegExp(
     r'^Android\s*USB\s*Peripheral$',
     caseSensitive: false,
   ).hasMatch(cleaned.trim())) {
-    return 'USB MIDI Device';
+    return _androidGenericDevice;
   }
 
   // 5. Remove redundant Android terms ("MIDI", "Port 0", "input 1", etc.)
-  cleaned = cleaned
-      .replaceAll(RegExp(r'\bMIDI\b', caseSensitive: false), '')
-      .replaceAll(
-        RegExp(r'\b(Port|Input|Output|Device)[-_]?\d*\b', caseSensitive: false),
-        '',
-      )
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
+  cleaned = _stripInterfaceTerms(cleaned, _androidInterfaceTerm);
 
-  return cleaned.isEmpty ? 'USB MIDI Device' : cleaned;
+  return cleaned.isEmpty ? _androidGenericDevice : cleaned;
 }
 
 String formatMidiPortName(String rawName) {
