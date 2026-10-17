@@ -19,7 +19,6 @@
   "languages": "Sprachen",
   "sendFeedback": "Feedback an den Entwickler",
 
-  "feedbackTitle": "Rückmeldung",
   "crashReportTitle": "Absturzberichte",
   "reportsNotice": "{count, plural, =0{Es konnte kein Bericht gesendet werden.} =1{Ein Bericht könnte gesendet werden, um die Anwendung zu verbessern.} other{{count} Berichte könnten gesendet werden, um die Anwendung zu verbessern.}}",
   "feedbackEmail": "Ihre E-Mail-Adresse (optional)",

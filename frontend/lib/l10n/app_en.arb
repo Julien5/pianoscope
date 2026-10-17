@@ -19,7 +19,6 @@
   "languages": "Languages",
   "sendFeedback": "Feedback to the developer",
 
-  "feedbackTitle": "Feedback",
   "crashReportTitle": "Crash reports",
   "reportsNotice": "{count, plural, =0{No report could be sent.} =1{One report could be sent to help improve the application.} other{{count} reports could be sent to help improve the application.}}",
   "feedbackEmail": "Your email (optional)",

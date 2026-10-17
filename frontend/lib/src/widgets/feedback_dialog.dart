@@ -256,7 +256,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
     }
     return AlertDialog(
       title: Text(
-        _isCrashReport ? l10n.crashReportTitle : l10n.feedbackTitle,
+        _isCrashReport ? l10n.crashReportTitle : l10n.sendFeedback,
         style: AppTextStyles.header,
       ),
       insetPadding: const EdgeInsets.all(AppSpacing.sm),

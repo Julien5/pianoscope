@@ -61,9 +61,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sendFeedback => 'Contacter le développeur';
 
   @override
-  String get feedbackTitle => 'Retour';
-
-  @override
   String get crashReportTitle => 'Rapports de plantage';
 
   @override

@@ -9,6 +9,9 @@
 #   * Adaptive icon XML (mipmap-anydpi-v26) for ic_launcher and ic_launcher_round
 #   * Legacy launcher icons at 48dp (48/72/96/144/192 px): rounded square + round
 #   * Play Store icon: 512x512, 32-bit PNG, full-bleed square (Google applies the mask)
+#   * flutter_launcher_icons inputs (<outdir>/flutter): icon.png, icon_foreground.png,
+#     icon_monochrome.png, icon_splash.png (1152 px, Android 12+ splash) and a
+#     ready-made flutter_launcher_icons.yaml
 #
 # Google's adaptive icon geometry (all in dp):
 #   canvas 108x108 | visible mask area 72x72 | safe zone = 66 dp diameter circle
@@ -19,11 +22,12 @@
 set -euo pipefail
 
 NAME="ic_launcher"
-OUT="./android-icons"
+OUT="/tmp/android-icons"
 BG="#FFFFFF"
 SAFE_DP=66
 CIRCLE=0
 TRIM=1
+ASSET_DIR="assets/icon"
 
 usage() {
   cat <<EOF
@@ -36,6 +40,9 @@ Options:
   -s DP     Max logo size in dp, 1-66            (default: 66)
   -c        Fit the logo's diagonal inside the safe-zone circle, so even the
             corners of a rectangular logo survive any mask shape (smaller logo)
+  -a DIR    Folder in your Flutter project where you'll put the generated images;
+            only used for the paths in flutter_launcher_icons.yaml
+            (default: assets/icon)
   -T        Don't auto-trim transparent borders
   -h        Show this help
 
@@ -48,12 +55,13 @@ EOF
 
 die() { echo "error: $*" >&2; exit 1; }
 
-while getopts ":o:n:b:s:cTh" opt; do
+while getopts ":o:n:b:s:a:cTh" opt; do
   case $opt in
     o) OUT=$OPTARG ;;
     n) NAME=$OPTARG ;;
     b) BG=$OPTARG ;;
     s) SAFE_DP=$OPTARG ;;
+    a) ASSET_DIR=${OPTARG%/} ;;
     c) CIRCLE=1 ;;
     T) TRIM=0 ;;
     h) usage; exit 0 ;;
@@ -111,10 +119,10 @@ read -r W H < <(awk -v w="$w" -v h="$h" -v box="$SAFE_PX" -v circ="$CIRCLE" 'BEG
   printf "%d %d\n", W, H
 }')
 
-# Warn if the source is too small for xxxhdpi (432 px canvas => ~264 px logo)
-need=$((SAFE_DP * 4))
-if (( W * need / SAFE_PX > w || H * need / SAFE_PX > h )); then
-  echo "warning: source (${w}x${h}) is smaller than needed for a crisp xxxhdpi icon; use a larger image" >&2
+# Warn if the source is too small for a sharp Android 12+ splash icon
+# (icon_splash.png is 1152 px, i.e. 2/3 of the 1728 px master)
+if (( W * 2 > w * 3 || H * 2 > h * 3 )); then
+  echo "warning: source (${w}x${h}) is smaller than the logo area of icon_splash.png ($((W * 2 / 3))x$((H * 2 / 3)) px); it will be upscaled and look soft" >&2
 fi
 
 # --- 2. Master layers --------------------------------------------------------
@@ -185,20 +193,66 @@ if (( size > 1024 * 1024 )); then
   echo "warning: Play Store icon is $((size / 1024)) KB, over the 1024 KB limit" >&2
 fi
 
+# --- 7. flutter_launcher_icons inputs ------------------------------------------
+# icon.png            full-bleed square, bg + logo      -> image_path
+# icon_foreground.png logo on transparent 108dp canvas  -> adaptive_icon_foreground
+# icon_monochrome.png black silhouette of the logo      -> adaptive_icon_monochrome
+# icon_splash.png     1152 px foreground for the Android 12+ splash (flutter_native_splash)
+# The foreground/monochrome images already contain the 66dp safe-zone padding, so the
+# config sets adaptive_icon_foreground_inset to 0 (the package default of 16% would
+# shrink the logo a second time).
+FL="$OUT/flutter"
+mkdir -p "$FL"
+"${IM[@]}" "$TMP/legacy_master.png" -resize 1024x1024 "PNG32:$FL/icon.png"
+"${IM[@]}" "$TMP/fg.png"            -resize 1024x1024 "PNG32:$FL/icon_foreground.png"
+"${IM[@]}" "$TMP/mono.png"          -resize 1024x1024 "PNG32:$FL/icon_monochrome.png"
+# Android 12+ splash: 288dp at xxxhdpi = 1152 px. Same 108:72:66 geometry as the adaptive
+# foreground, so the logo sits inside the 768 px (2/3) circle the splash screen shows.
+"${IM[@]}" "$TMP/fg.png"            -resize 1152x1152 "PNG32:$FL/icon_splash.png"
+
+cat > "$FL/flutter_launcher_icons.yaml" <<EOF
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "${ASSET_DIR}/icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "${BG}"
+  adaptive_icon_foreground: "${ASSET_DIR}/icon_foreground.png"
+  adaptive_icon_foreground_inset: 0
+  adaptive_icon_monochrome: "${ASSET_DIR}/icon_monochrome.png"
+EOF
+
 # --- Done --------------------------------------------------------------------
 cat <<EOF
 
 Done. Output in: $OUT
 
-  res/mipmap-*/${NAME}.png, ${NAME}_round.png      legacy icons (48dp)
-  res/mipmap-*/${NAME}_foreground.png              adaptive foreground (108dp)
-  res/mipmap-*/${NAME}_monochrome.png              themed icon layer
-  res/mipmap-anydpi-v26/${NAME}.xml, _round.xml    adaptive icon definitions
-  res/values/${NAME}_background.xml                background color
-  play_store_512.png                               Google Play listing icon
+For flutter_launcher_icons (in $FL):
+  icon.png, icon_foreground.png, icon_monochrome.png, icon_splash.png,
+  flutter_launcher_icons.yaml
 
-Copy 'res/' into app/src/main/res/ (Flutter: android/app/src/main/res/) and set in
-AndroidManifest.xml:
-  android:icon="@mipmap/${NAME}"
-  android:roundIcon="@mipmap/${NAME}_round"
+Next steps, from your Flutter project root:
+  1. mkdir -p ${ASSET_DIR} && cp $FL/*.png ${ASSET_DIR}/
+  2. flutter pub add dev:flutter_launcher_icons
+  3. Paste the config below into pubspec.yaml (or save it as
+     flutter_launcher_icons.yaml in the project root):
+
+$(sed 's/^/       /' "$FL/flutter_launcher_icons.yaml")
+
+  4. dart run flutter_launcher_icons
+
+Android 12+ splash (sharp; icon_splash.png is copied to the assets folder in step 1):
+  flutter pub add dev:flutter_native_splash
+  add to pubspec.yaml, then run: dart run flutter_native_splash:create
+
+       flutter_native_splash:
+         color: "${BG}"
+         android_12:
+           color: "${BG}"
+           image: ${ASSET_DIR}/icon_splash.png
+
+Also generated:
+  play_store_512.png   Google Play listing icon (upload in Play Console)
+  res/                 native Android resources; not needed with flutter_launcher_icons,
+                       only if you want to copy them into android/app/src/main/res/ yourself
 EOF
