@@ -43,14 +43,14 @@ class StemRenderer {
     if (direction == StemDirection.up) {
       // Stem attaches to right side of notehead, goes up
       stemStart = StaffOffset(
-        noteheadCenter.dx + noteheadWidth * (0.5),
+        noteheadCenter.dx + noteheadWidth * (0.5) - StaffUnits.fromUnits(1.0),
         noteheadCenter.dy,
       );
       stemEnd = StaffOffset(stemStart.dx, stemStart.dy - length);
     } else {
       // Stem attaches to left side of notehead, goes down
       stemStart = StaffOffset(
-        noteheadCenter.dx - noteheadWidth / 2,
+        noteheadCenter.dx - noteheadWidth / 2 + StaffUnits.fromUnits(1.0),
         noteheadCenter.dy,
       );
       stemEnd = StaffOffset(stemStart.dx, stemStart.dy + length);
