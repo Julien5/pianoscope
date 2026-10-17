@@ -436,7 +436,7 @@ abstract class AppTheme {
     ),
 
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: AppColors.text,
+      backgroundColor: AppColors.background,
       contentTextStyle: AppTextStyles.normal.copyWith(
         color: AppColors.onPrimary,
       ),

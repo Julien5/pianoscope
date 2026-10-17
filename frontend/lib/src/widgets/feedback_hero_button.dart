@@ -51,7 +51,8 @@ class FeedbackHeroButton extends StatelessWidget {
     final result = handler.outcome;
     final String status;
     if (result == null) {
-      status = l10n.feedbackNotSaved;
+      // cancelled by user before sent
+      return;
     } else if (result.uploaded) {
       status = l10n.feedbackSent;
     } else if (result.cancelled) {
@@ -60,6 +61,7 @@ class FeedbackHeroButton extends StatelessWidget {
     } else {
       status = l10n.feedbackQueued;
     }
+    debugPrint("result:$result status=$status");
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status)));
   }
 
