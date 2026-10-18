@@ -35,7 +35,7 @@ abstract class AppColors {
 
   /// Off-white so white [surface] cards read as raised rather than floating on
   /// the same colour.
-  static const Color background = Color(0xFFF4F5F8);
+  static const Color background = Colors.blueGrey;
 
   /// Cards, dialogs, drawer, app bar.
   static const Color surface = Colors.white;

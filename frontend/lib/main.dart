@@ -28,7 +28,7 @@ Future<void> main() async {
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await windowManager.ensureInitialized();
     await windowManager.waitUntilReadyToShow(
-      const WindowOptions(size: portrait_tight, center: true),
+      const WindowOptions(size: portrait_pixel6a, center: true),
       () async {
         await windowManager.show();
         await windowManager.focus();

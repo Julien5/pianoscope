@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../../pianoscope.dart';
-import '../notation/grand_staff_parameters.dart';
 import '../providers/user_settings_provider.dart';
 import '../routes.dart';
 import '../rust/api/event.dart';
@@ -53,59 +52,13 @@ class ScreenData {
   });
 }
 
-class MainContentTightPortrait extends StatelessWidget {
-  final ScreenData data;
-  final ScreenCallbacks callbacks;
-
-  const MainContentTightPortrait({
-    super.key,
-    required this.callbacks,
-    required this.data,
-  });
+class _MidiCard extends StatelessWidget {
+  final Widget child;
+  const _MidiCard({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          flex: 0,
-          child: ButtonsRow(data: data, callbacks: callbacks),
-        ),
-        Expanded(
-          flex: 1,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            child: GrandStaffView(
-              keySignature: data.keySignature ?? KeySignature.cMajor,
-              notes: data.notes,
-              splitPoint: data.splitPoint,
-              params: GrandStaffParameters.tight,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  spacing: AppSpacing.md,
-                  children: [
-                    _KeyboardPanel(notes: data.notes),
-
-                    NoteNameText(noteNames: data.notes),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: VelocityIndicator(velocity: data.signalVelocity),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    return Card(child: child);
   }
 }
 
@@ -124,24 +77,25 @@ class MainContentPortrait extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(
-          flex: 1,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: GrandStaffPanel(data: data, callbacks: callbacks),
+        SizedBox(height: 10),
+        Flexible(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 300),
+            child: _MidiCard(
+              child: GrandStaffPanel(data: data, callbacks: callbacks),
+            ),
           ),
         ),
 
-        Expanded(
-          child: Column(
-            spacing: AppSpacing.md,
-            children: [
-              _KeyboardPanel(notes: data.notes),
+        SizedBox(height: 20),
 
-              NoteNameText(noteNames: data.notes),
-            ],
-          ),
+        _MidiCard(child: _KeyboardPanel(data: data)),
+
+        SizedBox(height: 20),
+        _MidiCard(
+          child: ButtonsRow(data: data, callbacks: callbacks),
         ),
+        SizedBox(height: 10),
       ],
     );
   }
@@ -162,42 +116,28 @@ class MainContentLandscape extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(child: SizedBox(height: AppSpacing.xl)),
         Expanded(
-          flex: 2,
+          flex: 4,
           child: Column(
             children: [
               const Expanded(child: SizedBox(width: AppSpacing.md)),
-              KeyboardWidget(
-                pressedNotes: data.notes,
-                whiteHeight: AppKeyboardStyle.landscapeWhiteHeight,
-                whiteWidth: AppKeyboardStyle.landscapeWhiteWidth,
-              ),
-              SizedBox(
-                height: 50,
-                child: Align(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      SizedBox(
-                        width: 100,
-                        child: NoteNameText(noteNames: data.notes),
-                      ),
-                    ],
-                  ),
-                ),
+              _MidiCard(child: _KeyboardPanel(data: data)),
+              _MidiCard(
+                child: ButtonsRow(data: data, callbacks: callbacks),
               ),
               const Expanded(child: SizedBox(width: AppSpacing.md)),
             ],
           ),
         ),
-        const SizedBox(width: 50),
         Expanded(
           flex: 4,
-          child: GrandStaffPanel(data: data, callbacks: callbacks),
+          child: _MidiCard(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: GrandStaffPanel(data: data, callbacks: callbacks),
+            ),
+          ),
         ),
-
-        const Expanded(child: SizedBox(height: AppSpacing.xl)),
       ],
     );
   }
@@ -211,23 +151,27 @@ class ButtonsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        ElevatedButton(
-          onPressed: callbacks.onNoteUpperStaffClicked,
-          child: Icon(Icons.arrow_upward),
-        ),
-        ElevatedButton(
-          onPressed: () => callbacks.openClefSelectionClicked(),
-          child: Icon(Icons.music_note_rounded),
-        ),
-        ElevatedButton(
-          onPressed: callbacks.onNoteLowerStaffClicked,
-          child: Icon(Icons.arrow_downward),
-        ),
-      ],
+    return Padding(
+      padding: EdgeInsetsGeometry.directional(top: 10, bottom: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.md,
+        children: [
+          ElevatedButton.icon(
+            style: AppTheme.tonalButtonStyle,
+            onPressed: callbacks.onNoteUpperStaffClicked,
+            icon: Icon(Icons.arrow_upward),
+            label: const Text('Clé de sol'),
+          ),
+          ElevatedButton.icon(
+            style: AppTheme.tonalButtonStyle,
+            onPressed: () => callbacks.openClefSelectionClicked(),
+            icon: Icon(Icons.music_note_rounded),
+            label: const Text('Key signature'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -246,24 +190,7 @@ class GrandStaffPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              onPressed: callbacks.onNoteUpperStaffClicked,
-              child: Icon(Icons.arrow_upward),
-            ),
-            ElevatedButton(
-              onPressed: () => callbacks.openClefSelectionClicked(),
-              child: Icon(Icons.music_note_rounded),
-            ),
-            ElevatedButton(
-              onPressed: callbacks.onNoteLowerStaffClicked,
-              child: Icon(Icons.arrow_downward),
-            ),
-          ],
-        ),
-
+        SizedBox(width: 10),
         Expanded(
           flex: 6,
           child: GrandStaffView(
@@ -427,14 +354,6 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
             );
             final isLandscape = orientation == Orientation.landscape;
             debugPrint("constr:$constraints");
-            final isTight =
-                constraints.hasBoundedWidth &&
-                constraints.maxWidth < 400.0 &&
-                data.keySignature != null &&
-                data.keySignature!.accidentals.abs() > 2;
-            if (isTight) {
-              return MainContentTightPortrait(data: data, callbacks: callbacks);
-            }
             if (isLandscape) {
               return MainContentLandscape(data: data, callbacks: callbacks);
             }
@@ -446,26 +365,39 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   }
 }
 
-/// The keyboard is an opaque white object sitting on the tinted page, so give
-/// it the same card treatment as the device list instead of letting it float.
 class _KeyboardPanel extends StatelessWidget {
-  const _KeyboardPanel({required this.notes});
-
-  final List<Note> notes;
+  const _KeyboardPanel({required this.data});
+  final ScreenData data;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: KeyboardWidget(
-          pressedNotes: notes,
-          whiteHeight: AppKeyboardStyle.compactWhiteHeight,
-          whiteWidth: AppKeyboardStyle.compactWhiteWidth,
+    return Column(
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: KeyboardWidget(
+              pressedNotes: data.notes,
+              whiteHeight: AppKeyboardStyle.compactWhiteHeight,
+              whiteWidth: AppKeyboardStyle.compactWhiteWidth,
+            ),
+          ),
         ),
-      ),
+        SizedBox(
+          height: 50,
+          child: Align(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 250,
+                  child: NoteNameText(noteNames: data.notes),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
