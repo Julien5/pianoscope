@@ -263,6 +263,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
       content: content,
       actions: [
         TextButton(
+          style: AppTheme.flatButtonStyle,
           onPressed: _busy
               ? widget.uploadHandler.onCancel
               : () => Navigator.of(context).pop(),

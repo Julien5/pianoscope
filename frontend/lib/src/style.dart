@@ -191,7 +191,7 @@ abstract class AppMeterStyle {
 
 abstract class AppDrawerStyle {
   static const List<Color> headerGradient = [
-    AppColors.primary,
+    AppColors.background,
     Color(0xFF6E8CEC),
   ];
 
@@ -309,7 +309,7 @@ abstract class AppTheme {
   /// Primary action: filled accent. Not the theme default, so opt in per
   /// button with `ElevatedButton(style: AppTheme.filledButtonStyle, ...)`.
   static ButtonStyle get filledButtonStyle => _elevatedButton(
-    background: AppColors.primary,
+    background: AppColors.background,
     foreground: AppColors.onPrimary,
     shadowColor: AppShadows.buttonColor,
     shape: _shape(),
@@ -459,12 +459,15 @@ abstract class AppTheme {
 
     checkboxTheme: CheckboxThemeData(
       shape: const RoundedRectangleBorder(borderRadius: AppRadii.small),
-      side: const BorderSide(color: AppColors.borderStrong),
+      side: WidgetStateBorderSide.resolveWith(
+        (states) => const BorderSide(color: AppColors.onPrimary, width: 1.3),
+      ),
       fillColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? AppColors.primary
+            ? AppColors.background
             : AppColors.surface,
       ),
+      checkColor: WidgetStateProperty.all(AppColors.onPrimary),
     ),
 
     inputDecorationTheme: InputDecorationTheme(
