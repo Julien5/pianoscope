@@ -67,26 +67,29 @@ class _KeyTilesState extends State<KeyTiles> {
       KeySignature key = widget.keySignatures[k];
       children.add(KeyTile(keySignature: key, current: current));
     }
-    return OrientationBuilder(
-      builder: (context, orientation) {
-        final isLandscape = orientation == Orientation.landscape;
-        if (isLandscape) {
+    return Padding(
+      padding: EdgeInsetsGeometry.all(AppClefStyle.gridSpacing),
+      child: OrientationBuilder(
+        builder: (context, orientation) {
+          final isLandscape = orientation == Orientation.landscape;
+          if (isLandscape) {
+            return GridView.count(
+              crossAxisCount: AppClefStyle.landscapeColumns,
+              mainAxisSpacing: AppClefStyle.gridSpacing,
+              childAspectRatio: AppClefStyle.childAspectRatio,
+              crossAxisSpacing: AppClefStyle.gridSpacing,
+              children: children,
+            );
+          }
           return GridView.count(
-            crossAxisCount: AppClefStyle.landscapeColumns,
             mainAxisSpacing: AppClefStyle.gridSpacing,
-            childAspectRatio: AppClefStyle.childAspectRatio,
             crossAxisSpacing: AppClefStyle.gridSpacing,
+            crossAxisCount: AppClefStyle.portraitColumns,
+            childAspectRatio: AppClefStyle.childAspectRatio,
             children: children,
           );
-        }
-        return GridView.count(
-          mainAxisSpacing: AppClefStyle.gridSpacing,
-          crossAxisSpacing: AppClefStyle.gridSpacing,
-          crossAxisCount: AppClefStyle.portraitColumns,
-          childAspectRatio: AppClefStyle.childAspectRatio,
-          children: children,
-        );
-      },
+        },
+      ),
     );
   }
 }

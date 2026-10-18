@@ -117,7 +117,7 @@ class MainContentLandscape extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          flex: 4,
+          flex: 6,
           child: Column(
             children: [
               const Expanded(child: SizedBox(width: AppSpacing.md)),
@@ -130,7 +130,7 @@ class MainContentLandscape extends StatelessWidget {
           ),
         ),
         Expanded(
-          flex: 4,
+          flex: 7,
           child: _MidiCard(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 300),
@@ -156,7 +156,7 @@ class ButtonsRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: AppSpacing.md,
+        spacing: AppSpacing.sm,
         children: [
           ElevatedButton.icon(
             style: AppTheme.tonalButtonStyle,
