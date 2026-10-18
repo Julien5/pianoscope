@@ -11,6 +11,10 @@
   "noteSharp":"sharp",
   "noteFlat":"flat",
 
+  "moveToTrebleClef": "Treble Clef",
+  "moveToBassClef": "Bass Clef",
+  "changeKeySignature": "Key",
+
   "sharp": "{noteName} sharp",
   "flat": "{noteName} flat",
 

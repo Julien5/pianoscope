@@ -13,7 +13,7 @@ abstract class AppColors {
   ///
   /// Carries white label text, so its lightness is capped by legibility, not
   /// taste: the lightest value still clearing WCAG AA (4.5:1) at 14px.
-  static const Color primary = Colors.lightBlueAccent;
+  static const Color primary = Colors.black;
 
   /// Tinted accent background for icon chips and selected tiles.
   static const Color primaryContainer = Color(0xFFE7ECFC);
@@ -35,7 +35,7 @@ abstract class AppColors {
 
   /// Off-white so white [surface] cards read as raised rather than floating on
   /// the same colour.
-  static const Color background = Colors.blueGrey;
+  static const Color background = Color.fromARGB(255, 200, 200, 225);
 
   /// Cards, dialogs, drawer, app bar.
   static const Color surface = Colors.white;
@@ -214,7 +214,7 @@ abstract class AppClefStyle {
   static const double childAspectRatio = 1.7;
 
   /// Width of the vertical tab rail in landscape.
-  static const double tabRailWidth = 88;
+  static const double tabRailWidth = 68;
 
   /// Intrinsic size of the little staff tile used as each button's child.
   static const double keyTileHeight = 100;

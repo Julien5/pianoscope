@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get selectClef => 'Schlusselauswahl';
+  String get selectClef => 'Schlüssel';
 
   @override
   String get selectInput => 'Eingang';
@@ -40,6 +40,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noteFlat => 'es';
+
+  @override
+  String get moveToTrebleClef => 'Violinschlüssel';
+
+  @override
+  String get moveToBassClef => 'Bassschlüssel';
+
+  @override
+  String get changeKeySignature => 'Tonart';
 
   @override
   String sharp(Object noteName) {

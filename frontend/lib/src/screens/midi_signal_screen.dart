@@ -22,13 +22,11 @@ class MidiSignalScreen extends StatefulWidget {
 
 class ScreenCallbacks {
   final VoidCallback openClefSelectionClicked;
-  final VoidCallback? onNoteUpperStaffClicked;
-  final VoidCallback? onNoteLowerStaffClicked;
+  final VoidCallback? onChangeStaffClicked;
 
   ScreenCallbacks({
     required this.openClefSelectionClicked,
-    required this.onNoteUpperStaffClicked,
-    required this.onNoteLowerStaffClicked,
+    required this.onChangeStaffClicked,
   });
 }
 
@@ -37,6 +35,8 @@ class ScreenData {
   final KeySignature? keySignature;
   final List<Note> notes;
   final String selectClef;
+  final String changeStaff;
+  final Move? moveCandidate;
   final int splitPoint;
   final Orientation orientation;
   final BoxConstraints constraints;
@@ -49,6 +49,8 @@ class ScreenData {
     required this.splitPoint,
     required this.orientation,
     required this.constraints,
+    required this.changeStaff,
+    required this.moveCandidate,
   });
 }
 
@@ -151,6 +153,10 @@ class ButtonsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final icon =
+        data.moveCandidate != null && data.moveCandidate! == Move.toLower
+        ? Icons.arrow_downward
+        : Icons.arrow_upward;
     return Padding(
       padding: EdgeInsetsGeometry.directional(top: 10, bottom: 10),
       child: Row(
@@ -158,17 +164,22 @@ class ButtonsRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: AppSpacing.sm,
         children: [
-          ElevatedButton.icon(
-            style: AppTheme.tonalButtonStyle,
-            onPressed: callbacks.onNoteUpperStaffClicked,
-            icon: Icon(Icons.arrow_upward),
-            label: const Text('Clé de sol'),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 170),
+            child: ElevatedButton.icon(
+              style: AppTheme.tonalButtonStyle,
+              onPressed: data.moveCandidate == null
+                  ? null
+                  : callbacks.onChangeStaffClicked,
+              icon: Icon(icon),
+              label: Text(data.changeStaff, style: AppTextStyles.normal),
+            ),
           ),
           ElevatedButton.icon(
             style: AppTheme.tonalButtonStyle,
             onPressed: () => callbacks.openClefSelectionClicked(),
             icon: Icon(Icons.music_note_rounded),
-            label: const Text('Key signature'),
+            label: Text(data.selectClef, style: AppTextStyles.normal),
           ),
         ],
       ),
@@ -309,6 +320,22 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     userSettings.setSplitPoint(note.pitch.midiNumber + 1);
   }
 
+  void onChangeStaffClicked(UserSettingsProvider userSettings) {
+    debugPrint("onNoteLowerStaffClicked");
+    final notes = currentNotes();
+    if (notes.isEmpty) {
+      return;
+    }
+    final currentNote = notes.last.pitch.midiNumber;
+    final currentSplit = userSettings.splitPoint;
+    final isUpper = currentNote >= currentSplit;
+    if (isUpper) {
+      userSettings.setSplitPoint(currentNote + 1);
+    } else {
+      userSettings.setSplitPoint(currentNote);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_inputProvider == null) {
@@ -317,7 +344,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     // because we need to rebuild on clef change
     context.watch<InputProvider>();
     final signalVelocity = (_lastEvent?.velocity ?? 0).clamp(0, 127);
-    final String selectClef = AppLocalizations.of(context)!.selectClef;
+    final String selectClef = AppLocalizations.of(context)!.changeKeySignature;
     final notes = currentNotes();
     final userSettings = context.watch<UserSettingsProvider>();
     KeySignature? keySignature = userSettings.keySignature;
@@ -327,17 +354,16 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     final callbacks = ScreenCallbacks(
       openClefSelectionClicked: openClefSelectionScreen,
 
-      onNoteUpperStaffClicked: candidate == null || candidate != Move.toUpper
+      onChangeStaffClicked: candidate == null
           ? null
           : () {
-              onNoteUpperStaffClicked(userSettings);
-            },
-      onNoteLowerStaffClicked: candidate == null || candidate != Move.toLower
-          ? null
-          : () {
-              onNoteLowerStaffClicked(userSettings);
+              onChangeStaffClicked(userSettings);
             },
     );
+
+    final String changeStaff = candidate == Move.toUpper
+        ? AppLocalizations.of(context)!.moveToTrebleClef
+        : AppLocalizations.of(context)!.moveToBassClef;
 
     return OrientationBuilder(
       builder: (context, orientation) {
@@ -348,9 +374,11 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
               keySignature: keySignature,
               notes: notes,
               selectClef: selectClef,
+              changeStaff: changeStaff,
               splitPoint: userSettings.splitPoint,
               orientation: orientation,
               constraints: constraints,
+              moveCandidate: candidate,
             );
             final isLandscape = orientation == Orientation.landscape;
             debugPrint("constr:$constraints");

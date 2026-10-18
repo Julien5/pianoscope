@@ -11,6 +11,10 @@
   "noteSharp":"dièse",
   "noteFlat":"bémol",
 
+  "moveToTrebleClef": "Clé de sol",
+  "moveToBassClef": "Clé de fa",
+  "changeKeySignature": "Tonalité",
+
   "sharp": "{noteName} dièse",
   "flat": "{noteName} bémol",
 

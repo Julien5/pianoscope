@@ -158,13 +158,16 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
         if (!isLandscape) {
           return Column(
             children: [
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'C Major'),
-                  Tab(text: 'Sharps'),
-                  Tab(text: 'Flats'),
-                ],
+              ColoredBox(
+                color: AppColors.primaryContainer,
+                child: TabBar(
+                  controller: _tabController,
+                  tabs: const [
+                    Tab(text: 'C Major'),
+                    Tab(text: 'Sharps'),
+                    Tab(text: 'Flats'),
+                  ],
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               Expanded(
@@ -177,20 +180,23 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
         // Landscape: vertical tabs on the left (rotated TabBar)
         return Row(
           children: [
-            Container(
-              width: AppClefStyle.tabRailWidth,
-              alignment: Alignment.center,
-              child: RotatedBox(
-                quarterTurns: -1,
-                child: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.center,
-                  tabs: const [
-                    Tab(text: 'C Major'),
-                    Tab(text: 'Sharps'),
-                    Tab(text: 'Flats'),
-                  ],
+            ColoredBox(
+              color: AppColors.primaryContainer,
+              child: Container(
+                width: AppClefStyle.tabRailWidth,
+                alignment: Alignment.bottomRight,
+                child: RotatedBox(
+                  quarterTurns: -1,
+                  child: TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.center,
+                    tabs: const [
+                      Tab(text: 'C Major'),
+                      Tab(text: 'Sharps'),
+                      Tab(text: 'Flats'),
+                    ],
+                  ),
                 ),
               ),
             ),

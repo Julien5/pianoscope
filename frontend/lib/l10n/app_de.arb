@@ -1,5 +1,5 @@
 {
-  "selectClef": "Schlusselauswahl",
+  "selectClef": "Schlüssel",
   "selectInput": "Eingang",
   "noteC":"C",
   "noteD":"D",
@@ -10,6 +10,10 @@
   "noteB":"H",
   "noteSharp":"is",
   "noteFlat":"es",
+
+  "moveToTrebleClef": "Violinschlüssel",
+  "moveToBassClef": "Bassschlüssel",
+  "changeKeySignature": "Tonart",
 
   "sharp": "{noteName}is",
   "flat": "{noteName}es",

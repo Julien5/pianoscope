@@ -166,6 +166,24 @@ abstract class AppLocalizations {
   /// **'flat'**
   String get noteFlat;
 
+  /// No description provided for @moveToTrebleClef.
+  ///
+  /// In en, this message translates to:
+  /// **'Treble Clef'**
+  String get moveToTrebleClef;
+
+  /// No description provided for @moveToBassClef.
+  ///
+  /// In en, this message translates to:
+  /// **'Bass Clef'**
+  String get moveToBassClef;
+
+  /// No description provided for @changeKeySignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Key'**
+  String get changeKeySignature;
+
   /// No description provided for @sharp.
   ///
   /// In en, this message translates to:

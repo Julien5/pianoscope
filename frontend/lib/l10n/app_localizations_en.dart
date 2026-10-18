@@ -42,6 +42,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noteFlat => 'flat';
 
   @override
+  String get moveToTrebleClef => 'Treble Clef';
+
+  @override
+  String get moveToBassClef => 'Bass Clef';
+
+  @override
+  String get changeKeySignature => 'Key';
+
+  @override
   String sharp(Object noteName) {
     return '$noteName sharp';
   }
