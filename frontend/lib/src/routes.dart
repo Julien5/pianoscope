@@ -43,10 +43,13 @@ Widget _noAppBarScaffold(Widget child) {
             // Give it the AppBar's leading slot and button style so it is
             // pixel-for-pixel the menu the other orientations show.
             Positioned(
-              top: MediaQuery.of(context).padding.top,
-              left: 0,
+              top:
+                  MediaQuery.of(context).padding.top +
+                  MediaQuery.of(context).size.height / 2 -
+                  24,
+              left: AppSpacing.sm,
               child: SizedBox.square(
-                dimension: AppHeights.appBar,
+                dimension: AppHeights.button,
                 child: IconButton(
                   style: AppTheme.overlayIconButtonStyle,
                   onPressed: () => Scaffold.of(context).openDrawer(),

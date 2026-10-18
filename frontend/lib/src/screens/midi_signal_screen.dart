@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../../pianoscope.dart';
+import '../notation/rendering/glyph_provider.dart';
 import '../providers/user_settings_provider.dart';
 import '../routes.dart';
 import '../rust/api/event.dart';
@@ -118,6 +119,7 @@ class MainContentLandscape extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        SizedBox(width: AppHeights.appBar),
         Expanded(
           flex: 6,
           child: Column(
@@ -157,6 +159,7 @@ class ButtonsRow extends StatelessWidget {
         data.moveCandidate != null && data.moveCandidate! == Move.toLower
         ? Icons.arrow_downward
         : Icons.arrow_upward;
+
     return Padding(
       padding: EdgeInsetsGeometry.directional(top: 10, bottom: 10),
       child: Row(
@@ -178,7 +181,15 @@ class ButtonsRow extends StatelessWidget {
           ElevatedButton.icon(
             style: AppTheme.tonalButtonStyle,
             onPressed: () => callbacks.openClefSelectionClicked(),
-            icon: Icon(Icons.music_note_rounded),
+            icon: const Text(
+              "${GlyphProvider.sharp}  ${GlyphProvider.flat}", // sharp + flat
+              style: TextStyle(
+                fontFamily: 'Bravura',
+                fontSize: 24,
+                height: 1,
+                fontWeight: FontWeight(1),
+              ),
+            ),
             label: Text(data.selectClef, style: AppTextStyles.normal),
           ),
         ],

@@ -346,7 +346,8 @@ abstract class AppTheme {
   /// Pair with an [AppHeights.appBar] square at the top left of the body to
   /// line the icon up with the AppBar's leading slot.
   static ButtonStyle get overlayIconButtonStyle => IconButton.styleFrom(
-    foregroundColor: AppColors.textSecondary,
+    foregroundColor: AppColors.onPrimary,
+    backgroundColor: AppColors.primaryContainer,
     iconSize: 24,
     shape: const RoundedRectangleBorder(borderRadius: AppRadii.small),
   );
