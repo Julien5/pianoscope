@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../pianoscope.dart';
 import '../providers/user_settings_provider.dart';
 import '../style.dart';
@@ -151,6 +152,7 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
     final sharpChild = KeyTiles(keySignatures: sharps);
     final flatChild = KeyTiles(keySignatures: flats);
     final pages = [zeroChild, sharpChild, flatChild];
+    final l10n = AppLocalizations.of(context)!;
 
     return OrientationBuilder(
       builder: (context, orientation) {
@@ -162,10 +164,10 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
                 color: AppColors.primaryContainer,
                 child: TabBar(
                   controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'C Major'),
-                    Tab(text: 'Sharps'),
-                    Tab(text: 'Flats'),
+                  tabs: [
+                    Tab(text: l10n.cMajor),
+                    Tab(text: l10n.sharps),
+                    Tab(text: l10n.flats),
                   ],
                 ),
               ),
@@ -191,10 +193,10 @@ class _ClefSelectionScreenState extends State<ClefSelectionScreen>
                     controller: _tabController,
                     isScrollable: true,
                     tabAlignment: TabAlignment.center,
-                    tabs: const [
-                      Tab(text: 'C Major'),
-                      Tab(text: 'Sharps'),
-                      Tab(text: 'Flats'),
+                    tabs: [
+                      Tab(text: l10n.cMajor),
+                      Tab(text: l10n.sharps),
+                      Tab(text: l10n.flats),
                     ],
                   ),
                 ),

@@ -18,6 +18,10 @@
   "sharp": "{noteName} dièse",
   "flat": "{noteName} bémol",
 
+  "sharps": "Dièse",
+  "flats": "Bémol",
+  "cMajor": "Do majeur",
+
   "microphone": "Microphone",
 
   "languages": "Langues",

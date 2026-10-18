@@ -51,6 +51,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get changeKeySignature => 'Tonalité';
 
   @override
+  String get sharps => 'Dièse';
+
+  @override
+  String get flats => 'Bémol';
+
+  @override
+  String get cMajor => 'Do majeur';
+
+  @override
   String sharp(Object noteName) {
     return '$noteName dièse';
   }

@@ -18,6 +18,10 @@
   "sharp": "{noteName}is",
   "flat": "{noteName}es",
 
+  "sharps": "Kreuz",
+  "flats": "Be",
+  "cMajor": "C-Dur",
+
   "microphone": "Mikrofon",
 
   "languages": "Sprachen",

@@ -15,6 +15,10 @@
   "moveToBassClef": "Bass Clef",
   "changeKeySignature": "Key",
 
+  "sharps": "Sharps",
+  "flats": "Flats",
+  "cMajor": "C Major",
+
   "sharp": "{noteName} sharp",
   "flat": "{noteName} flat",
 

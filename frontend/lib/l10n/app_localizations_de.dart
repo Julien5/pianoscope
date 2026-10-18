@@ -51,6 +51,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get changeKeySignature => 'Tonart';
 
   @override
+  String get sharps => 'Kreuz';
+
+  @override
+  String get flats => 'Be';
+
+  @override
+  String get cMajor => 'C-Dur';
+
+  @override
   String sharp(Object noteName) {
     return '${noteName}is';
   }

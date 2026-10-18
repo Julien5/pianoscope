@@ -184,6 +184,24 @@ abstract class AppLocalizations {
   /// **'Key'**
   String get changeKeySignature;
 
+  /// No description provided for @sharps.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharps'**
+  String get sharps;
+
+  /// No description provided for @flats.
+  ///
+  /// In en, this message translates to:
+  /// **'Flats'**
+  String get flats;
+
+  /// No description provided for @cMajor.
+  ///
+  /// In en, this message translates to:
+  /// **'C Major'**
+  String get cMajor;
+
   /// No description provided for @sharp.
   ///
   /// In en, this message translates to:

@@ -51,6 +51,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changeKeySignature => 'Key';
 
   @override
+  String get sharps => 'Sharps';
+
+  @override
+  String get flats => 'Flats';
+
+  @override
+  String get cMajor => 'C Major';
+
+  @override
   String sharp(Object noteName) {
     return '$noteName sharp';
   }
