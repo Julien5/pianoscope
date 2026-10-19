@@ -13,6 +13,10 @@ fn server_base_url() -> &'static str {
     option_env!("MONITORING_SERVER_URL").unwrap_or("https://www.localhost/api/v1/feedback-x92z/")
 }
 
+fn application_version() -> &'static str {
+    option_env!("APPLICATION_VERSION").unwrap_or("0.0.1")
+}
+
 fn allows_insecure_tls(base_url: &str) -> bool {
     let Ok(url) = reqwest::Url::parse(base_url) else {
         return false; // fail closed: an unparseable URL gets real verification
@@ -300,7 +304,7 @@ impl UploadSession {
         let mut form = reqwest::multipart::Form::new()
             .text("message", body.message)
             .text("application_id", SERVER_APP_ID)
-            .text("application_version", env!("CARGO_PKG_VERSION"))
+            .text("application_version", application_version())
             .text("platform", std::env::consts::OS)
             .text("report", body.report);
         if let Some(screenshot) = body.screenshot {
