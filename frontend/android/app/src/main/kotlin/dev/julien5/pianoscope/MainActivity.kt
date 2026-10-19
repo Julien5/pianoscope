@@ -1,4 +1,4 @@
-package com.example.pianoscope
+package dev.julien5.pianoscope
 
 import io.flutter.embedding.android.FlutterActivity
 

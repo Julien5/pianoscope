@@ -113,6 +113,7 @@ function setup-simulation() {
 function main() {
 	load-toolchain
 	MODE=debug
+	MODE=release
 	if need-generate; then
 		echo bindings need to be re-generated
 		flutter_rust_bridge_codegen generate
