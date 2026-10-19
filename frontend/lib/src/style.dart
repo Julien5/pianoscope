@@ -158,13 +158,13 @@ abstract class AppKeyboardStyle {
 
   static const double blackWidthRatio = 0.6;
   static const double blackHeightRatio = 0.65;
-  static const double whiteSpace = 2;
+  static const double whiteSpace = 3;
   static const double blackKeyRadius = 2;
 
   /// Distance from the bottom of a key to the centre of its pressed dot.
   static const double pressedDotOffset = 20;
   static const double pressedDotRadius = 5;
-  static const Color pressedDotColor = AppColors.primary;
+  static const Color pressedDotColor = AppColors.secondary;
 
   static const Color whiteKeyFill = Colors.white;
   static const Color whiteKeyStroke = Color(0x1F16181D);

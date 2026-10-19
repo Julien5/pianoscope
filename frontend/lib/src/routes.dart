@@ -45,8 +45,7 @@ Widget _noAppBarScaffold(Widget child) {
             Positioned(
               top:
                   MediaQuery.of(context).padding.top +
-                  MediaQuery.of(context).size.height / 2 -
-                  24,
+                  MediaQuery.of(context).size.height / 3,
               left: AppSpacing.sm,
               child: SizedBox.square(
                 dimension: AppHeights.button,

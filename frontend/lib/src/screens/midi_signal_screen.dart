@@ -413,8 +413,9 @@ class _KeyboardPanel extends StatelessWidget {
     return Column(
       children: [
         Card(
+          color: AppColors.textTertiary,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: KeyboardWidget(
               pressedNotes: data.notes,
               whiteHeight: AppKeyboardStyle.compactWhiteHeight,
