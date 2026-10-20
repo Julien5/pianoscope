@@ -87,8 +87,6 @@ impl Default for Microphone {
 pub enum PitchRecognizerAlgorithm {
     McLeod,
     YIN,
-    PYIN,
-    Swipe,
     AutoCorrelation,
     Kord,
 }
@@ -102,23 +100,9 @@ pub struct PitchRecognizerParameters {
 
 #[allow(dead_code)]
 impl PitchRecognizerParameters {
-    fn new_pyin(sample_rate: u32, window_len: usize) -> Self {
-        Self {
-            algorithm: PitchRecognizerAlgorithm::PYIN,
-            sample_rate,
-            window_len,
-        }
-    }
     fn new_mcleod(sample_rate: u32, window_len: usize) -> Self {
         Self {
             algorithm: PitchRecognizerAlgorithm::McLeod,
-            sample_rate,
-            window_len,
-        }
-    }
-    fn new_swipe(sample_rate: u32, window_len: usize) -> Self {
-        Self {
-            algorithm: PitchRecognizerAlgorithm::Swipe,
             sample_rate,
             window_len,
         }

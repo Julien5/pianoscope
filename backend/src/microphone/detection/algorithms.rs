@@ -56,80 +56,16 @@ pub trait Detector {
 
 pub fn make_detector(parameters: &PitchRecognizerParameters) -> Box<dyn Detector> {
     match parameters.algorithm {
-        crate::microphone::PitchRecognizerAlgorithm::PYIN => {
-            Box::new(PYInDetector::new(parameters))
-        }
         crate::microphone::PitchRecognizerAlgorithm::McLeod => {
             Box::new(McLeodDetector::new(parameters))
         }
         crate::microphone::PitchRecognizerAlgorithm::YIN => Box::new(YinDetector::new(parameters)),
-        crate::microphone::PitchRecognizerAlgorithm::Swipe => {
-            Box::new(SwipeDetector::new(parameters))
-        }
         crate::microphone::PitchRecognizerAlgorithm::AutoCorrelation => {
             Box::new(AutoCorrelationDetector::new(parameters))
         }
         crate::microphone::PitchRecognizerAlgorithm::Kord => {
             Box::new(KordDetector::new(parameters))
         }
-    }
-}
-
-pub struct PYInDetector {
-    tracker: pitch_core::PitchTracker,
-}
-
-impl PYInDetector {
-    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
-        log::trace!("make PYIN detector");
-        let est = pitch_core::PyinEstimator::new().unwrap();
-        let tracker = pitch_core::PitchTracker::new(est, parameters.sample_rate, 1024)
-            .expect("could not build tracker");
-        Self { tracker }
-    }
-}
-
-impl Detector for PYInDetector {
-    fn process(&mut self, buffer: &[f32]) -> Estimates {
-        let mut ret = Vec::new();
-
-        for estimate in self.tracker.process(&buffer).unwrap() {
-            ret.push(Estimate {
-                frequency: estimate.pitch_hz,
-                confidence: estimate.confidence,
-                annotation: Some(format!("prelim:{}", estimate.is_preliminary)),
-            });
-        }
-        Estimates { estimates: ret }
-    }
-}
-
-pub struct SwipeDetector {
-    tracker: pitch_core::PitchTracker,
-}
-
-impl SwipeDetector {
-    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
-        log::trace!("make Swipe detector");
-        let est = pitch_core::SwipeEstimator::new().unwrap();
-        let tracker = pitch_core::PitchTracker::new(est, parameters.sample_rate, 1024)
-            .expect("could not build tracker");
-        Self { tracker }
-    }
-}
-
-impl Detector for SwipeDetector {
-    fn process(&mut self, buffer: &[f32]) -> Estimates {
-        let mut ret = Vec::new();
-
-        for estimate in self.tracker.process(&buffer).unwrap() {
-            ret.push(Estimate {
-                frequency: estimate.pitch_hz,
-                confidence: estimate.confidence,
-                annotation: Some(format!("prelim:{}", estimate.is_preliminary)),
-            });
-        }
-        Estimates { estimates: ret }
     }
 }
 
