@@ -50,25 +50,31 @@ impl Backend {
 
     pub fn select_microphone(&mut self) {
         assert!(self.source.is_none());
-        let source = if simulation::enabled() {
+        let device = if simulation::enabled() {
             Microphone::new_wavfile(&simulation::setting().unwrap())
         } else {
             Microphone::new_device()
         };
-        self.source = Some(Source::Microphone(source));
+        self.source = Some(Source::Microphone(device));
     }
 
     pub fn select_wavfile(&mut self, path: &str) {
         assert!(self.source.is_none());
-        let source = Microphone::new_wavfile(path);
-        self.source = Some(Source::Microphone(source));
+        let file = Microphone::new_wavfile(path);
+        self.source = Some(Source::Microphone(file));
+    }
+
+    pub fn select_wavfile_test(&mut self, path: &str) {
+        assert!(self.source.is_none());
+        let file = Microphone::new_wavfile_test(path);
+        self.source = Some(Source::Microphone(file));
     }
 
     fn start_midi_stream(
         midi: &midi::Midi,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: &Option<DebugServerHandle>,
+        debug_handle: Option<DebugServerHandle>,
     ) {
         midi.start_event_stream(event_sender, error_sender, debug_handle);
     }
@@ -77,7 +83,7 @@ impl Backend {
         mic: &microphone::Microphone,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: &Option<DebugServerHandle>,
+        debug_handle: Option<DebugServerHandle>,
     ) {
         mic.start_stream(event_sender, error_sender, debug_handle);
     }
@@ -86,15 +92,10 @@ impl Backend {
         assert!(!self.source.is_none());
         match self.source.as_ref().unwrap() {
             Source::Midi(midi) => {
-                Self::start_midi_stream(midi, event_sender, error_sender, &self.debug_server);
+                midi.start_event_stream(event_sender, error_sender, self.debug_server.clone());
             }
             Source::Microphone(microphone) => {
-                Self::start_microphone_stream(
-                    microphone,
-                    event_sender,
-                    error_sender,
-                    &self.debug_server,
-                );
+                microphone.start_stream(event_sender, error_sender, self.debug_server.clone());
             }
         }
     }

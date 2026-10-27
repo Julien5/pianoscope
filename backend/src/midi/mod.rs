@@ -96,20 +96,15 @@ impl Midi {
         &self,
         event_sender: event::EventSender,
         error_sender: event::ErrorSender,
-        debug_handle: &Option<DebugServerHandle>,
+        debug_handle: Option<DebugServerHandle>,
     ) {
         match &self.input {
             Input::Simulation(spec) => {
-                self.start_simulation_stream(
-                    spec,
-                    event_sender,
-                    error_sender,
-                    debug_handle.clone(),
-                );
+                self.start_simulation_stream(spec, event_sender, error_sender, debug_handle);
             }
             Input::Device(port) => {
                 debug_assert!(!port.is_simulation());
-                self.start_device_stream(port, event_sender, error_sender, debug_handle.clone());
+                self.start_device_stream(port, event_sender, error_sender, debug_handle);
             }
         }
     }

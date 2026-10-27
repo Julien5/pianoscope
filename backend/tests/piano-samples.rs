@@ -45,7 +45,7 @@ fn detect(path: &PathBuf) -> Vec<String> {
 
     let error_sender = Arc::new(|msg: String| log::error!("error: {msg}"));
 
-    backend.select_wavfile(&path.to_string_lossy());
+    backend.select_wavfile_test(&path.to_string_lossy());
     backend.start_stream(event_sender, error_sender);
     while !backend.stream_done() {
         std::thread::sleep(Duration::from_millis(100));
@@ -94,7 +94,7 @@ fn old_piano_note(pos: usize, note: &str, octave: usize) -> (bool, String, Strin
     let (ok, message) = (
         local_goods.len() > local_bads.len(),
         format!(
-            "expected={:4} | {} vs. {}",
+            "expected={:4} | good:{} bad:{}",
             absnote,
             local_goods.len(),
             local_bads.len()

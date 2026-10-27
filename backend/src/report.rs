@@ -489,11 +489,7 @@ mod tests {
         set_report_dir(dir.to_str().unwrap()).unwrap();
         assert!(dir.is_dir());
 
-        let named = |prefix: &str, index: u32| {
-            dir.join(format!(
-                "{prefix}{index:0REPORT_FILE_DIGITS$}{REPORT_FILE_SUFFIX}"
-            ))
-        };
+        let named = |prefix: &str, index: u32| dir.join(format!("{prefix}{index:04}.json"));
 
         // Panics become numbered crash reports.
         setup_panic_hook();

@@ -51,13 +51,9 @@ fn main() {
     let event_sender = Arc::new(|event: MidiEvent| log::trace!("midi event: {}", event.note_name));
     let error_sender = Arc::new(|msg: String| log::error!("midi error: {msg}"));
 
-    match cli.source {
+    match &cli.source {
         Source::WavFile { path } => {
-            unsafe {
-                log::trace!("export SIMULATION={}", path);
-                std::env::set_var("SIMULATION", path);
-            }
-            backend.select_microphone();
+            backend.select_wavfile(&path);
             backend.start_stream(event_sender, error_sender);
         }
         Source::Microphone => {
@@ -87,7 +83,7 @@ fn main() {
             for port in &list {
                 log::trace!("port {}:{}", port.name, port.id);
             }
-            backend.select_midi_port(&list[port]);
+            backend.select_midi_port(&list[*port]);
             backend.start_stream(event_sender, error_sender);
         }
     }

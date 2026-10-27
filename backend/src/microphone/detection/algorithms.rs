@@ -1,5 +1,3 @@
-use crate::microphone::PitchRecognizerParameters;
-
 #[derive(Clone)]
 pub struct Estimate {
     pub frequency: f32,
@@ -11,12 +9,6 @@ pub struct Estimate {
 pub struct Estimates {
     // (confidence, frequency)
     estimates: Vec<Estimate>,
-}
-
-fn _safe_padding(size: usize, min_padding: usize) -> usize {
-    let min_total = size + min_padding;
-    let total = min_total.next_power_of_two();
-    total - size
 }
 
 impl Estimates {
@@ -50,45 +42,28 @@ impl Estimates {
     }
 }
 
-pub trait Detector {
-    fn process(&mut self, block: &[f32]) -> Estimates;
-}
-
-pub fn make_detector(parameters: &PitchRecognizerParameters) -> Box<dyn Detector> {
-    match parameters.algorithm {
-        crate::microphone::PitchRecognizerAlgorithm::McLeod => {
-            Box::new(McLeodDetector::new(parameters))
-        }
-        crate::microphone::PitchRecognizerAlgorithm::YIN => Box::new(YinDetector::new(parameters)),
-        crate::microphone::PitchRecognizerAlgorithm::AutoCorrelation => {
-            Box::new(AutoCorrelationDetector::new(parameters))
-        }
-        crate::microphone::PitchRecognizerAlgorithm::Kord => {
-            Box::new(KordDetector::new(parameters))
-        }
-    }
-}
-
-use pitch_detection::detector::mcleod::McLeodDetector as McLeod;
 use pitch_detection::detector::PitchDetector as PitchDetectorTrait;
 
+use crate::microphone::processor::BlockProcessorParameters;
+
 pub struct McLeodDetector {
-    detector: McLeod<f32>,
-    parameters: PitchRecognizerParameters,
+    detector: pitch_detection::detector::mcleod::McLeodDetector<f32>,
+    parameters: BlockProcessorParameters,
 }
 
 impl McLeodDetector {
-    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+    pub fn new(parameters: &BlockProcessorParameters) -> Self {
         log::trace!("make McLeod detector");
         Self {
-            detector: McLeod::new(parameters.window_len, parameters.window_len / 2),
+            detector: pitch_detection::detector::mcleod::McLeodDetector::new(
+                parameters.window_len,
+                parameters.window_len / 2,
+            ),
             parameters: parameters.clone(),
         }
     }
-}
 
-impl Detector for McLeodDetector {
-    fn process(&mut self, buffer: &[f32]) -> Estimates {
+    pub fn process(&mut self, buffer: &[f32]) -> Estimates {
         let empty = Estimates {
             estimates: Vec::new(),
         };
@@ -111,159 +86,5 @@ impl Detector for McLeodDetector {
             });
         }
         Estimates { estimates: ret }
-    }
-}
-
-use pitch_detection::detector::yin::YINDetector as YIN;
-
-pub struct YinDetector {
-    detector: YIN<f32>,
-    parameters: PitchRecognizerParameters,
-}
-
-impl YinDetector {
-    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
-        log::trace!("make YIN detector");
-        Self {
-            detector: YIN::new(parameters.window_len, parameters.window_len / 2),
-            parameters: parameters.clone(),
-        }
-    }
-}
-
-impl Detector for YinDetector {
-    fn process(&mut self, buffer: &[f32]) -> Estimates {
-        let mut ret = Vec::new();
-        if buffer.len() < self.parameters.window_len {
-            return Estimates {
-                estimates: Vec::new(),
-            };
-        } else if buffer.len() > self.parameters.window_len {
-        }
-        debug_assert_eq!(buffer.len(), self.parameters.window_len);
-        if let Some(pitch) = self.detector.get_pitch(
-            &buffer,
-            self.parameters.sample_rate as usize,
-            0.0, // power detect is upfront
-            0.6, // clarity
-        ) {
-            ret.push(Estimate {
-                frequency: pitch.frequency,
-                confidence: 0.75,
-                annotation: None,
-            });
-        }
-        Estimates { estimates: ret }
-    }
-}
-
-use pitch_detection::detector::autocorrelation::AutocorrelationDetector as AutoCorrelation;
-
-pub struct AutoCorrelationDetector {
-    detector: AutoCorrelation<f32>,
-    parameters: PitchRecognizerParameters,
-}
-
-impl AutoCorrelationDetector {
-    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
-        log::trace!("make AutoCorrelationDetector");
-        Self {
-            detector: AutoCorrelation::new(parameters.window_len, parameters.window_len / 2),
-            parameters: parameters.clone(),
-        }
-    }
-}
-
-impl Detector for AutoCorrelationDetector {
-    fn process(&mut self, buffer: &[f32]) -> Estimates {
-        let mut ret = Vec::new();
-        if buffer.len() < self.parameters.window_len {
-            return Estimates {
-                estimates: Vec::new(),
-            };
-        } else if buffer.len() > self.parameters.window_len {
-        }
-        debug_assert_eq!(buffer.len(), self.parameters.window_len);
-        if let Some(pitch) = self.detector.get_pitch(
-            &buffer,
-            self.parameters.sample_rate as usize,
-            0.0, // power detect is upfront
-            0.6, // clarity
-        ) {
-            ret.push(Estimate {
-                frequency: pitch.frequency,
-                confidence: 0.75,
-                annotation: None,
-            });
-        }
-        Estimates { estimates: ret }
-    }
-}
-
-use crate::microphone::detection::kord;
-
-pub struct KordDetector {
-    parameters: PitchRecognizerParameters,
-    buffer: Vec<f32>,
-    duration_seconds: f32,
-}
-
-impl KordDetector {
-    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
-        log::trace!("make KordDetector");
-        Self {
-            parameters: parameters.clone(),
-            buffer: Vec::with_capacity(parameters.sample_rate as usize),
-            duration_seconds: parameters.window_len as f32 / parameters.sample_rate as f32,
-        }
-    }
-
-    pub fn set_duration(&mut self, seconds: f32) {
-        self.duration_seconds = seconds;
-    }
-}
-
-impl Detector for KordDetector {
-    fn process(&mut self, buffer: &[f32]) -> Estimates {
-        for &s in buffer {
-            self.buffer.push(s);
-        }
-        let capacity = (self.parameters.sample_rate as f32 * self.duration_seconds) as usize;
-        if self.buffer.len() > capacity {
-            let excess = self.buffer.len() - capacity;
-            let _ = self.buffer.drain(..excess);
-        }
-        // Analyze once enough audio is buffered; a shorter final flush is still
-        // analyzed so that recordings shorter than `duration_seconds` produce a result.
-        if self.buffer.len() < 128 {
-            return Estimates {
-                estimates: Vec::new(),
-            };
-        }
-        let notes = kord::analyze(&self.buffer, self.parameters.sample_rate);
-        if notes.is_empty() {
-            return Estimates {
-                estimates: Vec::new(),
-            };
-        }
-        let mut max_magnitude = 0.0;
-        for (_, magnitude) in &notes {
-            if *magnitude > max_magnitude {
-                max_magnitude = *magnitude;
-            }
-        }
-        let estimates = notes
-            .iter()
-            .map(|(frequency, magnitude)| Estimate {
-                frequency: *frequency,
-                confidence: if max_magnitude > 0.0 {
-                    *magnitude / max_magnitude
-                } else {
-                    0.0
-                },
-                annotation: None,
-            })
-            .collect::<Vec<_>>();
-        Estimates { estimates }
     }
 }

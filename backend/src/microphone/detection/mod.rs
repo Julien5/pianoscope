@@ -1,12 +1,11 @@
 pub mod algorithms;
-pub mod kord;
 
 use serde::Serialize;
 use std::f32;
 
 use crate::{
     event::NOTE_NAMES,
-    microphone::{detection::algorithms::Detector, PitchRecognizerParameters},
+    microphone::{detection::algorithms::McLeodDetector, processor::BlockProcessorParameters},
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -47,7 +46,7 @@ impl PitchStats {
 
 pub struct PitchDetector {
     stats: PitchStats,
-    detector: Box<dyn Detector>,
+    detector: McLeodDetector,
 }
 
 fn compute_energy(samples: &[f32]) -> f32 {
@@ -60,10 +59,10 @@ fn compute_energy(samples: &[f32]) -> f32 {
 }
 
 impl PitchDetector {
-    pub fn new(parameters: &PitchRecognizerParameters) -> Self {
+    pub fn new(parameters: &BlockProcessorParameters) -> Self {
         Self {
             stats: PitchStats::new(parameters.sample_rate),
-            detector: algorithms::make_detector(parameters),
+            detector: McLeodDetector::new(&parameters),
         }
     }
 
@@ -154,12 +153,6 @@ mod tests {
         let sample_rate = 48_000;
         let signal_length = (sample_rate / 2) as usize; //  1 sec
         let window_len = signal_length;
-        let algorithms = vec![
-            PitchRecognizerParameters::new_mcleod(sample_rate, window_len),
-            //PitchRecognizerParameters::new_pyin(sample_rate, window_len),
-            //PitchRecognizerParameters::new_swipe(sample_rate, window_len),
-            PitchRecognizerParameters::new_yin(sample_rate, window_len),
-        ];
         let table = [
             (32.7, "C1"),
             (34.65, "C#1"),
@@ -171,14 +164,14 @@ mod tests {
         for (freq, note) in table {
             log::trace!("test: {} {}", freq, note);
             let signal = sine_buffer(freq, sample_rate, signal_length);
-            for algorithm in &algorithms {
-                log::trace!("testing {:?}", algorithm.algorithm);
-                let mut pd = PitchDetector::new(&algorithm);
-                pd.update(&signal);
-                assert!(pd.on());
-                let key = format!("{:?}|{}", algorithm.algorithm, note);
-                results.insert(key, pd.pitch() == note);
-            }
+            let mut pd = PitchDetector::new(&BlockProcessorParameters {
+                sample_rate,
+                window_len,
+            });
+            pd.update(&signal);
+            assert!(pd.on());
+            let key = format!("{}", note);
+            results.insert(key, pd.pitch() == note);
         }
         let mut good = true;
         for (key, ok) in results {
@@ -188,49 +181,5 @@ mod tests {
             }
         }
         debug_assert!(good);
-    }
-
-    #[test]
-    fn detects_c4_kord() {
-        let _ = env_logger::try_init();
-        let sample_rate = 48_000;
-        let window_len = (sample_rate / 8) as usize; // 0.125 seconds
-        let signal_length = window_len;
-        let algorithm = PitchRecognizerParameters::new_kord(sample_rate, window_len);
-        let table = [(65.4, "C2"), (261.63, "C4"), (440.0, "A4")];
-        let mut good = true;
-        for (freq, note) in table {
-            log::trace!("test: {} {}", freq, note);
-            let signal = sine_buffer(freq, sample_rate, signal_length);
-            let mut pd = PitchDetector::new(&algorithm);
-            pd.update(&signal);
-            let ok = pd.on() && pd.pitch() == note;
-            log::trace!("result {:?} => {}", note, ok);
-            if !ok {
-                good = false;
-            }
-        }
-        debug_assert!(good);
-    }
-
-    #[test]
-    fn detects_chord_kord() {
-        let _ = env_logger::try_init();
-        let sample_rate = 48_000;
-        let window_len = (sample_rate / 8) as usize; // 0.125 seconds
-        let signal_length = window_len;
-        let algorithm = PitchRecognizerParameters::new_kord(sample_rate, window_len);
-        // C4 chord with E4 (amplitude 0.8 so C4 remains the strongest estimate).
-        let signal = (0..signal_length)
-            .map(|i| {
-                let t = i as f32 / sample_rate as f32;
-                1.0 * (2.0 * std::f32::consts::PI * 261.63 * t).sin()
-                    + 0.8 * (2.0 * std::f32::consts::PI * 329.63 * t).sin()
-            })
-            .collect::<Vec<_>>();
-        let mut pd = PitchDetector::new(&algorithm);
-        pd.update(&signal);
-        debug_assert!(pd.on());
-        debug_assert_eq!(pd.pitch(), "C4");
     }
 }
