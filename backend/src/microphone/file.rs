@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use rtrb::Producer;
+use rtrb::{Producer, PushError};
 
 use crate::microphone::processor::{BlockProcessorFactory, BlockProcessorParameters};
 use crate::microphone::{consumer::Consumer, WavfileSpec};
@@ -70,6 +70,35 @@ fn read_wav_sample_rate(path: &Path) -> Result<u32, String> {
     Ok(sample_rate)
 }
 
+/// Pushes one sample into `producer`.
+///
+/// With `backpressure`, a full ring buffer is waited on instead of dropping the
+/// sample, so an offline (unpaced) file source processes every sample. Without
+/// it, the sample is dropped to keep a real-time source on schedule. Returns
+/// `false` when the stream was stopped or the consumer is gone.
+fn push_sample(
+    producer: &mut Producer<f32>,
+    mut sample: f32,
+    stop: &AtomicBool,
+    backpressure: bool,
+) -> bool {
+    loop {
+        match producer.push(sample) {
+            Ok(()) => return true,
+            Err(PushError::Full(returned)) => {
+                if !backpressure {
+                    return true;
+                }
+                if stop.load(Ordering::Relaxed) || producer.is_abandoned() {
+                    return false;
+                }
+                sample = returned;
+                thread::yield_now();
+            }
+        }
+    }
+}
+
 fn spawn_wav_reader(
     spec: &WavfileSpec,
     stop: Arc<AtomicBool>,
@@ -101,7 +130,9 @@ fn spawn_wav_reader(
                     batch.push(sample);
                     if batch.len() == BATCH {
                         for &value in &batch {
-                            let _ = producer.push(value);
+                            if !push_sample(&mut producer, value, &stop, !paced) {
+                                return;
+                            }
                         }
                         batch.clear();
                         if paced {
@@ -113,7 +144,9 @@ fn spawn_wav_reader(
                 }
                 if !batch.is_empty() {
                     for &value in &batch {
-                        let _ = producer.push(value);
+                        if !push_sample(&mut producer, value, &stop, !paced) {
+                            return;
+                        }
                     }
                 }
                 if !looped {
