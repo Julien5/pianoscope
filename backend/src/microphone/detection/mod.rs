@@ -79,13 +79,13 @@ impl PitchDetector {
         let alpha = 0.01;
         self.stats.level_max = (1.0 - alpha) * self.stats.level_max + alpha * self.stats.energy;
         self.stats.level_min = (1.0 - alpha) * self.stats.level_min + alpha * self.stats.energy;
+        // ensure a minimal span, otherwise notes are never detected off.
+        self.stats.level_max = self.stats.level_max.max(self.stats.level_min + 0.005);
         self.stats.threshold = self.compute_threshold();
         // zero the current estimate
         self.stats.current_frequency = 0.0;
         self.stats.current_note = String::new();
-        if self.stats.energy >= self.stats.threshold {
-            self.update_pitch(buffer);
-        }
+        self.update_pitch(buffer);
         /*
         log::trace!(
             "min:{:.3}|curr:{:.3}|max:{:.3} threshold:{:.3} => {:>5} ({5:.1} Hz)",
@@ -105,8 +105,10 @@ impl PitchDetector {
         estimates.print();
         if let Some(best) = estimates.best() {
             self.stats.confidence = best.confidence;
-            self.stats.current_frequency = best.frequency;
-            self.stats.current_note = freq_to_note_name(best.frequency);
+            if best.confidence > 0.9 {
+                self.stats.current_frequency = best.frequency;
+                self.stats.current_note = freq_to_note_name(best.frequency);
+            }
         } else {
             debug_assert!(estimates.is_empty());
         }

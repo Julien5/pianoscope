@@ -2,7 +2,6 @@
 pub struct Estimate {
     pub frequency: f32,
     pub confidence: f32,
-    pub annotation: Option<String>,
 }
 
 #[derive(Clone)]
@@ -19,12 +18,11 @@ impl Estimates {
         for (index, estimate) in self.estimates.iter().enumerate() {
             let note = super::freq_to_note_name(estimate.frequency);
             log::trace!(
-                "{}. estimate: {:.1} ({:>3}) confidence: {:.2} notes:{:?}",
+                "{}. estimate: {:.1} ({:>3}) confidence: {:.2}",
                 index + 1,
                 estimate.frequency,
                 note,
                 estimate.confidence,
-                estimate.annotation
             );
         }
     }
@@ -42,12 +40,10 @@ impl Estimates {
     }
 }
 
-use pitch_detection::detector::PitchDetector as PitchDetectorTrait;
-
 use crate::microphone::processor::BlockProcessorParameters;
 
 pub struct McLeodDetector {
-    detector: pitch_detection::detector::mcleod::McLeodDetector<f32>,
+    detector: mcleod::McLeod,
     parameters: BlockProcessorParameters,
 }
 
@@ -55,10 +51,7 @@ impl McLeodDetector {
     pub fn new(parameters: &BlockProcessorParameters) -> Self {
         log::trace!("make McLeod detector");
         Self {
-            detector: pitch_detection::detector::mcleod::McLeodDetector::new(
-                parameters.window_len,
-                parameters.window_len / 2,
-            ),
+            detector: mcleod::McLeod::new(parameters.sample_rate as f32),
             parameters: parameters.clone(),
         }
     }
@@ -73,18 +66,11 @@ impl McLeodDetector {
         } else if buffer.len() > self.parameters.window_len {
         }
         debug_assert_eq!(buffer.len(), self.parameters.window_len);
-        if let Some(pitch) = self.detector.get_pitch(
-            &buffer,
-            self.parameters.sample_rate as usize,
-            0.0, // power detect is upfront
-            0.6, // clarity threshold
-        ) {
-            ret.push(Estimate {
-                frequency: pitch.frequency,
-                confidence: pitch.clarity,
-                annotation: None,
-            });
-        }
+        let estimate = self.detector.process(&buffer);
+        ret.push(Estimate {
+            frequency: estimate.frequency,
+            confidence: estimate.confidence,
+        });
         Estimates { estimates: ret }
     }
 }
