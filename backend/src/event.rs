@@ -73,7 +73,7 @@ impl MidiEvent {
 
     pub fn from_microphone_estimate(
         name: &str,
-        status: Status,
+        status: &Status,
         velocity: u8,
         confidence: f32,
     ) -> Option<Self> {
@@ -83,7 +83,7 @@ impl MidiEvent {
             Status::NoteOff => 0x80,
         };
         Some(Self {
-            status,
+            status: status.clone(),
             velocity,
             confidence,
             note,
@@ -95,6 +95,7 @@ impl MidiEvent {
     pub fn off_clone(&self) -> Self {
         let mut ret = self.clone();
         ret.status = Status::NoteOff;
+        ret.velocity = 0;
         ret
     }
 }

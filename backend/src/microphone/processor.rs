@@ -65,7 +65,7 @@ impl BlockProcessor for SimpleProcessor {
         let velocity = self.pitch_detector.stats().velocity();
         let confidence = self.pitch_detector.stats().confidence;
         if let Some(event) =
-            MidiEvent::from_microphone_estimate(&pitch, status, velocity, confidence)
+            MidiEvent::from_microphone_estimate(&pitch, &status, velocity, confidence)
         {
             if let Some(last_event) = &self.last_event {
                 // end the last note.
@@ -74,6 +74,14 @@ impl BlockProcessor for SimpleProcessor {
                 }
             }
             self.send(&event);
+        } else if status == Status::NoteOff {
+            // no pitch detected
+            if let Some(last_event) = &self.last_event {
+                // end the last note.
+                if last_event.status == Status::NoteOn {
+                    self.send(&last_event.off_clone());
+                }
+            }
         }
     }
 }

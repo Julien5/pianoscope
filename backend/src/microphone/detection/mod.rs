@@ -82,9 +82,7 @@ impl PitchDetector {
         // ensure a minimal span, otherwise notes are never detected off.
         self.stats.level_max = self.stats.level_max.max(self.stats.level_min + 0.005);
         self.stats.threshold = self.compute_threshold();
-        // zero the current estimate
-        self.stats.current_frequency = 0.0;
-        self.stats.current_note = String::new();
+
         self.update_pitch(buffer);
         /*
         log::trace!(
@@ -101,6 +99,10 @@ impl PitchDetector {
     /// Only called when sound is detected (`energy >= threshold`).
     fn update_pitch(&mut self, buffer: &[f32]) {
         debug_assert!(self.stats.sample_rate != 0);
+        // zero the current estimate
+        self.stats.current_frequency = 0.0;
+        self.stats.current_note = String::new();
+
         let estimates = self.detector.process(&buffer);
         estimates.print();
         if let Some(best) = estimates.best() {
