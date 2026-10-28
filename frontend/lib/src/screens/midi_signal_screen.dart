@@ -236,6 +236,8 @@ enum Move { toUpper, toLower }
 class _MidiSignalScreenState extends State<MidiSignalScreen> {
   final Map<int, MidiEvent> _activeEvents = {};
   MidiEvent? _lastEvent;
+  final Map<DateTime, MidiEvent> _lastActiveEvent = {};
+  Timer? _redrawTimer;
 
   InputProvider? _inputProvider;
 
@@ -265,6 +267,25 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   }
 
   void _onEvent(MidiEvent event) {
+    final device = context.read<InputProvider>().currentDevice()!;
+    debugPrint(
+      "microphone?:${device is Microphone} event: ${event.noteName} ${event.status}",
+    );
+    // With the microphone, hold the last note at least 5 seconds.
+    if (device is Microphone) {
+      debugPrint("microphone event: ${event.noteName} ${event.status}");
+      _redrawTimer?.cancel();
+      if (event.status == Status.noteOn) {
+        _lastActiveEvent.clear();
+        _lastActiveEvent[DateTime.now()] = event;
+      } else {
+        _redrawTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+          if (!mounted) return;
+          setState(() {});
+        });
+      }
+    }
+
     setState(() {
       _lastEvent = event;
       if (event.status == Status.noteOn) {
@@ -272,6 +293,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
       } else if (event.status == Status.noteOff) {
         _activeEvents.remove(event.note);
       }
+      debugPrint("activeEvents: $_activeEvents");
     });
   }
 
@@ -287,6 +309,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     // disconnect(), so nothing reaches this disposed State.
     unawaited(_inputProvider?.disconnect());
     WakelockPlus.disable();
+    _redrawTimer?.cancel();
     super.dispose();
   }
 
@@ -294,14 +317,34 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
     GoRouter.of(context).push(Routes.clefs);
   }
 
+  Color eventColor(MidiEvent e) {
+    final a = -255 / (1 - 0.9);
+    final b = -a;
+    final y = (a * e.confidence + b).round();
+    debugPrint("confidence=${e.confidence} => y=$y");
+    return Color.fromRGBO(y, y, y, 255);
+  }
+
   List<Note> currentNotes() {
+    assert(context.read<InputProvider>().currentDevice() != null);
+    final device = context.read<InputProvider>().currentDevice()!;
+
+    // With the microphone, hold the last note at least 5 seconds.
+    if (_activeEvents.isEmpty &&
+        device is Microphone &&
+        _lastActiveEvent.isNotEmpty) {
+      final entry = _lastActiveEvent.entries.first;
+      final duration = DateTime.now().difference(entry.key);
+      debugPrint("duration:$duration last:${entry.value.noteName}");
+      if (duration.inMilliseconds < 750) {
+        final e = entry.value;
+        return [
+          Note(pitch: Pitch.fromMidiNumber(e.note), color: eventColor(e)),
+        ];
+      }
+    }
     return _activeEvents.values.map((e) {
-      final a = -255 / (1 - 0.9);
-      final b = -a;
-      final y = (a * e.confidence + b).round();
-      debugPrint("confidence=${e.confidence} => y=$y");
-      final color = Color.fromRGBO(y, y, y, 255);
-      return Note(pitch: Pitch.fromMidiNumber(e.note), color: color);
+      return Note(pitch: Pitch.fromMidiNumber(e.note), color: eventColor(e));
     }).toList();
   }
 

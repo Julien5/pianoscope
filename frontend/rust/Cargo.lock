@@ -218,9 +218,9 @@ dependencies = [
  "jni 0.21.1",
  "libc",
  "log",
+ "mcleod",
  "midir",
  "ndk-context",
- "pitch-detection",
  "reqwest",
  "rtrb",
  "rustfft",
@@ -1383,6 +1383,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dae608c151f68243f2b000364e1f7b186d9c29845f7d2d85bd31b9ad77ad552b"
 
 [[package]]
+name = "mcleod"
+version = "0.1.0"
+source = "git+https://github.com/Julien5/mcleod.git#f6062b52cb1c43c90c816ed80b365d4753919bab"
+dependencies = [
+ "rustfft",
+]
+
+[[package]]
 name = "md-5"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1725,13 +1733,6 @@ name = "pin-utils"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
-
-[[package]]
-name = "pitch-detection"
-version = "0.3.0"
-dependencies = [
- "rustfft",
-]
 
 [[package]]
 name = "pkg-config"

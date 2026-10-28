@@ -19,7 +19,7 @@ function adb.log() {
 	PACKAGENAME=$(package_name)
 	PID=$(adb -s $(pixel) shell pidof -s ${PACKAGENAME})
 	echo package: $PACKAGENAME pid: $PID 
-	adb -s $(pixel) logcat --pid=$PID 
+	adb -s $(pixel) logcat '*:V' --pid=$PID 
 }
 
 function adb.kill() {
