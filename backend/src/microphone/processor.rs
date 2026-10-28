@@ -63,7 +63,10 @@ impl BlockProcessor for SimpleProcessor {
             Status::NoteOff
         };
         let velocity = self.pitch_detector.stats().velocity();
-        if let Some(event) = MidiEvent::from_note_status(&pitch, status, velocity) {
+        let confidence = self.pitch_detector.stats().confidence;
+        if let Some(event) =
+            MidiEvent::from_microphone_estimate(&pitch, status, velocity, confidence)
+        {
             if let Some(last_event) = &self.last_event {
                 // end the last note.
                 if last_event.status == Status::NoteOn && last_event.note != event.note {

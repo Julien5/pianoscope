@@ -15,6 +15,7 @@ pub struct PitchStats {
     pub current_note: String,
     pub current_frequency: f32,
     pub energy: f32,
+    pub confidence: f32,
     pub threshold: f32,
     pub sample_rate: u32,
 }
@@ -27,6 +28,7 @@ impl PitchStats {
             current_note: String::new(),
             current_frequency: 0.0,
             energy: 0.0,
+            confidence: 0.0,
             threshold: f32::MAX,
             sample_rate,
         }
@@ -102,6 +104,7 @@ impl PitchDetector {
         let estimates = self.detector.process(&buffer);
         estimates.print();
         if let Some(best) = estimates.best() {
+            self.stats.confidence = best.confidence;
             self.stats.current_frequency = best.frequency;
             self.stats.current_note = freq_to_note_name(best.frequency);
         } else {

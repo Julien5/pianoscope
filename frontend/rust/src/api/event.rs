@@ -4,6 +4,7 @@ pub use backend::event::{MidiEvent, Status};
 pub struct _MidiEvent {
     pub status: Status,
     pub velocity: u8,
+    pub confidence: f32,
     pub note: u8,
     pub note_name: String,
     pub raw: Vec<u8>,

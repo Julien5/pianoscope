@@ -27,7 +27,7 @@ class NoteheadRenderer {
     );
 
     final paint = Paint()
-      ..color = Colors.black
+      ..color = color ?? Colors.black
       ..style = PaintingStyle.fill
       ..strokeWidth = 0;
 

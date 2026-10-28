@@ -295,9 +295,14 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   }
 
   List<Note> currentNotes() {
-    return _activeEvents.values
-        .map((e) => Note(pitch: Pitch.fromMidiNumber(e.note)))
-        .toList();
+    return _activeEvents.values.map((e) {
+      final a = -255 / (1 - 0.9);
+      final b = -a;
+      final y = (a * e.confidence + b).round();
+      debugPrint("confidence=${e.confidence} => y=$y");
+      final color = Color.fromRGBO(y, y, y, 255);
+      return Note(pitch: Pitch.fromMidiNumber(e.note), color: color);
+    }).toList();
   }
 
   Move? moveCandidate(UserSettingsProvider userSettings) {

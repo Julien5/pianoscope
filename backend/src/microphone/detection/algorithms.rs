@@ -77,11 +77,11 @@ impl McLeodDetector {
             &buffer,
             self.parameters.sample_rate as usize,
             0.0, // power detect is upfront
-            0.6, // clarity
+            0.6, // clarity threshold
         ) {
             ret.push(Estimate {
                 frequency: pitch.frequency,
-                confidence: 0.6,
+                confidence: pitch.clarity,
                 annotation: None,
             });
         }

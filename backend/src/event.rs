@@ -15,6 +15,7 @@ pub enum Status {
 pub struct MidiEvent {
     pub status: Status,
     pub velocity: u8,
+    pub confidence: f32,
     pub note: u8,
     pub note_name: String,
     pub raw: Vec<u8>,
@@ -43,6 +44,7 @@ impl MidiEvent {
         Some(Self {
             status,
             velocity,
+            confidence: 1.0,
             note,
             note_name: name,
             raw: bytes.to_vec(),
@@ -62,6 +64,28 @@ impl MidiEvent {
         Some(Self {
             status,
             velocity,
+            confidence: 1.0,
+            note,
+            note_name: name.to_string(),
+            raw: vec![status_byte, note, velocity as u8],
+        })
+    }
+
+    pub fn from_microphone_estimate(
+        name: &str,
+        status: Status,
+        velocity: u8,
+        confidence: f32,
+    ) -> Option<Self> {
+        let note = note_name_to_midi(name)?;
+        let status_byte = match status {
+            Status::NoteOn => 0x90,
+            Status::NoteOff => 0x80,
+        };
+        Some(Self {
+            status,
+            velocity,
+            confidence,
             note,
             note_name: name.to_string(),
             raw: vec![status_byte, note, velocity as u8],
