@@ -10,12 +10,13 @@ set style fill transparent solid 0.35 border
 # set autoscale x
 # set autoscale y
 set xrange [0:{WINDOW_SECONDS}]
-set yrange [-0.5:0.5]
+set yrange [-0.15:0.15]
 
 plot '{audio_csv}' using 1:2 with lines title 'Signal', \
      '{pitch_csv}' using 2:4:3 with boxes title 'Energy', \
      '{pitch_csv}' using 1:5 with lines dashtype 2 lc rgb 'red' title 'Threshold', \
      '{pitch_csv}' using 1:6 with lines dashtype 3 lc rgb 'blue' title 'min', \
-     '{pitch_csv}' using 1:7 with lines dashtype 4 lc rgb 'blue' title 'max'
+     '{pitch_csv}' using 1:7 with lines dashtype 4 lc rgb 'blue' title 'max', \
+     '{notes_csv}' using 1:(0.10):2 with labels notitle font ',12' tc rgb 'dark-green'
 
 

@@ -11,6 +11,7 @@ from plot import (
     render_plot,
     trim_buffer,
 )
+from record import WAV_PATH, WavRecorder
 
 
 def decode_b64(block):
@@ -71,42 +72,51 @@ def run(socket, buffer):
     t0 = time.perf_counter()
     last_plot = 0.0
     dirty = False
+    recorder = WavRecorder()
+    print(f"Recording audio to {WAV_PATH}")
     print("Connected to port 9000. Waiting for packets...")
 
-    while True:
-        if socket.poll(timeout=500):
-            while True:
-                try:
-                    raw_bytes = socket.recv(zmq.NOBLOCK)
-                except zmq.ZMQError:
-                    break
-                try:
-                    data = json.loads(raw_bytes)
-                    msg = "";
-                    if "audio" in data:
-                        packet = AudioDebugPacket(data)
-                        buffer.append(packet)
-                        trim_buffer(buffer)
-                        dirty = True
-                        msg = str(packet)
-                    elif "event" in data:
-                        msg = message_midi(data["event"]);
-                    elapsed = time.perf_counter() - t0
-                    print(f"|{elapsed:5.1f}| {msg}")    
-                except KeyError as e:
-                    print("key error:",e);
+    try:
+        while True:
+            if socket.poll(timeout=500):
+                while True:
+                    try:
+                        raw_bytes = socket.recv(zmq.NOBLOCK)
+                    except zmq.ZMQError:
+                        break
+                    try:
+                        data = json.loads(raw_bytes)
+                        msg = "";
+                        if "audio" in data:
+                            packet = AudioDebugPacket(data)
+                            recorder.write(
+                                packet.audio.samples(), packet.audio.sample_rate
+                            )
+                            buffer.append(packet)
+                            trim_buffer(buffer)
+                            dirty = True
+                            msg = str(packet)
+                        elif "event" in data:
+                            msg = message_midi(data["event"]);
+                        elapsed = time.perf_counter() - t0
+                        print(f"|{elapsed:5.1f}| {msg}")    
+                    except KeyError as e:
+                        print("key error:",e);
 
-        now = time.perf_counter()
-        if dirty and now - last_plot >= MIN_PLOT_INTERVAL:
-            render_plot(buffer)
-            last_plot = now
-            dirty = False
+            now = time.perf_counter()
+            if dirty and now - last_plot >= MIN_PLOT_INTERVAL:
+                render_plot(buffer)
+                last_plot = now
+                dirty = False
+    finally:
+        recorder.close()
+        print(f"Saved {recorder.duration:.1f}s to {WAV_PATH}")
 
 
 def main():
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
-    #ip="192.168.1.100";
+    #ip="192.168.1.104";
     ip="127.0.0.1";
     print("connect to",ip)
     socket.connect(f"tcp://{ip:s}:9000")

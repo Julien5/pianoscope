@@ -8,6 +8,7 @@ WINDOW_SECONDS = 5.0
 MIN_PLOT_INTERVAL = 0.5
 AUDIO_CSV_PATH = "/tmp/audio.csv"
 PITCH_CSV_PATH = "/tmp/pitch.csv"
+NOTES_CSV_PATH = "/tmp/notes.csv"
 PLOT_PNG_PATH = "/tmp/plot.png"
 RENDER_SCRIPT_PATH = "/tmp/plot.gp"
 PLOT_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "plot.gnuplot")
@@ -62,7 +63,7 @@ def save_pitch_csv(buffer, path=PITCH_CSV_PATH):
     display_freq = _sample_rate(buffer) / DOWNSAMPLE_FACTOR
     tmp_path = "/tmp/tmp_pitch.csv"
     with open(tmp_path, "w", newline="", encoding="utf-8") as f:
-        f.write("# start_x, center_x, width, energy, threshold\n")
+        f.write("# start_x, center_x, width, energy, threshold, level_min, level_max\n")
         pos = 0
         for packet in buffer:
             n = len(packet.audio.samples(step=DOWNSAMPLE_FACTOR))
@@ -81,12 +82,50 @@ def save_pitch_csv(buffer, path=PITCH_CSV_PATH):
     os.replace(tmp_path, path)
 
 
+def save_notes_csv(buffer, path=NOTES_CSV_PATH):
+    """Write one row per stable note segment as (center_x, note)."""
+    if not buffer:
+        return
+
+    display_freq = _sample_rate(buffer) / DOWNSAMPLE_FACTOR
+    tmp_path = "/tmp/tmp_notes.csv"
+    rows = []
+    pos = 0
+    segment_start = 0
+    segment_note = None
+
+    def flush(end_pos):
+        if segment_note:
+            center = ((segment_start + end_pos) / 2) / display_freq
+            rows.append((center, segment_note))
+
+    for packet in buffer:
+        n = len(packet.audio.samples(step=DOWNSAMPLE_FACTOR))
+        if n == 0:
+            continue
+        note = packet.audio.pitch_detector.current
+        if True or note != segment_note:
+            flush(pos)
+            segment_note = note
+            segment_start = pos
+        pos += n
+    flush(pos)
+
+    with open(tmp_path, "w", newline="", encoding="utf-8") as f:
+        f.write("# center_x, note\n")
+        for center, note in rows:
+            f.write(f"{center:.6f} {note}\n")
+
+    os.replace(tmp_path, path)
+
+
 def render_plot(buffer, output_path=PLOT_PNG_PATH):
     if len(buffer) == 0:
         return
 
     count = save_data_csv(buffer)
     save_pitch_csv(buffer)
+    save_notes_csv(buffer)
 
     with open(PLOT_SCRIPT_PATH) as f:
         script = f.read().format(
@@ -94,6 +133,7 @@ def render_plot(buffer, output_path=PLOT_PNG_PATH):
             WINDOW_SECONDS=WINDOW_SECONDS,
             audio_csv=AUDIO_CSV_PATH,
             pitch_csv=PITCH_CSV_PATH,
+            notes_csv=NOTES_CSV_PATH,
         )
     with open(RENDER_SCRIPT_PATH, "w") as f:
         f.write(script + "\n")
