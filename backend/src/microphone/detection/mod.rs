@@ -34,15 +34,14 @@ impl PitchStats {
         }
     }
     pub fn velocity(&self) -> u8 {
-        debug_assert!(self.threshold >= self.level_min);
+        let max = self.level_max;
+        let min = self.level_min;
+        let current = self.energy;
         if self.energy <= self.threshold {
             return 0u8;
         }
-        debug_assert!(self.threshold <= self.energy && self.energy <= self.level_max);
-        let scaled =
-            1.0 + 126.0 * (self.energy - self.threshold) / (self.level_max - self.threshold);
-        debug_assert!(0.9 <= scaled && scaled <= 127.1, "scaled={}", scaled);
-        return scaled.round() as u8;
+        let scaled = 1.0 + 126.0 * (current - min) / (max - min);
+        return scaled.round().clamp(1.0, 126.0) as u8;
     }
 }
 
@@ -120,7 +119,7 @@ impl PitchDetector {
     }
     pub fn on(&self) -> bool {
         // here
-        self.stats.energy >= self.stats.threshold
+        self.stats.energy >= self.stats.threshold || self.stats.confidence > 0.9
     }
     pub fn pitch(&self) -> String {
         self.stats.current_note.clone()

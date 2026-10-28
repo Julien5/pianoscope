@@ -318,7 +318,7 @@ class _MidiSignalScreenState extends State<MidiSignalScreen> {
   }
 
   Color eventColor(MidiEvent e) {
-    final a = -255 / (1 - 0.9);
+    final a = -255 / (1 - 0.8);
     final b = -a;
     final y = (a * e.confidence + b).round();
     debugPrint("confidence=${e.confidence} => y=$y");
