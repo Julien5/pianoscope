@@ -4,7 +4,7 @@ import subprocess
 import numpy as np
 
 DOWNSAMPLE_FACTOR = 16
-WINDOW_SECONDS = 5.0
+WINDOW_SECONDS = 10.0
 MIN_PLOT_INTERVAL = 0.5
 AUDIO_CSV_PATH = "/tmp/audio.csv"
 PITCH_CSV_PATH = "/tmp/pitch.csv"
@@ -73,10 +73,11 @@ def save_pitch_csv(buffer, path=PITCH_CSV_PATH):
             center = (pos + n / 2) / display_freq
             width = n / display_freq
             energy = packet.audio.pitch_detector.energy
+            confidence = packet.audio.pitch_detector.confidence-0.9
             threshold = packet.audio.pitch_detector.threshold
             level_min = packet.audio.pitch_detector.level_min;
             level_max = packet.audio.pitch_detector.level_max;
-            f.write(f"{start:.6f} {center:.6f} {width:.6f} {energy:.6f} {threshold:.6f} {level_min:.6f} {level_max:.6f}\n")
+            f.write(f"{start:.6f} {center:.6f} {width:.6f} {energy:.6f} {threshold:.6f} {level_min:.6f} {level_max:.6f} {confidence:.6f}\n")
             pos += n
 
     os.replace(tmp_path, path)

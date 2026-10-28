@@ -30,6 +30,7 @@ class PitchDetector:
         self.level_max = data["level_max"]
         self.current = data["current_note"]
         self.energy = data["energy"]
+        self.confidence = data["confidence"]
         self.sample_rate = data["sample_rate"]
 
     def __str__(self):
@@ -116,8 +117,8 @@ def run(socket, buffer):
 def main():
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
-    #ip="192.168.1.104";
-    ip="127.0.0.1";
+    ip="192.168.1.104";
+    #ip="127.0.0.1";
     print("connect to",ip)
     socket.connect(f"tcp://{ip:s}:9000")
 
