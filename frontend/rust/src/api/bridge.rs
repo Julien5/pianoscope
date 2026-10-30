@@ -31,8 +31,14 @@ pub struct Bridge {
 
 impl Bridge {
     pub fn new() -> Self {
-        Self {
-            backend: Backend::new_debug_server(),
+        if cfg!(debug_assertions) {
+            Self {
+                backend: Backend::new_debug_server(),
+            }
+        } else {
+            Self {
+                backend: Backend::new(),
+            }
         }
     }
 
