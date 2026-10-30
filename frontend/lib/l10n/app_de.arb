@@ -23,6 +23,10 @@
   "cMajor": "C-Dur",
 
   "microphone": "Mikrofon",
+  "microphoneWarningTitle": "Mikrofoneingang",
+  "microphoneWarningMessage": "Das Mikrofon kann nur eine Note gleichzeitig erkennen. Akkorde werden nicht erkannt. Spielen Sie jeweils nur eine Note für beste Ergebnisse.",
+  "microphoneWarningDontShowAgain": "Diese Warnung nicht mehr anzeigen",
+  "microphoneWarningContinue": "Weiter",
 
   "languages": "Sprachen",
   "sendFeedback": "Feedback an den Entwickler",

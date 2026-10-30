@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../providers/input_provider.dart';
 import '../routes/route_observer.dart';
 import '../style.dart';
+import '../widgets/microphone_warning_dialog.dart';
 
 class DeviceListScreen extends StatefulWidget {
   const DeviceListScreen({super.key});
@@ -106,6 +107,17 @@ class _DeviceListScreenState extends State<DeviceListScreen> with RouteAware {
     }
   }
 
+  Future<void> _selectDevice(InputDevice device) async {
+    if (device is Microphone) {
+      final settings = context.read<UserSettingsProvider>();
+      if (!settings.hideMicrophoneWarning) {
+        final proceed = await showMicrophoneWarningDialog(context, settings);
+        if (!mounted || !proceed) return;
+      }
+    }
+    await _connect(device);
+  }
+
   Future<void> _connect(InputDevice inputDevice) async {
     final provider = context.read<InputProvider>();
     try {
@@ -167,7 +179,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> with RouteAware {
       itemBuilder: (context, index) {
         return _DeviceCard(
           device: ports[index],
-          onTap: () => _connect(ports[index]),
+          onTap: () => _selectDevice(ports[index]),
         );
       },
     );

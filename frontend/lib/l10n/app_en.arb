@@ -23,6 +23,10 @@
   "flat": "{noteName} flat",
 
   "microphone": "Microphone",
+  "microphoneWarningTitle": "Microphone input",
+  "microphoneWarningMessage": "The microphone can only detect one note at a time. Chords will not be recognized. Play single notes for best results.",
+  "microphoneWarningDontShowAgain": "Don't show this warning again",
+  "microphoneWarningContinue": "Continue",
 
   "languages": "Languages",
   "sendFeedback": "Feedback to the developer",

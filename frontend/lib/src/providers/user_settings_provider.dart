@@ -8,6 +8,7 @@ class UserSettingsProvider extends ChangeNotifier {
   static const String _keyKeySignature = 'key_signature';
   static const String _keySplitPoint = 'key_split_point';
   static const String _keyEmail = 'email';
+  static const String _keyHideMicrophoneWarning = 'hide_microphone_warning';
 
   late final SharedPreferencesWithCache _prefs;
 
@@ -15,7 +16,13 @@ class UserSettingsProvider extends ChangeNotifier {
   Future<void> init() async {
     _prefs = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(
-        allowList: {_keyLocale, _keyKeySignature, _keySplitPoint, _keyEmail},
+        allowList: {
+          _keyLocale,
+          _keyKeySignature,
+          _keySplitPoint,
+          _keyEmail,
+          _keyHideMicrophoneWarning,
+        },
       ),
     );
   }
@@ -50,6 +57,14 @@ class UserSettingsProvider extends ChangeNotifier {
   Future<void> setEmail(String value) async {
     if (_emailSetting == value) return;
     await _prefs.setString(_keyEmail, value);
+    notifyListeners();
+  }
+
+  bool get hideMicrophoneWarning =>
+      _prefs.getBool(_keyHideMicrophoneWarning) ?? false;
+  Future<void> setHideMicrophoneWarning(bool value) async {
+    if (hideMicrophoneWarning == value) return;
+    await _prefs.setBool(_keyHideMicrophoneWarning, value);
     notifyListeners();
   }
 }

@@ -220,6 +220,30 @@ abstract class AppLocalizations {
   /// **'Microphone'**
   String get microphone;
 
+  /// No description provided for @microphoneWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone input'**
+  String get microphoneWarningTitle;
+
+  /// No description provided for @microphoneWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone can only detect one note at a time. Chords will not be recognized. Play single notes for best results.'**
+  String get microphoneWarningMessage;
+
+  /// No description provided for @microphoneWarningDontShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show this warning again'**
+  String get microphoneWarningDontShowAgain;
+
+  /// No description provided for @microphoneWarningContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get microphoneWarningContinue;
+
   /// No description provided for @languages.
   ///
   /// In en, this message translates to:

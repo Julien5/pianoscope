@@ -73,6 +73,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get microphone => 'Microphone';
 
   @override
+  String get microphoneWarningTitle => 'Microphone input';
+
+  @override
+  String get microphoneWarningMessage =>
+      'The microphone can only detect one note at a time. Chords will not be recognized. Play single notes for best results.';
+
+  @override
+  String get microphoneWarningDontShowAgain => 'Don\'t show this warning again';
+
+  @override
+  String get microphoneWarningContinue => 'Continue';
+
+  @override
   String get languages => 'Languages';
 
   @override
