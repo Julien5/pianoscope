@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../routes.dart';
 import '../style.dart';
@@ -33,7 +34,11 @@ class SettingsDrawer extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [title],
+                  children: [
+                    title,
+                    const SizedBox(height: AppSpacing.xs),
+                    const _VersionLabel(),
+                  ],
                 ),
               ),
             )
@@ -48,7 +53,11 @@ class SettingsDrawer extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [title],
+                  children: [
+                    title,
+                    const SizedBox(height: AppSpacing.xs),
+                    const _VersionLabel(),
+                  ],
                 ),
               ),
             ),
@@ -105,6 +114,32 @@ class SettingsDrawer extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _VersionLabel extends StatefulWidget {
+  const _VersionLabel();
+
+  @override
+  State<_VersionLabel> createState() => _VersionLabelState();
+}
+
+class _VersionLabelState extends State<_VersionLabel> {
+  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: _packageInfo,
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        if (info == null) return const SizedBox.shrink();
+        final version = info.buildNumber.isEmpty
+            ? info.version
+            : '${info.version}+${info.buildNumber}';
+        return Text(version, style: AppDrawerStyle.brandVersionTextStyle);
+      },
     );
   }
 }

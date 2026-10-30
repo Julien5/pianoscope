@@ -203,6 +203,12 @@ abstract class AppDrawerStyle {
     fontWeight: FontWeight.w700,
     color: AppColors.onPrimary,
   );
+
+  static const TextStyle brandVersionTextStyle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    color: Color(0x9916181D),
+  );
 }
 
 /// Layout constants for the clef / key-signature picker.
